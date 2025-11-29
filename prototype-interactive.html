@@ -1,0 +1,3948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NavTag - Interactive Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Leaflet.js for real maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0A0E17 0%, #1A1F2B 100%);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Section Header */
+        .section-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--color-text);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(58, 139, 255, 0.6);
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(58, 139, 255, 0.1) 0%, rgba(58, 139, 255, 0.05) 100%);
+            border-radius: 20px;
+            border: 1px solid rgba(58, 139, 255, 0.3);
+        }
+
+        /* Phone Container */
+        .page-container {
+            width: 390px;
+            height: 844px;
+            background: linear-gradient(180deg, #0D111A 0%, #1A1F2B 100%);
+            border: 1px solid rgba(58, 139, 255, 0.3);
+            border-radius: 40px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6),
+                        0 0 1px rgba(58, 139, 255, 0.5) inset;
+        }
+
+        .page-container.hidden {
+            display: none;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            height: 44px;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #FFFFFF;
+            font-size: 15px;
+            font-weight: 600;
+            background: rgba(13, 17, 26, 0.95);
+            z-index: 50;
+        }
+
+        .status-time {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .status-icons {
+            display: flex;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        /* Main Content Area */
+        .content-area {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .content-area::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .content-area::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .content-area::-webkit-scrollbar-thumb {
+            background: rgba(58, 139, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        /* Typography */
+        .title-primary {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--color-text);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(58, 139, 255, 0.6);
+        }
+
+        .title-secondary {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--color-text);
+            letter-spacing: 1.5px;
+        }
+
+        .text-body {
+            font-size: 15px;
+            color: var(--color-text-muted);
+            line-height: 1.6;
+        }
+
+        /* Neon Glow Button */
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #3A8BFF 0%, #2563eb 100%);
+            color: #FFFFFF;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(58, 139, 255, 0.4),
+                        0 8px 16px rgba(0, 0, 0, 0.4);
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #3A8BFF, #60A5FA, #3A8BFF);
+            border-radius: 24px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(58, 139, 255, 0.6),
+                        0 12px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Breathing Animation */
+        @keyframes breathing {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(58, 139, 255, 0.4),
+                            0 8px 16px rgba(0, 0, 0, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 35px rgba(58, 139, 255, 0.7),
+                            0 8px 16px rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        .btn-breathing {
+            animation: breathing 2.5s ease-in-out infinite;
+        }
+
+        /* Secondary Button */
+        .btn-secondary {
+            width: 100%;
+            padding: 16px;
+            background: rgba(58, 139, 255, 0.1);
+            border: 1px solid rgba(58, 139, 255, 0.3);
+            color: #3A8BFF;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(58, 139, 255, 0.2);
+            border-color: rgba(58, 139, 255, 0.5);
+        }
+
+        /* Input Fields with Glassmorphism */
+        .input-field {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(26, 31, 43, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(58, 139, 255, 0.2);
+            border-radius: 20px;
+            color: #FFFFFF;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .input-field::placeholder {
+            color: #8B94A4;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(58, 139, 255, 0.6);
+            box-shadow: 0 0 20px rgba(58, 139, 255, 0.2);
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(26, 31, 43, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(58, 139, 255, 0.2);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Tag Item with Swipe Support */
+        .tag-item {
+            background: rgba(26, 31, 43, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(58, 139, 255, 0.15);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tag-item-wrapper {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .tag-item-content {
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 2;
+            background: rgba(26, 31, 43, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(58, 139, 255, 0.15);
+            border-radius: 20px;
+        }
+
+        /* Swipe hint: Edge glow indicator */
+        .tag-item-content::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 8px;
+            bottom: 8px;
+            width: 3px;
+            background: #3A8BFF;
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(58, 139, 255, 0.8),
+                        0 0 16px rgba(58, 139, 255, 0.4);
+            pointer-events: none;
+            animation: edgeGlow 2.5s ease-in-out infinite;
+            transition: opacity 0.3s ease;
+        }
+
+        @keyframes edgeGlow {
+            0%, 100% {
+                opacity: 0.6;
+                box-shadow: 0 0 8px rgba(58, 139, 255, 0.6),
+                            0 0 16px rgba(58, 139, 255, 0.3);
+            }
+            50% {
+                opacity: 1;
+                box-shadow: 0 0 12px rgba(58, 139, 255, 1),
+                            0 0 24px rgba(58, 139, 255, 0.5);
+            }
+        }
+
+        /* Hide edge glow when swiped */
+        .tag-item-content.swiped::after {
+            opacity: 0;
+        }
+
+        .tag-item-actions {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .tag-click-zone {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 70%;
+            height: 100%;
+            z-index: 3;
+            cursor: pointer;
+        }
+
+        .tag-swipe-zone {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 30%;
+            height: 100%;
+            z-index: 3;
+            cursor: grab;
+        }
+
+        .tag-swipe-zone:active {
+            cursor: grabbing;
+        }
+
+        .tag-item:hover {
+            border-color: rgba(58, 139, 255, 0.4);
+            box-shadow: 0 4px 16px rgba(58, 139, 255, 0.2);
+        }
+
+        .tag-item.active {
+            border-color: rgba(58, 139, 255, 0.6);
+            box-shadow: 0 0 20px rgba(58, 139, 255, 0.3);
+        }
+
+        /* Modal Overlay - Container Scoped */
+        .modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(13, 17, 26, 0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: linear-gradient(180deg, #1A1F2B 0%, #0D111A 100%);
+            border: 1px solid rgba(58, 139, 255, 0.3);
+            border-radius: 28px;
+            padding: 32px 24px;
+            width: 340px;
+            max-width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6),
+                        0 0 40px rgba(58, 139, 255, 0.2);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Splash Screen */
+        .splash-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: linear-gradient(180deg, #0A0E17 0%, #1A1F2B 100%);
+        }
+
+        .splash-logo {
+            width: 160px;
+            height: 160px;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(58, 139, 255, 0.6));
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                filter: drop-shadow(0 0 20px rgba(58, 139, 255, 0.6));
+                transform: scale(1);
+            }
+            50% {
+                filter: drop-shadow(0 0 30px rgba(58, 139, 255, 0.9));
+                transform: scale(1.05);
+            }
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(58, 139, 255, 0.2);
+            border-top-color: #3A8BFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Scanning Animation */
+        .scan-pulse {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .scan-pulse::before,
+        .scan-pulse::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid #3A8BFF;
+            border-radius: 50%;
+            animation: scanWave 2s ease-out infinite;
+        }
+
+        .scan-pulse::before {
+            width: 100px;
+            height: 100px;
+        }
+
+        .scan-pulse::after {
+            width: 100px;
+            height: 100px;
+            animation-delay: 1s;
+        }
+
+        @keyframes scanWave {
+            0% {
+                width: 100px;
+                height: 100px;
+                opacity: 1;
+            }
+            100% {
+                width: 200px;
+                height: 200px;
+                opacity: 0;
+            }
+        }
+
+        /* Map Styles - Leaflet Integration */
+        .map-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: visible;
+            z-index: 1;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Custom Leaflet Marker Styles */
+        .user-marker-icon {
+            width: 20px;
+            height: 20px;
+            background: #3A8BFF;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(58, 139, 255, 0.8),
+                        0 0 40px rgba(58, 139, 255, 0.4);
+            animation: userPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes userPulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(58, 139, 255, 0.8),
+                            0 0 40px rgba(58, 139, 255, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(58, 139, 255, 1),
+                            0 0 60px rgba(58, 139, 255, 0.6);
+            }
+        }
+
+        .tag-marker-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 158, 74, 0.9);
+            border: 2px solid #FF9E4A;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: 0 0 20px rgba(255, 158, 74, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .tag-marker-icon:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 30px rgba(255, 158, 74, 0.8);
+        }
+
+        /* Leaflet Scale Bar Customization */
+        .leaflet-control-scale {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            color: #3A8BFF !important;
+            font-family: 'Orbitron', sans-serif !important;
+            font-size: 11px !important;
+            z-index: 1000 !important;
+            margin-left: 10px !important;
+            margin-bottom: 10px !important;
+            pointer-events: none !important;
+        }
+
+        /* Leaflet controls positioning for home page (with 281px drawer) */
+        #demo-map .leaflet-bottom {
+            bottom: 45px !important;
+        }
+
+        /* Leaflet controls positioning for detail page (with 200px drawer) */
+        #demo-tag-detail-map .leaflet-bottom {
+            bottom: 45px !important;
+        }
+
+        .leaflet-control-scale-line {
+            border: 2px solid #3A8BFF !important;
+            border-top: none !important;
+            color: #3A8BFF !important;
+            background: transparent !important;
+            /* text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8), -1px -1px 2px rgba(0, 0, 0, 0.8) !important; */
+            padding: 2px 5px !important;
+            line-height: 1.2 !important;
+        }
+
+        /* Custom Leaflet Popup */
+        .leaflet-popup-content-wrapper {
+            background: linear-gradient(180deg, #1A1F2B 0%, #0D111A 100%) !important;
+            border: 1px solid rgba(58, 139, 255, 0.3) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+                        0 0 1px rgba(58, 139, 255, 0.5) inset !important;
+            padding: 0 !important;
+        }
+
+        .leaflet-popup-content {
+            margin: 16px !important;
+            font-family: 'Poppins', sans-serif !important;
+            color: #FFFFFF !important;
+            font-size: 14px !important;
+            line-height: 1.5 !important;
+        }
+
+        .leaflet-popup-tip {
+            background: #1A1F2B !important;
+            border: 1px solid rgba(58, 139, 255, 0.3) !important;
+            box-shadow: 0 0 8px rgba(58, 139, 255, 0.2) !important;
+        }
+
+        .leaflet-popup-close-button {
+            color: #8B94A4 !important;
+            font-size: 20px !important;
+            padding: 8px 8px 0 0 !important;
+        }
+
+        .leaflet-popup-close-button:hover {
+            color: #3A8BFF !important;
+        }
+
+        .popup-tag-name {
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .popup-tag-info {
+            color: #8B94A4;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .popup-tag-distance {
+            color: #3A8BFF;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        /* Drawer */
+        .drawer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, rgba(26, 31, 43, 0.95) 0%, rgba(13, 17, 26, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            border-top-left-radius: 28px;
+            border-top-right-radius: 28px;
+            border: 1px solid rgba(58, 139, 255, 0.2);
+            border-bottom: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+        }
+
+        .drawer-handle {
+            width: 40px;
+            height: 4px;
+            background: rgba(58, 139, 255, 0.3);
+            border-radius: 2px;
+            margin: 12px auto 8px;
+            cursor: pointer;
+        }
+
+        /* Map Controls */
+        .map-controls {
+            position: absolute;
+            right: 16px;
+            top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 800;
+        }
+
+        .control-btn {
+            width: 44px;
+            height: 44px;
+            background: rgba(26, 31, 43, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(58, 139, 255, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #3A8BFF;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(58, 139, 255, 0.2);
+            box-shadow: 0 0 15px rgba(58, 139, 255, 0.3);
+        }
+
+        /* Icon Button */
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            background: rgba(26, 31, 43, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(58, 139, 255, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #3A8BFF;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .icon-btn:hover {
+            background: rgba(58, 139, 255, 0.2);
+            box-shadow: 0 0 15px rgba(58, 139, 255, 0.3);
+        }
+
+        /* Toast Notification - Container Scoped */
+        .toast {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 31, 43, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(58, 139, 255, 0.3);
+            border-radius: 16px;
+            padding: 16px 24px;
+            color: #FFFFFF;
+            font-size: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.error {
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .toast.success {
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 40px;
+            text-align: center;
+        }
+
+        .empty-icon {
+            width: 64px;
+            height: 64px;
+            color: rgba(58, 139, 255, 0.3);
+            margin-bottom: 16px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Link Text */
+        .link-text {
+            color: var(--color-primary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .link-text:hover {
+            color: var(--color-primary-light);
+            text-decoration: underline;
+        }
+
+        /* Device Item */
+        .device-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            background: rgba(26, 31, 43, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(58, 139, 255, 0.15);
+            border-radius: 20px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .device-item:hover {
+            border-color: rgba(58, 139, 255, 0.4);
+            box-shadow: 0 4px 16px rgba(58, 139, 255, 0.2);
+        }
+
+        .device-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(58, 139, 255, 0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--color-primary);
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(58, 139, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3A8BFF 0%, #60A5FA 100%);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(58, 139, 255, 0.5);
+        }
+
+        /* Password Strength */
+        .password-strength {
+            margin-top: 8px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .strength-weak { color: #EF4444; }
+        .strength-medium { color: #FF9E4A; }
+        .strength-strong { color: #22C55E; }
+
+        /* Icon Grid */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .icon-option {
+            width: 48px;
+            height: 48px;
+            background: rgba(26, 31, 43, 0.6);
+            border: 2px solid rgba(58, 139, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .icon-option:hover {
+            border-color: rgba(58, 139, 255, 0.5);
+            background: rgba(58, 139, 255, 0.1);
+        }
+
+        .icon-option.selected {
+            border-color: #3A8BFF;
+            background: rgba(58, 139, 255, 0.2);
+            box-shadow: 0 0 15px rgba(58, 139, 255, 0.4);
+        }
+
+        /* QR Scanner */
+        .qr-scanner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #0A0E17 0%, #1A1F2B 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scanner-frame {
+            width: 260px;
+            height: 260px;
+            border: 2px solid #3A8BFF;
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 0 40px rgba(58, 139, 255, 0.4);
+        }
+
+        .scanner-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-color: #3A8BFF;
+            border-style: solid;
+        }
+
+        .scanner-corner.top-left {
+            top: -2px;
+            left: -2px;
+            border-width: 3px 0 0 3px;
+            border-top-left-radius: 20px;
+        }
+
+        .scanner-corner.top-right {
+            top: -2px;
+            right: -2px;
+            border-width: 3px 3px 0 0;
+            border-top-right-radius: 20px;
+        }
+
+        .scanner-corner.bottom-left {
+            bottom: -2px;
+            left: -2px;
+            border-width: 0 0 3px 3px;
+            border-bottom-left-radius: 20px;
+        }
+
+        .scanner-corner.bottom-right {
+            bottom: -2px;
+            right: -2px;
+            border-width: 0 3px 3px 0;
+            border-bottom-right-radius: 20px;
+        }
+
+        .scanner-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3A8BFF, transparent);
+            box-shadow: 0 0 10px rgba(58, 139, 255, 0.8);
+            animation: scanLine 2s linear infinite;
+        }
+
+        @keyframes scanLine {
+            0% { top: 0; }
+            100% { top: calc(100% - 2px); }
+        }
+
+        /* Checkbox */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(58, 139, 255, 0.4);
+            border-radius: 6px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox.checked {
+            background: #3A8BFF;
+            border-color: #3A8BFF;
+        }
+
+        .checkbox.checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #FFFFFF;
+            font-size: 12px;
+        }
+
+        /* Info Badge */
+        .info-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(58, 139, 255, 0.1);
+            border: 1px solid rgba(58, 139, 255, 0.3);
+            border-radius: 12px;
+            font-size: 13px;
+            color: #3A8BFF;
+        }
+
+        /* Utility Classes */
+        .text-glow {
+            text-shadow: 0 0 20px rgba(58, 139, 255, 0.6);
+        }
+
+        .icon-glow {
+            filter: drop-shadow(0 0 8px rgba(58, 139, 255, 0.6));
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* Action Button for Swipe */
+        .action-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(58, 139, 255, 0.2);
+            border: 1px solid rgba(58, 139, 255, 0.4);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #3A8BFF;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(58, 139, 255, 0.3);
+            box-shadow: 0 0 15px rgba(58, 139, 255, 0.4);
+        }
+
+        /* Back Button */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+        }
+
+        /* User Center - Avatar Button */
+        .avatar-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 48px;
+            height: 48px;
+            background: rgba(26, 31, 43, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(58, 139, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 900;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .avatar-btn:hover {
+            border-color: rgba(58, 139, 255, 0.6);
+            box-shadow: 0 0 20px rgba(58, 139, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* User Center - Left Drawer */
+        .user-drawer-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(13, 17, 26, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 950;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .user-drawer-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .user-drawer {
+            position: absolute;
+            left: -320px;
+            top: 0;
+            bottom: 0;
+            width: 320px;
+            background: linear-gradient(180deg, #1A1F2B 0%, #0D111A 100%);
+            border-right: 1px solid rgba(58, 139, 255, 0.3);
+            box-shadow: 8px 0 32px rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
+
+        .user-drawer.active {
+            left: 0;
+        }
+
+        .user-drawer-header {
+            padding: 60px 24px 32px;
+            text-align: center;
+            border-bottom: 1px solid rgba(58, 139, 255, 0.15);
+        }
+
+        .user-drawer-avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(58, 139, 255, 0.2);
+            border: 2px solid #3A8BFF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 16px;
+            box-shadow: 0 0 20px rgba(58, 139, 255, 0.3);
+        }
+
+        .user-drawer-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 8px;
+        }
+
+        .user-drawer-uid {
+            font-size: 12px;
+            color: #8B94A4;
+        }
+
+        .user-drawer-menu {
+            padding: 20px 0;
+        }
+
+        .user-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 24px;
+            color: #FFFFFF;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .user-menu-item:hover {
+            background: rgba(58, 139, 255, 0.1);
+            border-left-color: #3A8BFF;
+        }
+
+        .user-menu-item.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .user-menu-item.disabled:hover {
+            background: transparent;
+            border-left-color: transparent;
+        }
+
+        .user-menu-item i {
+            width: 20px;
+            text-align: center;
+            color: #3A8BFF;
+            font-size: 18px;
+        }
+
+        .user-menu-item.logout {
+            color: #EF4444;
+            margin-top: 20px;
+            border-top: 1px solid rgba(58, 139, 255, 0.15);
+            padding-top: 28px;
+        }
+
+        .user-menu-item.logout i {
+            color: #EF4444;
+        }
+
+        /* Language List */
+        .language-list {
+            padding: 0 20px 20px;
+        }
+
+        .language-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: rgba(26, 31, 43, 0.6);
+            border: 1px solid rgba(58, 139, 255, 0.15);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .language-item:hover {
+            border-color: rgba(58, 139, 255, 0.4);
+            background: rgba(26, 31, 43, 0.8);
+        }
+
+        .language-item.selected {
+            border-color: #3A8BFF;
+            background: rgba(58, 139, 255, 0.15);
+            box-shadow: 0 0 15px rgba(58, 139, 255, 0.3);
+        }
+
+        .language-item-name {
+            color: #FFFFFF;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .language-item-check {
+            color: #3A8BFF;
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .language-item.selected .language-item-check {
+            opacity: 1;
+        }
+
+        /* About Page Elements */
+        .about-icon {
+            width: 120px;
+            height: 120px;
+            background: rgba(58, 139, 255, 0.15);
+            border: 2px solid #3A8BFF;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            margin: 0 auto 24px;
+            box-shadow: 0 0 30px rgba(58, 139, 255, 0.3);
+        }
+
+        .version-info {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .version-label {
+            font-size: 13px;
+            color: #8B94A4;
+            margin-bottom: 4px;
+        }
+
+        .version-value {
+            font-size: 16px;
+            color: #FFFFFF;
+            font-family: 'Courier New', monospace;
+        }
+
+        .about-links {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            padding: 24px 0;
+            border-top: 1px solid rgba(58, 139, 255, 0.15);
+        }
+
+        .about-link {
+            color: #3A8BFF;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .about-link:hover {
+            color: #60A5FA;
+            text-decoration: underline;
+        }
+
+        .copyright-text {
+            text-align: center;
+            font-size: 11px;
+            color: #8B94A4;
+            padding: 16px;
+            border-top: 1px solid rgba(58, 139, 255, 0.15);
+        }
+
+        /* Account Deletion Page Styles */
+        .deletion-letter {
+            background: rgba(26, 31, 43, 0.6);
+            border: 1px solid rgba(58, 139, 255, 0.15);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .deletion-letter p {
+            margin-bottom: 16px;
+            line-height: 1.8;
+        }
+
+        .deletion-letter p:last-child {
+            margin-bottom: 0;
+        }
+
+        .deletion-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .deletion-checkbox .checkbox-icon {
+            width: 20px;
+            height: 20px;
+            color: #3A8BFF;
+            flex-shrink: 0;
+        }
+
+        .deletion-checkbox span {
+            flex: 1;
+            line-height: 1.5;
+        }
+
+        /* ========== Tag Loss Notification Styles ========== */
+
+        /* In-app Banner Notification */
+        .banner-notification {
+            position: absolute;
+            top: 52px;
+            left: 12px;
+            right: 12px;
+            background: #1A1F2B;
+            border: 1px solid rgba(255, 158, 74, 0.4);
+            border-radius: 12px;
+            padding: 12px 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
+                        0 0 8px rgba(255, 158, 74, 0.15);
+            z-index: 950;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .banner-notification-icon {
+            width: 20px;
+            height: 20px;
+            color: #FF9E4A;
+            flex-shrink: 0;
+        }
+
+        .banner-notification-content {
+            flex: 1;
+        }
+
+        .banner-notification-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 2px;
+            line-height: 1.2;
+        }
+
+        .banner-notification-body {
+            font-size: 12px;
+            color: #B0B8C4;
+            line-height: 1.3;
+        }
+
+        .banner-notification-close {
+            width: 24px;
+            height: 24px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8B94A4;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .banner-notification-close:hover {
+            background: rgba(139, 148, 164, 0.15);
+            color: #FFFFFF;
+        }
+
+        /* Banner Hidden State */
+        .banner-notification.hidden {
+            display: none;
+        }
+
+        /* ========== Tag Action Buttons ========== */
+        .tag-action-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tag-action-btn:hover .tag-action-icon {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .tag-action-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFFFFF;
+            font-size: 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .tag-action-btn span {
+            font-size: 11px;
+            font-weight: 500;
+            color: #B0B8C4;
+            white-space: nowrap;
+        }
+
+        .tag-action-btn:active .tag-action-icon {
+            transform: scale(0.95);
+        }
+
+        /* ========== Lost Mode Settings Styles ========== */
+
+        .setting-row {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(58, 139, 255, 0.1);
+        }
+
+        .setting-row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .setting-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 4px;
+        }
+
+        .setting-desc {
+            font-size: 12px;
+            color: #8B94A4;
+            line-height: 1.4;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            width: 52px;
+            height: 32px;
+            background: rgba(58, 139, 255, 0.2);
+            border-radius: 16px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #3A8BFF 0%, #2563EB 100%);
+        }
+
+        .toggle-slider {
+            width: 26px;
+            height: 26px;
+            background: #FFFFFF;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            left: 23px;
+        }
+
+        /* Segment Control */
+        .segment-control {
+            display: flex;
+            gap: 0;
+            background: rgba(26, 31, 43, 0.6);
+            border: 1px solid rgba(58, 139, 255, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .segment-option {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #8B94A4;
+            background: transparent;
+            border: none;
+            border-right: 1px solid rgba(58, 139, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .segment-option:last-child {
+            border-right: none;
+        }
+
+        .segment-option.selected {
+            background: linear-gradient(135deg, #3A8BFF 0%, #2563EB 100%);
+            color: #FFFFFF;
+        }
+
+        .segment-option:hover:not(.selected) {
+            background: rgba(58, 139, 255, 0.1);
+            color: #FFFFFF;
+        }
+
+        /* Location Item */
+        .location-item {
+            background: rgba(26, 31, 43, 0.6);
+            border: 1px solid rgba(58, 139, 255, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .location-item-info {
+            flex: 1;
+        }
+
+        .location-item-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 4px;
+        }
+
+        .location-item-detail {
+            font-size: 12px;
+            color: #8B94A4;
+        }
+
+        .location-item-delete {
+            width: 36px;
+            height: 36px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #EF4444;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .location-item-delete:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+    </style>
+    <link rel="stylesheet" href="styles/navtag-ui.css">
+</head>
+<body>
+    <div style="max-width: 1200px;">
+        <div class="section-header">🎮 INTERACTIVE PROTOTYPE</div>
+
+        <!-- Single Interactive Container -->
+        <div class="page-container" data-page="interactive" id="interactive-container">
+            <div class="status-bar">
+                <span class="status-time">9:03</span>
+                <div class="status-icons">
+                    <i data-lucide="signal"></i>
+                    <i data-lucide="wifi"></i>
+                    <i data-lucide="battery-full"></i>
+                </div>
+            </div>
+            <div class="content-area" id="interactive-content">
+                <!-- Content will be dynamically loaded here -->
+            </div>
+            <!-- Toast for interactive container -->
+            <div class="toast" id="interactive-toast"></div>
+            <!-- Modals will be appended here dynamically -->
+        </div>
+    </div>
+
+    <script>
+        // Wait for Leaflet to load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize interactive demo
+            initInteractiveDemo();
+        });
+
+        // Interactive Demo System
+        let interactiveMap = null;
+        let currentScreen = 'splash';
+        let navigationHistory = [];  // Navigation history stack
+        let userMarker = null;
+        let tagMarkers = [];
+
+        const mockTags = [
+            {
+                id: 1,
+                name: 'My Keys',
+                icon: '🔑',
+                address: '123 Main St, Downtown',
+                lat: 37.7749,
+                lng: -122.4194,
+                distance: 'Around You',
+                lastUpdate: '2025-11-27 17:24:21',
+                mac: '8F:42:A1:D3:7E:C9'
+            },
+            {
+                id: 2,
+                name: 'Backpack',
+                icon: '🎒',
+                address: '456 Oak Ave, Midtown',
+                lat: 37.7829,
+                lng: -122.4114,
+                distance: '1.2km',
+                lastUpdate: '2025-11-27 17:19:21',
+                mac: '3A:91:B2:E4:8F:D1'
+            },
+            {
+                id: 3,
+                name: 'Car',
+                icon: '🚗',
+                address: '789 Park Rd, Parking Lot B',
+                lat: 37.7679,
+                lng: -122.4274,
+                distance: '2.8km',
+                lastUpdate: '2025-11-27 17:09:21',
+                mac: 'D7:C2:F3:A5:9E:B8'
+            }
+        ];
+
+        // Mock addresses for trusted locations
+        const mockAddresses = [
+            '625 Division Street, Biloxi, Mississippi 39501, United States',
+            '1428 Maple Avenue, Portland, Oregon 97205, United States',
+            '892 Ocean Boulevard, Miami Beach, Florida 33139, United States',
+            '3547 Pine Street, Seattle, Washington 98101, United States',
+            '267 Broadway, New York, New York 10007, United States',
+            '1853 Lake Shore Drive, Chicago, Illinois 60611, United States',
+            '4192 Market Street, San Francisco, California 94102, United States',
+            '736 Highland Avenue, Boston, Massachusetts 02134, United States'
+        ];
+
+        // Helper function to get random address
+        function getRandomAddress() {
+            return mockAddresses[Math.floor(Math.random() * mockAddresses.length)];
+        }
+
+        function initInteractiveDemo() {
+            // Start with splash screen
+            setTimeout(() => {
+                showInteractiveScreen('login');
+            }, 3000);
+
+            showInteractiveScreen('splash');
+        }
+
+        function showInteractiveScreen(screenName, addToHistory = true) {
+            // Add current screen to history before navigating (if not empty and addToHistory is true)
+            if (addToHistory && currentScreen && currentScreen !== screenName) {
+                navigationHistory.push(currentScreen);
+            }
+
+            currentScreen = screenName;
+            const content = document.getElementById('interactive-content');
+            content.innerHTML = getScreenHTML(screenName);
+            annotateComponents(screenName);
+
+            // Initialize Lucide icons for dynamic content
+            lucide.createIcons();
+
+            // Attach event listeners for the current screen
+            attachScreenListeners(screenName);
+        }
+
+        function goBack(fallbackScreen = 'home') {
+            const previousScreen = navigationHistory.pop() || fallbackScreen;
+            showInteractiveScreen(previousScreen, false);
+        }
+
+        function getScreenHTML(screenName) {
+            const screens = {
+                splash: `
+                    <div class="splash-screen">
+                        <img src="resource/Splash_gradient.svg" alt="NavTag" class="splash-logo">
+                        <p class="text-body" style="margin-bottom: 40px;">More than finding, unveil the journey</p>
+                        <div class="loading-spinner"></div>
+                    </div>
+                `,
+                login: `
+                    <div style="padding: 60px 28px;">
+                        <h1 class="title-primary" style="margin-bottom: 12px;">WELCOME</h1>
+                        <p class="text-body" style="margin-bottom: 48px;">Sign in to your account</p>
+
+                        <div style="margin-bottom: 24px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Email Address</label>
+                            <input type="email" class="input-field" placeholder="your.email@example.com" id="demo-login-email">
+                        </div>
+
+                        <div style="margin-bottom: 32px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Verification Code</label>
+                            <div style="display: flex; gap: 12px;">
+                                <input type="text" class="input-field" placeholder="Enter code" id="demo-login-code" style="flex: 1;">
+                                <button class="btn-secondary" style="width: 120px; font-size: 14px;" id="demo-send-code">
+                                    Send Code
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary btn-breathing" id="demo-login-btn">
+                            Sign In
+                        </button>
+
+                        <div style="margin-top: 24px; text-align: center;">
+                            <span class="link-text" id="demo-switch-password">Switch to Password Login</span>
+                        </div>
+
+                        <div style="margin-top: 20px; text-align: center;">
+                            <span class="text-body" style="font-size: 14px;">Don't have an account? </span>
+                            <span class="link-text" id="demo-goto-register">Register</span>
+                        </div>
+                    </div>
+                `,
+                'login-password': `
+                    <div style="padding: 60px 28px;">
+                        <h1 class="title-primary" style="margin-bottom: 12px;">WELCOME</h1>
+                        <p class="text-body" style="margin-bottom: 48px;">Sign in with password</p>
+
+                        <div style="margin-bottom: 24px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Email / Username</label>
+                            <input type="text" class="input-field" placeholder="your.email@example.com">
+                        </div>
+
+                        <div style="margin-bottom: 32px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Password</label>
+                            <input type="password" class="input-field" placeholder="Enter password">
+                        </div>
+
+                        <div style="margin-bottom: 24px; text-align: right;">
+                            <span class="link-text" style="font-size: 13px;" id="demo-forgot-password">Forgot Password?</span>
+                        </div>
+
+                        <button class="btn-primary btn-breathing" id="demo-login-password-btn">
+                            Sign In
+                        </button>
+
+                        <div style="margin-top: 24px; text-align: center;">
+                            <span class="link-text" id="demo-switch-code">Switch to Verification Code Login</span>
+                        </div>
+
+                        <div style="margin-top: 20px; text-align: center;">
+                            <span class="text-body" style="font-size: 14px;">Don't have an account? </span>
+                            <span class="link-text" id="demo-goto-register2">Register</span>
+                        </div>
+                    </div>
+                `,
+                'forgot-password': `
+                    <div style="padding: 28px;">
+                        <button class="icon-btn back-btn" id="demo-forgot-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <div style="margin-top: 60px; margin-bottom: 48px;">
+                            <h1 class="title-primary" style="margin-bottom: 12px;">RESET PASSWORD</h1>
+                            <p class="text-body">Enter your email to receive verification code</p>
+                        </div>
+
+                        <div style="margin-bottom: 32px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Email Address</label>
+                            <input type="email" class="input-field" placeholder="your.email@example.com" id="demo-forgot-email">
+                        </div>
+
+                        <button class="btn-primary btn-breathing" id="demo-forgot-send" style="font-size: 14px; letter-spacing: 1px;">
+                            Send Verification Code
+                        </button>
+                    </div>
+                `,
+                'forgot-password-verify': `
+                    <div style="padding: 28px;">
+                        <button class="icon-btn back-btn" id="demo-forgot-verify-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <div style="margin-top: 60px; margin-bottom: 36px;">
+                            <h1 class="title-primary" style="margin-bottom: 12px; font-size: 28px;">VERIFY & RESET</h1>
+                            <p class="text-body">Check your email for the verification code</p>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Verification Code</label>
+                            <div style="display: flex; gap: 12px;">
+                                <input type="text" class="input-field" placeholder="Enter code" id="demo-forgot-code" style="flex: 1;">
+                                <button class="btn-secondary" style="width: 120px; font-size: 14px;" id="demo-forgot-resend">
+                                    Resend
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">New Password</label>
+                            <input type="password" class="input-field" placeholder="Enter new password" id="demo-forgot-new-pwd">
+                        </div>
+
+                        <div style="margin-bottom: 32px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Confirm New Password</label>
+                            <input type="password" class="input-field" placeholder="Re-enter new password" id="demo-forgot-confirm-pwd">
+                        </div>
+
+                        <button class="btn-primary btn-breathing" id="demo-forgot-reset">
+                            Reset Password
+                        </button>
+                    </div>
+                `,
+                'forgot-password-success': `
+                    <div style="padding: 80px 28px; text-align: center;">
+                        <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(58, 139, 255, 0.2); border: 2px solid #3A8BFF; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                            <i data-lucide="check" style="font-size: 36px; color: #3A8BFF;"></i>
+                        </div>
+
+                        <h1 class="title-primary" style="margin-bottom: 16px;">PASSWORD RESET</h1>
+                        <p class="text-body" style="margin-bottom: 48px; font-size: 15px;">
+                            Your password has been successfully reset.<br>
+                            You can now sign in with your new password.
+                        </p>
+
+                        <button class="btn-primary btn-breathing" id="demo-goto-login">
+                            Sign In Now
+                        </button>
+                    </div>
+                `,
+                register: `
+                    <div style="padding: 40px 28px;">
+                        <h1 class="title-primary" style="margin-bottom: 12px; font-size: 28px;">CREATE ACCOUNT</h1>
+                        <p class="text-body" style="margin-bottom: 36px;">Join NavTag today</p>
+
+                        <div style="margin-bottom: 20px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Email Address</label>
+                            <input type="email" class="input-field" placeholder="your.email@example.com" id="demo-register-email">
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Verification Code</label>
+                            <div style="display: flex; gap: 12px;">
+                                <input type="text" class="input-field" placeholder="Enter code" id="demo-register-code" style="flex: 1;">
+                                <button class="btn-secondary" style="width: 120px; font-size: 14px;" id="demo-register-send-code">
+                                    Send Code
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Password</label>
+                            <input type="password" class="input-field" placeholder="Create a strong password" id="demo-register-pwd">
+                        </div>
+
+                        <div style="margin-bottom: 28px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Confirm Password</label>
+                            <input type="password" class="input-field" placeholder="Re-enter password" id="demo-register-confirm-pwd">
+                        </div>
+
+                        <button class="btn-primary btn-breathing" id="demo-register-btn">
+                            Create Account
+                        </button>
+
+                        <div style="margin-top: 20px; text-align: center;">
+                            <span class="text-body" style="font-size: 14px;">Already have an account? </span>
+                            <span class="link-text" id="demo-back-login3">Sign In</span>
+                        </div>
+                    </div>
+                `,
+                bluetooth: `
+                    <div style="padding: 28px; height: 100%; display: flex; flex-direction: column;">
+                        <button class="icon-btn back-btn" id="demo-back-home">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; margin-top: 70px;">
+                            <div>
+                                <h2 class="title-secondary" style="margin-bottom: 8px;">Add Device</h2>
+                                <p class="text-body" style="font-size: 13px;">Scanning for nearby tags...</p>
+                            </div>
+                            <button class="icon-btn" id="demo-qr-scan">
+                                <i data-lucide="qr-code"></i>
+                            </button>
+                        </div>
+
+                        <div style="display: flex; justify-content: center; margin: 24px 0;">
+                            <div class="scan-pulse">
+                                <div style="width: 80px; height: 80px; background: rgba(58, 139, 255, 0.2); border: 2px solid #3A8BFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                    <i data-lucide="bluetooth" style="font-size: 36px; color: #3A8BFF;"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 24px; flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                            <h3 class="text-body" style="font-weight: 600; color: #FFFFFF; margin-bottom: 12px; font-size: 14px; display: flex; align-items: center;">
+                                <i data-lucide="bluetooth-searching" style="margin-right: 8px; color: #3A8BFF;"></i>
+                                DEVICES FOUND (3)
+                            </h3>
+
+                            <!-- Scrollable device list -->
+                            <div style="flex: 1; overflow-y: auto; margin: 0 -28px; padding: 0 28px;">
+                                <div class="device-item" data-device="1">
+                                    <div class="device-icon">
+                                        <i data-lucide="tag"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="color: #FFFFFF; font-weight: 600;">ATag-8F42</div>
+                                    </div>
+                                </div>
+
+                                <div class="device-item" data-device="2">
+                                    <div class="device-icon">
+                                        <i data-lucide="tag"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="color: #FFFFFF; font-weight: 600;">ATag-3A91</div>
+                                    </div>
+                                </div>
+
+                                <div class="device-item" data-device="3">
+                                    <div class="device-icon">
+                                        <i data-lucide="tag"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="color: #FFFFFF; font-weight: 600;">ATag-D7C2</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fixed info text at bottom -->
+                        <div style="margin-top: 20px; padding-top: 20px;">
+                            <p class="text-body" style="font-size: 13px; text-align: center; display: flex; align-items: center; justify-content: center;">
+                                <i data-lucide="info" style="margin-right: 6px; color: #3A8BFF; flex-shrink: 0;"></i>
+                                <span>Make sure your tag is powered on and nearby</span>
+                            </p>
+                        </div>
+                    </div>
+                `,
+                home: `
+                    <div style="position: relative; height: 100%; overflow: hidden;">
+                        <!-- User Center Avatar Button -->
+                        <button class="avatar-btn" id="demo-avatar-btn">
+                            <img src="resource/avatar/北极燕鸥.jpg" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        </button>
+
+                        <!-- User Center Drawer Overlay -->
+                        <div class="user-drawer-overlay" id="demo-user-drawer-overlay"></div>
+
+                        <!-- User Center Drawer -->
+                        <div class="user-drawer" id="demo-user-drawer">
+                            <div class="user-drawer-header">
+                                <div class="user-drawer-avatar">
+                                    <img src="resource/avatar/北极燕鸥.jpg" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                                    <div class="user-drawer-name">Not Set</div>
+                                    <button class="icon-btn" id="demo-edit-profile" style="width: 32px; height: 32px; font-size: 14px;">
+                                        <i data-lucide="pencil"></i>
+                                    </button>
+                                </div>
+                                <div class="user-drawer-uid">UID: 10240056</div>
+                            </div>
+                            <div class="user-drawer-menu">
+                                <div class="user-menu-item" data-menu="language">
+                                    <i data-lucide="globe"></i>
+                                    <span>Language</span>
+                                </div>
+                                <div class="user-menu-item" data-menu="reset-password">
+                                    <i data-lucide="key"></i>
+                                    <span>Reset Password</span>
+                                </div>
+                                <div class="user-menu-item disabled" data-menu="help">
+                                    <i data-lucide="help-circle"></i>
+                                    <span>Help & Feedback</span>
+                                </div>
+                                <div class="user-menu-item" data-menu="about">
+                                    <i data-lucide="info"></i>
+                                    <span>About</span>
+                                </div>
+                                <div class="user-menu-item logout" data-menu="logout">
+                                    <i data-lucide="log-out"></i>
+                                    <span>Logout</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tag Loss Warning Banner -->
+                        <div class="banner-notification" id="demo-tag-loss-banner">
+                            <i data-lucide="alert-triangle" class="banner-notification-icon"></i>
+                            <div class="banner-notification-content">
+                                <div class="banner-notification-title">部分Tag可能已遗失</div>
+                                <div class="banner-notification-body">
+                                    侦测到这些标签不在您身旁，请在 App 中检查是否遗失。
+                                </div>
+                            </div>
+                            <button class="banner-notification-close" id="demo-banner-close">
+                                <i data-lucide="x"></i>
+                            </button>
+                        </div>
+
+                        <!-- Map Section -->
+                        <div class="map-container" style="height: 563px; position: relative;">
+                            <div id="demo-map" style="width: 100%; height: 100%;"></div>
+
+                            <!-- Map Controls -->
+                            <div class="map-controls">
+                                <button class="control-btn" id="demo-zoom-in">
+                                    <i data-lucide="plus"></i>
+                                </button>
+                                <button class="control-btn" id="demo-zoom-out">
+                                    <i data-lucide="minus"></i>
+                                </button>
+                                <button class="control-btn" id="demo-center">
+                                    <i data-lucide="crosshair"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tag List Drawer -->
+                        <div class="drawer" style="height: 281px;" id="demo-drawer">
+                            <div class="drawer-handle" id="demo-drawer-handle"></div>
+
+                            <div style="padding: 0 20px 20px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                    <h3 class="text-body" style="font-weight: 600; color: #FFFFFF; font-size: 16px;">
+                                        MY TAGS (3)
+                                    </h3>
+                                    <div style="display: flex; gap: 12px;">
+                                        <button class="icon-btn" style="width: 36px; height: 36px;" id="demo-refresh">
+                                            <i data-lucide="rotate-cw"></i>
+                                        </button>
+                                        <button class="icon-btn" style="width: 36px; height: 36px;" id="demo-add-device">
+                                            <i data-lucide="plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="demo-tag-list">
+                                    ${mockTags.map(tag => `
+                                        <div class="tag-item-wrapper" data-tag-id="${tag.id}">
+                                            <div class="tag-item-actions">
+                                                <button class="action-btn" data-action="info">
+                                                    <i data-lucide="info"></i>
+                                                </button>
+                                            </div>
+                                            <div class="tag-item-content" style="padding: 16px;">
+                                                <div class="tag-click-zone"></div>
+                                                <div class="tag-swipe-zone"></div>
+                                                <div style="display: flex; align-items: center; gap: 12px; position: relative;">
+                                                    <div style="font-size: 28px;">${tag.icon}</div>
+                                                    <div style="flex: 1;">
+                                                        <div style="color: #FFFFFF; font-weight: 600; margin-bottom: 4px;">${tag.name}</div>
+                                                        <div class="text-body" style="font-size: 12px;">${tag.address}</div>
+                                                        <div class="text-body" style="font-size: 11px; margin-top: 2px;">Updated ${tag.lastUpdate}</div>
+                                                    </div>
+                                                    <div style="text-align: right;">
+                                                        <div style="color: #3A8BFF; font-weight: 600; font-size: 14px;">${tag.distance}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                `,
+                'qr-scanner': `
+                    <div class="qr-scanner">
+                        <button class="icon-btn back-btn" id="demo-qr-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <div style="text-align: center;">
+                            <div class="scanner-frame">
+                                <div class="scanner-corner top-left"></div>
+                                <div class="scanner-corner top-right"></div>
+                                <div class="scanner-corner bottom-left"></div>
+                                <div class="scanner-corner bottom-right"></div>
+                                <div class="scanner-line"></div>
+                            </div>
+                            <p class="text-body" style="margin-top: 32px; font-size: 15px;">
+                                Align QR code within frame
+                            </p>
+                        </div>
+                    </div>
+                `,
+                profile: `
+                    <div style="padding: 28px;">
+                        <button class="icon-btn back-btn" id="demo-profile-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <div style="margin-top: 60px; margin-bottom: 32px;">
+                            <h2 class="title-secondary" style="margin-bottom: 8px;">Profile</h2>
+                            <p class="text-body" style="font-size: 13px;">Edit your personal information</p>
+                        </div>
+
+                        <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                            <div class="text-body" style="font-size: 14px; color: #8B94A4;">
+                                UID: 10240056
+                            </div>
+                            <button class="icon-btn" id="demo-copy-uid" style="width: 32px; height: 32px; font-size: 14px;">
+                                <i data-lucide="copy"></i>
+                            </button>
+                        </div>
+
+                        <div style="margin-bottom: 24px;">
+                            <label class="text-body" style="display: block; margin-bottom: 12px; font-size: 13px;">Select Avatar</label>
+                            <div class="icon-grid">
+                                ${['北极燕鸥.jpg', '蝙蝠.jpg', '菊花.jpg', '蜜蜂.jpg', '蒲公英.jpg', '椰子.jpg', '榛果.jpg', '榛子.jpg'].map((imgFile, i) => `
+                                    <div class="icon-option ${i === 0 ? 'selected' : ''}" data-avatar="${imgFile}">
+                                        <img src="resource/avatar/${imgFile}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 32px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Nickname</label>
+                            <input type="text" class="input-field" placeholder="Enter your nickname" id="demo-profile-nickname" value="Not Set">
+                        </div>
+
+                        <button class="btn-primary" id="demo-profile-save">
+                            <i data-lucide="save" style="margin-right: 8px;"></i>
+                            Save Changes
+                        </button>
+                    </div>
+                `,
+                language: `
+                    <div style="padding: 28px;">
+                        <button class="icon-btn back-btn" id="demo-language-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <div style="margin-top: 60px; margin-bottom: 24px;">
+                            <h2 class="title-secondary" style="margin-bottom: 8px;">Language</h2>
+                            <p class="text-body" style="font-size: 13px;">Choose your preferred language</p>
+                        </div>
+
+                        <div class="language-list" style="height: 600px; overflow-y: auto;">
+                            ${[
+                                { code: 'zh-CN', name: '简体中文', selected: true },
+                                { code: 'zh-TW', name: '繁體中文', selected: false },
+                                { code: 'en', name: 'English', selected: false },
+                                { code: 'ja', name: '日本語', selected: false },
+                                { code: 'ko', name: '한국어', selected: false },
+                                { code: 'fr', name: 'Français', selected: false },
+                                { code: 'de', name: 'Deutsch', selected: false },
+                                { code: 'it', name: 'Italiano', selected: false }
+                            ].map(lang => `
+                                <div class="language-item ${lang.selected ? 'selected' : ''}" data-lang="${lang.code}">
+                                    <span class="language-item-name">${lang.name}</span>
+                                    <i data-lucide="check" class="language-item-check"></i>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `,
+                about: `
+                    <div style="padding: 28px;">
+                        <button class="icon-btn back-btn" id="demo-about-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <div style="margin-top: 80px; text-align: center;">
+                            <div class="about-icon">
+                                <img src="resource/Splash_gradient.svg" alt="NavTag" style="width: 80px; height: 80px;">
+                            </div>
+
+                            <h2 class="title-secondary" style="margin-bottom: 24px; font-size: 24px;">NAVTAG</h2>
+
+                            <div class="version-info" style="margin-bottom: 32px;">
+                                <div class="version-label">Version</div>
+                                <div class="version-value">v1.0.0 (100)</div>
+                            </div>
+
+                            <button class="btn-primary" id="demo-check-update" style="max-width: 120px; margin: 0 auto 32px; padding: 12px 16px; font-size: 13px; white-space: nowrap;">
+                                <i data-lucide="cloud-download" style="margin-right: 6px; font-size: 12px;"></i>
+                                Check Update
+                            </button>
+
+                            <div class="about-links">
+                                <a href="#" class="about-link">User Policy</a>
+                                <a href="#" class="about-link">Privacy Agreement</a>
+                            </div>
+
+                            <div style="text-align: center; margin-top: 8px; margin-bottom: 32px;">
+                                <a href="#" class="about-link" id="demo-delete-account-link" style="display: inline-flex; align-items: center; gap: 6px;">
+                                    <i data-lucide="user-x" style="width: 14px; height: 14px;"></i>
+                                    Delete Account
+                                </a>
+                            </div>
+
+                            <div class="copyright-text">
+                                Copyright © 2025 NavTag Co., Ltd. All Rights Reserved
+                            </div>
+                        </div>
+                    </div>
+                `,
+                'account-deletion': `
+                    <div style="padding: 28px;">
+                        <button class="icon-btn back-btn" id="demo-account-deletion-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <div style="margin-top: 60px;">
+                            <h2 class="title-secondary" style="margin-bottom: 32px; font-size: 22px; text-align: center;">Delete Account</h2>
+
+                            <!-- Letter to User -->
+                            <div class="deletion-letter">
+                                <p class="text-body">
+                                    Dear User,
+                                </p>
+                                <p class="text-body">
+                                    Thank you for your continued support. We understand that account cancellation is an important decision. To protect your rights, please review the following before proceeding:
+                                </p>
+                                <p class="text-body">
+                                    •Data deletion: Once you log out, all personal data (such as profile, history, etc.) stored on your device and cloud will be permanently deleted and cannot be recovered. Please back up important information in advance.
+                                </p>
+                                <p class="text-body">
+                                    • Rights processing: Existing membership or value-added services will be terminated upon account cancellation. Unused benefits (such as membership duration and points) will be automatically voided, and refunds are not available. We recommend using them before cancellation.
+                                </p>
+                                <p class="text-body">
+                                    •Account Closure: This cancellation completes all rights and obligations during your account usage.
+                                </p>
+                                <p class="text-body">
+                                    If you have any questions about data deletion, privacy policies, or user agreements, we are here to help. You can contact us via email at service@iweiyin.com. Thank you for choosing us. We wish you all the best!
+                                </p>
+                                <p class="text-body" style="margin-top: 20px;">
+                                    Sincerely,<br>
+                                    The NavTag Team
+                                </p>
+                            </div>
+
+                            <!-- Checkbox -->
+                            <div class="deletion-checkbox" id="demo-deletion-checkbox">
+                                <i data-lucide="square" class="checkbox-icon" id="demo-checkbox-icon"></i>
+                                <span class="text-body" style="font-size: 14px;">I have read and understood the above terms</span>
+                            </div>
+
+                            <!-- Delete Button -->
+                            <button class="btn-secondary" id="demo-delete-account-btn" style="width: 100%; margin-top: 24px; border-color: #FF4D4F; color: #FF4D4F;" disabled>删除账号</button>
+                        </div>
+                    </div>
+                `,
+                'account-deletion-verify': `
+                    <div style="padding: 28px;">
+                        <button class="icon-btn back-btn" id="demo-account-deletion-verify-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <div style="margin-top: 60px; margin-bottom: 48px;">
+                            <h1 class="title-primary" style="margin-bottom: 12px;">VERIFY EMAIL</h1>
+                            <p class="text-body">Enter the verification code sent to your email</p>
+                        </div>
+
+                        <div style="margin-bottom: 32px;">
+                            <label class="text-body" style="display: block; margin-bottom: 8px; font-size: 13px;">Verification Code</label>
+                            <div style="display: flex; gap: 12px;">
+                                <input type="text" class="input-field" placeholder="Enter 6-digit code" id="demo-deletion-verify-code" style="flex: 1;" maxlength="6">
+                                <button class="btn-secondary" style="width: 120px; font-size: 14px;" id="demo-deletion-resend-code">
+                                    Resend
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary" id="demo-deletion-verify-btn" style="border-color: #FF4D4F; background: linear-gradient(135deg, #FF4D4F 0%, #DC2626 100%); box-shadow: 0 0 20px rgba(255, 77, 79, 0.4), 0 8px 16px rgba(0, 0, 0, 0.4);">
+                            DELETE ACCOUNT
+                        </button>
+
+                        <div style="margin-top: 24px; text-align: center;">
+                            <span class="text-body" style="font-size: 13px;">Didn't receive code? </span>
+                            <span class="link-text" id="demo-deletion-resend-link">Resend</span>
+                        </div>
+                    </div>
+                `,
+                'lost-mode-settings': `
+                    <div style="padding: 28px;">
+                        <button class="icon-btn back-btn" id="demo-lost-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <div style="margin-top: 60px; margin-bottom: 32px;">
+                            <h1 class="title-primary">LOST MODE</h1>
+                        </div>
+
+                        <!-- 1. Lost Notification Toggle -->
+                        <div class="setting-row">
+                            <div class="setting-row-header">
+                                <div>
+                                    <div class="setting-label">Lost Notification</div>
+                                    <div class="setting-desc">Alert when tag leaves trusted locations</div>
+                                </div>
+                                <div class="toggle-switch" id="demo-lost-toggle">
+                                    <div class="toggle-slider"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Reminder Interval (disabled by default) -->
+                        <div class="setting-row" id="demo-interval-section" style="opacity: 0.5; pointer-events: none;">
+                            <div class="setting-label">Reminder Interval</div>
+                            <div class="segment-control" style="width: 100%;">
+                                <button class="segment-option selected" data-interval="5">5 min</button>
+                                <button class="segment-option" data-interval="10">10 min</button>
+                                <button class="segment-option" data-interval="30">30 min</button>
+                            </div>
+                        </div>
+
+                        <!-- 3. Trusted Locations -->
+                        <div id="demo-trusted-locations-section" style="opacity: 0.5; pointer-events: none;">
+                            <div class="setting-label" style="margin-top: 32px; margin-bottom: 16px;">
+                                Trusted Locations
+                            </div>
+
+                            <!-- Empty State (show when no locations) -->
+                            <div class="empty-state" id="demo-trusted-empty">
+                                <i data-lucide="map-pinned" class="empty-icon"></i>
+                                <div class="text-body" style="margin-bottom: 8px;">No trusted locations yet</div>
+                                <div class="text-body" style="font-size: 12px; color: #8B94A4;">
+                                    Add locations where you don't want to be alerted
+                                </div>
+                            </div>
+
+                            <!-- Location List (show when locations exist) -->
+                            <div id="demo-trusted-list" style="display: none;"></div>
+
+                            <!-- Add Location Button -->
+                            <button class="btn-secondary" id="demo-add-location" style="margin-top: 16px;" disabled>
+                                <i data-lucide="plus" style="margin-right: 8px;"></i>
+                                Add Trusted Location
+                            </button>
+                        </div>
+                    </div>
+                `,
+                'add-trusted-location': `
+                    <div style="position: relative; height: 100%; overflow: hidden;">
+                        <!-- Header Bar -->
+                        <div style="position: absolute; top: 0; left: 0; right: 0; height: 80px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid rgba(58, 139, 255, 0.2);">
+                            <button class="icon-btn" id="demo-add-location-back">
+                                <i data-lucide="arrow-left"></i>
+                            </button>
+                            <h3 class="title-secondary" style="font-size: 18px;">Add Trusted Location</h3>
+                            <button class="icon-btn" id="demo-add-location-save">
+                                <i data-lucide="check"></i>
+                            </button>
+                        </div>
+
+                        <!-- Address Display Bar -->
+                        <div style="position: absolute; top: 80px; left: 0; right: 0; height: 60px; background: rgba(26, 31, 43, 0.9); backdrop-filter: blur(10px); z-index: 900; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(58, 139, 255, 0.2);">
+                            <i data-lucide="map-pin" style="color: #3A8BFF; margin-right: 12px; width: 20px; height: 20px;"></i>
+                            <div style="flex: 1;">
+                                <div class="text-body" style="font-size: 13px; color: #8B94A4;">Selected Location</div>
+                                <div class="text-body" style="font-size: 14px; color: #FFFFFF;" id="demo-selected-address">
+                                    Tap on map to select location
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Full Map -->
+                        <div id="demo-trusted-location-map" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"></div>
+
+                        <!-- Bottom Control Panel -->
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); z-index: 1000; padding: 20px; border-top: 1px solid rgba(58, 139, 255, 0.2);">
+                            <!-- Fence Type Selector -->
+                            <div class="segment-control" style="margin-bottom: 16px;">
+                                <button class="segment-option selected" id="demo-fence-circle" data-type="circle">
+                                    <i data-lucide="circle" style="margin-right: 6px; width: 14px; height: 14px;"></i>
+                                    Circle
+                                </button>
+                                <button class="segment-option" id="demo-fence-polygon" data-type="polygon">
+                                    <i data-lucide="pentagon" style="margin-right: 6px; width: 14px; height: 14px;"></i>
+                                    Polygon
+                                </button>
+                            </div>
+
+                            <!-- Circle Radius Slider (visible by default) -->
+                            <div id="demo-radius-control" style="display: block;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span class="text-body" style="font-size: 13px;">Radius</span>
+                                    <span class="text-body" style="font-size: 14px; color: #3A8BFF; font-weight: 600;" id="demo-radius-value">500m</span>
+                                </div>
+                                <input type="range" id="demo-radius-slider" min="100" max="1000" value="500" step="50"
+                                       style="width: 100%; height: 6px; background: rgba(58, 139, 255, 0.3); border-radius: 3px; outline: none; -webkit-appearance: none;">
+                            </div>
+
+                            <!-- Polygon Instructions (hidden by default) -->
+                            <div id="demo-polygon-instructions" style="display: none;">
+                                <div class="text-body" style="font-size: 13px; color: #8B94A4; text-align: center; margin-bottom: 8px;">
+                                    Tap on map to add points (minimum 3)
+                                </div>
+                                <button class="btn-secondary" id="demo-clear-polygon" style="width: 100%;" disabled>
+                                    <i data-lucide="trash-2" style="margin-right: 8px;"></i>
+                                    Clear Points
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `
+            };
+            const inner = screens[screenName] || screens.splash;
+            return `<div data-page="${screenName}" class="page-${screenName}" style="height:100%; width:100%;">${inner}</div>`;
+        }
+
+        function annotateComponents(screenName) {
+            const root = document.querySelector(`.page-${screenName}`);
+            if (!root) return;
+            root.querySelectorAll('.device-item').forEach(el => el.setAttribute('data-component', 'comp-device-item'));
+            root.querySelectorAll('.device-icon').forEach(el => el.setAttribute('data-component', 'comp-device-icon'));
+            root.querySelectorAll('.user-drawer').forEach(el => el.setAttribute('data-component', 'comp-user-drawer'));
+            root.querySelectorAll('.user-menu-item').forEach(el => el.setAttribute('data-component', 'comp-user-menu-item'));
+            root.querySelectorAll('.map-container').forEach(el => el.setAttribute('data-component', 'group-map-container'));
+            root.querySelectorAll('.map-controls').forEach(el => el.setAttribute('data-component', 'group-map-controls'));
+            root.querySelectorAll('.drawer').forEach(el => el.setAttribute('data-component', 'comp-drawer'));
+            root.querySelectorAll('.tag-item-wrapper').forEach(el => el.setAttribute('data-component', 'comp-tag-item'));
+            root.querySelectorAll('.tag-item-content').forEach(el => el.setAttribute('data-component', 'comp-tag-content'));
+            root.querySelectorAll('.btn-primary, .btn-secondary, .icon-btn, .control-btn, .action-btn').forEach(el => el.setAttribute('data-type', 'button'));
+            root.querySelectorAll('.input-field').forEach(el => el.setAttribute('data-type', 'input'));
+            root.querySelectorAll('.about-link').forEach(el => el.setAttribute('data-component', 'link'));
+            document.getElementById('interactive-toast')?.setAttribute('data-type', 'toast');
+        }
+
+        // 60-second countdown timer
+        function startCountdown(buttonElement) {
+            let countdown = 60;
+            buttonElement.disabled = true;
+            buttonElement.style.opacity = '0.5';
+            buttonElement.style.cursor = 'not-allowed';
+
+            const originalText = buttonElement.textContent;
+
+            const timer = setInterval(() => {
+                countdown--;
+                buttonElement.textContent = `Resend (${countdown}s)`;
+
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    buttonElement.disabled = false;
+                    buttonElement.style.opacity = '1';
+                    buttonElement.style.cursor = 'pointer';
+                    buttonElement.textContent = originalText;
+                }
+            }, 1000);
+        }
+
+        function attachScreenListeners(screenName) {
+            switch (screenName) {
+                case 'login':
+                    const sendCodeBtn = document.getElementById('demo-send-code');
+                    sendCodeBtn?.addEventListener('click', () => {
+                        showInteractiveToast('Verification code sent to your email');
+                        startCountdown(sendCodeBtn);
+                    });
+                    document.getElementById('demo-login-btn')?.addEventListener('click', () => {
+                        showInteractiveToast('Logging in...');
+                        setTimeout(() => showInteractiveScreen('bluetooth'), 1500);
+                    });
+                    document.getElementById('demo-switch-password')?.addEventListener('click', () => {
+                        showInteractiveScreen('login-password');
+                    });
+                    document.getElementById('demo-goto-register')?.addEventListener('click', () => {
+                        showInteractiveScreen('register');
+                    });
+                    break;
+
+                case 'login-password':
+                    document.getElementById('demo-login-password-btn')?.addEventListener('click', () => {
+                        showInteractiveToast('Logging in...');
+                        setTimeout(() => showInteractiveScreen('bluetooth'), 1500);
+                    });
+                    document.getElementById('demo-switch-code')?.addEventListener('click', () => {
+                        showInteractiveScreen('login');
+                    });
+                    document.getElementById('demo-forgot-password')?.addEventListener('click', () => {
+                        showInteractiveScreen('forgot-password');
+                    });
+                    document.getElementById('demo-goto-register2')?.addEventListener('click', () => {
+                        showInteractiveScreen('register');
+                    });
+                    break;
+
+                case 'register':
+                    const registerSendBtn = document.getElementById('demo-register-send-code');
+                    registerSendBtn?.addEventListener('click', () => {
+                        showInteractiveToast('Verification code sent to your email');
+                        startCountdown(registerSendBtn);
+                    });
+                    document.getElementById('demo-register-btn')?.addEventListener('click', () => {
+                        const code = document.getElementById('demo-register-code')?.value;
+                        if (code && code !== '123456') {
+                            showInteractiveToast('❌ Incorrect verification code', 'error');
+                        } else {
+                            showInteractiveToast('Account created successfully! Logging in...');
+                            setTimeout(() => showInteractiveScreen('bluetooth'), 1500);
+                        }
+                    });
+                    document.getElementById('demo-back-login3')?.addEventListener('click', () => {
+                        showInteractiveScreen('login');
+                    });
+                    break;
+
+                case 'forgot-password':
+                    document.getElementById('demo-forgot-send')?.addEventListener('click', () => {
+                        const email = document.getElementById('demo-forgot-email')?.value;
+                        if (email && email.includes('@')) {
+                            showInteractiveToast('Verification code sent to your email');
+                            setTimeout(() => showInteractiveScreen('forgot-password-verify'), 1000);
+                        } else {
+                            showInteractiveToast('❌ Please enter a valid email address', 'error');
+                        }
+                    });
+                    document.getElementById('demo-forgot-back')?.addEventListener('click', () => {
+                        goBack('login-password');
+                    });
+                    break;
+
+                case 'forgot-password-verify':
+                    const forgotResendBtn = document.getElementById('demo-forgot-resend');
+                    forgotResendBtn?.addEventListener('click', () => {
+                        showInteractiveToast('Verification code resent');
+                        startCountdown(forgotResendBtn);
+                    });
+                    document.getElementById('demo-forgot-reset')?.addEventListener('click', () => {
+                        const code = document.getElementById('demo-forgot-code')?.value;
+                        const newPwd = document.getElementById('demo-forgot-new-pwd')?.value;
+                        const confirmPwd = document.getElementById('demo-forgot-confirm-pwd')?.value;
+
+                        if (!code) {
+                            showInteractiveToast('❌ Please enter verification code', 'error');
+                        } else if (code !== '123456') {
+                            showInteractiveToast('❌ Incorrect verification code', 'error');
+                        } else if (!newPwd || newPwd.length < 6) {
+                            showInteractiveToast('❌ Password must be at least 6 characters', 'error');
+                        } else if (newPwd !== confirmPwd) {
+                            showInteractiveToast('❌ Passwords do not match', 'error');
+                        } else {
+                            showInteractiveToast('Password reset successful!');
+                            setTimeout(() => {
+                                // Check if user came from home (user center) or login flow
+                                const previousPage = navigationHistory[0];
+                                if (previousPage === 'home') {
+                                    returnToDrawerOpen();
+                                } else {
+                                    showInteractiveScreen('login-password', false);
+                                }
+                                navigationHistory = [];  // Clear history after navigation
+                            }, 1000);
+                        }
+                    });
+                    document.getElementById('demo-forgot-verify-back')?.addEventListener('click', () => {
+                        showInteractiveScreen('forgot-password', false);
+                    });
+                    break;
+
+                case 'forgot-password-success':
+                    document.getElementById('demo-goto-login')?.addEventListener('click', () => {
+                        showInteractiveScreen('login');
+                    });
+                    break;
+
+                case 'bluetooth':
+                    document.getElementById('demo-back-home')?.addEventListener('click', () => {
+                        showInteractiveScreen('home');
+                    });
+                    document.getElementById('demo-qr-scan')?.addEventListener('click', () => {
+                        showInteractiveScreen('qr-scanner');
+                    });
+                    document.querySelectorAll('.device-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            showInteractiveToast('Device connected! Redirecting to home...');
+                            setTimeout(() => showInteractiveScreen('home'), 1500);
+                        });
+                    });
+                    break;
+
+                case 'qr-scanner':
+                    document.getElementById('demo-qr-back')?.addEventListener('click', () => {
+                        showInteractiveScreen('bluetooth');
+                    });
+                    break;
+
+                case 'home':
+                    // Initialize interactive map
+                    setTimeout(() => {
+                        initInteractiveMap();
+                        attachHomeListeners();
+                        attachUserCenterListeners();
+                    }, 100);
+                    break;
+
+                case 'profile':
+                    document.getElementById('demo-profile-back')?.addEventListener('click', () => {
+                        returnToDrawerOpen();
+                    });
+
+                    // Avatar selection
+                    document.querySelectorAll('.icon-option').forEach(option => {
+                        option.addEventListener('click', () => {
+                            document.querySelectorAll('.icon-option').forEach(o => o.classList.remove('selected'));
+                            option.classList.add('selected');
+                        });
+                    });
+
+                    // UID copy button
+                    document.getElementById('demo-copy-uid')?.addEventListener('click', () => {
+                        navigator.clipboard.writeText('10240056').then(() => {
+                            showInteractiveToast('✅ UID copied to clipboard', 'success');
+                        }).catch(() => {
+                            showInteractiveToast('❌ Failed to copy UID', 'error');
+                        });
+                    });
+
+                    document.getElementById('demo-profile-save')?.addEventListener('click', () => {
+                        const nickname = document.getElementById('demo-profile-nickname')?.value || 'Not Set';
+                        const selectedAvatar = document.querySelector('.icon-option.selected')?.dataset.avatar || '北极燕鸥.jpg';
+                        showInteractiveToast('✅ Profile updated successfully!', 'success');
+                        // Store for home screen update
+                        window.userProfile = { nickname, avatar: selectedAvatar };
+                        setTimeout(() => returnToDrawerOpen(), 1500);
+                    });
+                    break;
+
+                case 'language':
+                    document.getElementById('demo-language-back')?.addEventListener('click', () => {
+                        returnToDrawerOpen();
+                    });
+
+                    document.querySelectorAll('.language-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            document.querySelectorAll('.language-item').forEach(i => i.classList.remove('selected'));
+                            item.classList.add('selected');
+                            const langName = item.querySelector('.language-item-name').textContent;
+                            showInteractiveToast(`Language set to ${langName}`, 'success');
+                        });
+                    });
+                    break;
+
+                case 'about':
+                    document.getElementById('demo-about-back')?.addEventListener('click', () => {
+                        returnToDrawerOpen();
+                    });
+
+                    document.getElementById('demo-check-update')?.addEventListener('click', () => {
+                        const hasUpdate = Math.random() > 0.5;
+                        if (hasUpdate) {
+                            showUpdateModal();
+                        } else {
+                            showInteractiveToast('You are using the latest version', 'success');
+                        }
+                    });
+
+                    document.getElementById('demo-delete-account-link')?.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        showInteractiveScreen('account-deletion');
+                    });
+                    break;
+
+                case 'account-deletion':
+                    let isCheckboxChecked = false;
+
+                    document.getElementById('demo-account-deletion-back')?.addEventListener('click', () => {
+                        goBack();
+                    });
+
+                    document.getElementById('demo-deletion-checkbox')?.addEventListener('click', () => {
+                        isCheckboxChecked = !isCheckboxChecked;
+                        const checkboxIcon = document.getElementById('demo-checkbox-icon');
+                        const deleteBtn = document.getElementById('demo-delete-account-btn');
+
+                        if (isCheckboxChecked) {
+                            checkboxIcon.setAttribute('data-lucide', 'check-square');
+                            deleteBtn.disabled = false;
+                            deleteBtn.style.opacity = '1';
+                            deleteBtn.style.cursor = 'pointer';
+                        } else {
+                            checkboxIcon.setAttribute('data-lucide', 'square');
+                            deleteBtn.disabled = true;
+                            deleteBtn.style.opacity = '0.5';
+                            deleteBtn.style.cursor = 'not-allowed';
+                        }
+
+                        lucide.createIcons();
+                    });
+
+                    document.getElementById('demo-delete-account-btn')?.addEventListener('click', () => {
+                        if (!isCheckboxChecked) return;
+
+                        // 发送验证码并跳转到验证页面
+                        showInteractiveToast('Verification code sent to your email', 'success');
+                        setTimeout(() => {
+                            showInteractiveScreen('account-deletion-verify');
+                        }, 1000);
+                    });
+                    break;
+
+                case 'account-deletion-verify':
+                    // 倒计时状态
+                    let resendCooldown = false;
+
+                    // Back button
+                    document.getElementById('demo-account-deletion-verify-back')?.addEventListener('click', () => {
+                        goBack('account-deletion');
+                    });
+
+                    // Verify button
+                    document.getElementById('demo-deletion-verify-btn')?.addEventListener('click', () => {
+                        const code = document.getElementById('demo-deletion-verify-code')?.value;
+
+                        if (!code) {
+                            showInteractiveToast('❌ Please enter verification code', 'error');
+                            return;
+                        }
+
+                        if (code.length !== 6) {
+                            showInteractiveToast('❌ Verification code must be 6 digits', 'error');
+                            return;
+                        }
+
+                        // 模拟验证码检查（实际应用中应该调用 API）
+                        if (code !== '123456') {
+                            showInteractiveToast('❌ Incorrect verification code', 'error');
+                            return;
+                        }
+
+                        // 验证成功，删除账户
+                        showInteractiveToast('Account deleted successfully. Logging out...', 'success');
+                        setTimeout(() => {
+                            navigationHistory = [];
+                            showInteractiveScreen('login', false);
+                        }, 2000);
+                    });
+
+                    // Resend button
+                    document.getElementById('demo-deletion-resend-code')?.addEventListener('click', () => {
+                        if (resendCooldown) return;
+
+                        showInteractiveToast('Verification code resent to your email', 'success');
+                        startCountdown(document.getElementById('demo-deletion-resend-code'));
+                        resendCooldown = true;
+                        setTimeout(() => { resendCooldown = false; }, 60000);
+                    });
+
+                    // Resend link
+                    document.getElementById('demo-deletion-resend-link')?.addEventListener('click', () => {
+                        if (resendCooldown) return;
+
+                        showInteractiveToast('Verification code resent to your email', 'success');
+                        startCountdown(document.getElementById('demo-deletion-resend-code'));
+                        resendCooldown = true;
+                        setTimeout(() => { resendCooldown = false; }, 60000);
+                    });
+                    break;
+
+                case 'lost-mode-settings':
+                    // Initialize or restore state from cache
+                    if (!window.lostModeSettings) {
+                        window.lostModeSettings = {
+                            notificationEnabled: false,
+                            reminderInterval: 5
+                        };
+                    }
+                    let lostNotificationEnabled = window.lostModeSettings.notificationEnabled;
+                    let reminderInterval = window.lostModeSettings.reminderInterval;
+                    let trustedLocations = window.trustedLocations || [];
+
+                    // Back button
+                    document.getElementById('demo-lost-back')?.addEventListener('click', () => {
+                        if (window.currentTag) {
+                            showTagDetailView(window.currentTag);
+                        } else {
+                            goBack('home');
+                        }
+                    });
+
+                    // Lost notification toggle
+                    const lostToggle = document.getElementById('demo-lost-toggle');
+                    const intervalSection = document.getElementById('demo-interval-section');
+                    const trustedSection = document.getElementById('demo-trusted-locations-section');
+                    const addLocationBtn = document.getElementById('demo-add-location');
+
+                    // Restore toggle state
+                    if (lostNotificationEnabled) {
+                        lostToggle.classList.add('active');
+                        intervalSection.style.opacity = '1';
+                        intervalSection.style.pointerEvents = 'auto';
+                        trustedSection.style.opacity = '1';
+                        trustedSection.style.pointerEvents = 'auto';
+                        addLocationBtn.disabled = false;
+                    }
+
+                    // Restore selected interval
+                    document.querySelectorAll('.segment-option').forEach(option => {
+                        if (parseInt(option.dataset.interval) === reminderInterval) {
+                            option.classList.add('selected');
+                        } else {
+                            option.classList.remove('selected');
+                        }
+                    });
+
+                    lostToggle?.addEventListener('click', () => {
+                        lostNotificationEnabled = !lostNotificationEnabled;
+                        lostToggle.classList.toggle('active');
+
+                        // Update cache
+                        window.lostModeSettings.notificationEnabled = lostNotificationEnabled;
+
+                        // Enable/disable dependent sections
+                        if (lostNotificationEnabled) {
+                            intervalSection.style.opacity = '1';
+                            intervalSection.style.pointerEvents = 'auto';
+                            trustedSection.style.opacity = '1';
+                            trustedSection.style.pointerEvents = 'auto';
+                            addLocationBtn.disabled = false;
+                            showInteractiveToast('✅ Lost notification enabled');
+                        } else {
+                            intervalSection.style.opacity = '0.5';
+                            intervalSection.style.pointerEvents = 'none';
+                            trustedSection.style.opacity = '0.5';
+                            trustedSection.style.pointerEvents = 'none';
+                            addLocationBtn.disabled = true;
+                            showInteractiveToast('Lost notification disabled');
+                        }
+                    });
+
+                    // Segment control for interval
+                    document.querySelectorAll('.segment-option').forEach(option => {
+                        option.addEventListener('click', () => {
+                            if (!lostNotificationEnabled) return;
+                            document.querySelectorAll('.segment-option').forEach(o => o.classList.remove('selected'));
+                            option.classList.add('selected');
+                            reminderInterval = parseInt(option.dataset.interval);
+
+                            // Update cache
+                            window.lostModeSettings.reminderInterval = reminderInterval;
+
+                            showInteractiveToast(`Reminder set to ${reminderInterval} minutes`);
+                        });
+                    });
+
+                    // Add location button
+                    addLocationBtn?.addEventListener('click', () => {
+                        if (!lostNotificationEnabled) return;
+                        showInteractiveScreen('add-trusted-location');
+                    });
+
+                    // Render existing locations
+                    function renderLocations() {
+                        const listContainer = document.getElementById('demo-trusted-list');
+                        const emptyState = document.getElementById('demo-trusted-empty');
+
+                        if (trustedLocations.length === 0) {
+                            emptyState.style.display = 'block';
+                            listContainer.style.display = 'none';
+                        } else {
+                            emptyState.style.display = 'none';
+                            listContainer.style.display = 'block';
+                            listContainer.innerHTML = trustedLocations.map((loc, index) => `
+                                <div class="location-item">
+                                    <div class="location-item-info">
+                                        <div class="location-item-name">${loc.address}</div>
+                                        <div class="location-item-detail">${loc.type === 'circle' ? `Circle • ${loc.radius}m radius` : `Polygon • ${loc.points.length} points`}</div>
+                                    </div>
+                                    <button class="location-item-delete" data-index="${index}">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                </div>
+                            `).join('');
+
+                            lucide.createIcons();
+
+                            // Delete handlers
+                            document.querySelectorAll('.location-item-delete').forEach(btn => {
+                                btn.addEventListener('click', () => {
+                                    const index = parseInt(btn.dataset.index);
+                                    trustedLocations.splice(index, 1);
+                                    window.trustedLocations = trustedLocations;
+                                    renderLocations();
+                                    showInteractiveToast('Location removed');
+                                });
+                            });
+                        }
+                    }
+
+                    renderLocations();
+                    break;
+
+                case 'add-trusted-location':
+                    let trustedLocationMap;
+                    let selectedCenter = null;
+                    let circleLayer = null;
+                    let polygonPoints = [];
+                    let polygonMarkers = [];
+                    let polygonLayer = null;
+                    let fenceType = 'circle';
+                    let radius = 500;
+                    let currentLocationAddress = '';
+
+                    setTimeout(() => {
+                        // Initialize map
+                        trustedLocationMap = L.map('demo-trusted-location-map', {
+                            center: [37.7749, -122.4194],
+                            zoom: 15,
+                            zoomControl: false
+                        });
+
+                        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                            attribution: '&copy; OpenStreetMap contributors',
+                            subdomains: 'abcd',
+                            maxZoom: 20
+                        }).addTo(trustedLocationMap);
+
+                        // Map click handler
+                        trustedLocationMap.on('click', (e) => {
+                            const latlng = e.latlng;
+
+                            if (fenceType === 'circle') {
+                                // Circle mode: update center
+                                selectedCenter = latlng;
+                                updateCircle();
+                                updateAddress(latlng);
+                            } else {
+                                // Polygon mode: add point
+                                addPolygonPoint(latlng);
+                                if (polygonPoints.length === 1) {
+                                    updateAddress(latlng);
+                                }
+                            }
+                        });
+
+                        function updateCircle() {
+                            if (circleLayer) {
+                                trustedLocationMap.removeLayer(circleLayer);
+                            }
+                            if (selectedCenter) {
+                                circleLayer = L.circle(selectedCenter, {
+                                    radius: radius,
+                                    color: '#3A8BFF',
+                                    fillColor: '#3A8BFF',
+                                    fillOpacity: 0.2,
+                                    weight: 2
+                                }).addTo(trustedLocationMap);
+                            }
+                        }
+
+                        function addPolygonPoint(latlng) {
+                            polygonPoints.push(latlng);
+
+                            // Add marker
+                            const marker = L.circleMarker(latlng, {
+                                radius: 6,
+                                color: '#3A8BFF',
+                                fillColor: '#FFFFFF',
+                                fillOpacity: 1,
+                                weight: 2
+                            }).addTo(trustedLocationMap);
+                            polygonMarkers.push(marker);
+
+                            // Update polygon
+                            if (polygonLayer) {
+                                trustedLocationMap.removeLayer(polygonLayer);
+                            }
+                            if (polygonPoints.length >= 3) {
+                                polygonLayer = L.polygon(polygonPoints, {
+                                    color: '#3A8BFF',
+                                    fillColor: '#3A8BFF',
+                                    fillOpacity: 0.2,
+                                    weight: 2
+                                }).addTo(trustedLocationMap);
+                            } else if (polygonPoints.length === 2) {
+                                // Draw line between 2 points
+                                polygonLayer = L.polyline(polygonPoints, {
+                                    color: '#3A8BFF',
+                                    weight: 2,
+                                    dashArray: '5, 5'
+                                }).addTo(trustedLocationMap);
+                            }
+
+                            // Enable clear button
+                            document.getElementById('demo-clear-polygon').disabled = false;
+                        }
+
+                        function updateAddress(latlng) {
+                            // Get random address from mock data
+                            currentLocationAddress = getRandomAddress();
+                            document.getElementById('demo-selected-address').textContent = currentLocationAddress;
+                        }
+
+                        // Fence type toggle
+                        document.getElementById('demo-fence-circle')?.addEventListener('click', () => {
+                            fenceType = 'circle';
+                            document.getElementById('demo-fence-circle').classList.add('selected');
+                            document.getElementById('demo-fence-polygon').classList.remove('selected');
+                            document.getElementById('demo-radius-control').style.display = 'block';
+                            document.getElementById('demo-polygon-instructions').style.display = 'none';
+
+                            // Clear polygon layers
+                            polygonMarkers.forEach(m => trustedLocationMap.removeLayer(m));
+                            if (polygonLayer) trustedLocationMap.removeLayer(polygonLayer);
+                            polygonPoints = [];
+                            polygonMarkers = [];
+                            currentLocationAddress = '';
+                            document.getElementById('demo-selected-address').textContent = 'Tap on map to select location';
+                        });
+
+                        document.getElementById('demo-fence-polygon')?.addEventListener('click', () => {
+                            fenceType = 'polygon';
+                            document.getElementById('demo-fence-polygon').classList.add('selected');
+                            document.getElementById('demo-fence-circle').classList.remove('selected');
+                            document.getElementById('demo-radius-control').style.display = 'none';
+                            document.getElementById('demo-polygon-instructions').style.display = 'block';
+
+                            // Clear circle layer
+                            if (circleLayer) trustedLocationMap.removeLayer(circleLayer);
+                            selectedCenter = null;
+                            currentLocationAddress = '';
+                            document.getElementById('demo-selected-address').textContent = 'Tap on map to select location';
+                        });
+
+                        // Radius slider
+                        document.getElementById('demo-radius-slider')?.addEventListener('input', (e) => {
+                            radius = parseInt(e.target.value);
+                            document.getElementById('demo-radius-value').textContent = `${radius}m`;
+                            updateCircle();
+                        });
+
+                        // Clear polygon button
+                        document.getElementById('demo-clear-polygon')?.addEventListener('click', () => {
+                            polygonMarkers.forEach(m => trustedLocationMap.removeLayer(m));
+                            if (polygonLayer) trustedLocationMap.removeLayer(polygonLayer);
+                            polygonPoints = [];
+                            polygonMarkers = [];
+                            polygonLayer = null;
+                            currentLocationAddress = '';
+                            document.getElementById('demo-clear-polygon').disabled = true;
+                            document.getElementById('demo-selected-address').textContent = 'Tap on map to select location';
+                            showInteractiveToast('Points cleared');
+                        });
+
+                        lucide.createIcons();
+                    }, 100);
+
+                    // Back button
+                    document.getElementById('demo-add-location-back')?.addEventListener('click', () => {
+                        goBack('lost-mode-settings');
+                    });
+
+                    // Save button
+                    document.getElementById('demo-add-location-save')?.addEventListener('click', () => {
+                        if (fenceType === 'circle' && !selectedCenter) {
+                            showInteractiveToast('❌ Please select a location on the map', 'error');
+                            return;
+                        }
+                        if (fenceType === 'polygon' && polygonPoints.length < 3) {
+                            showInteractiveToast('❌ Polygon requires at least 3 points', 'error');
+                            return;
+                        }
+
+                        const location = {
+                            type: fenceType,
+                            address: currentLocationAddress || getRandomAddress(),
+                            center: selectedCenter,
+                            radius: radius,
+                            points: polygonPoints.map(p => [p.lat, p.lng])
+                        };
+
+                        if (!window.trustedLocations) {
+                            window.trustedLocations = [];
+                        }
+                        window.trustedLocations.push(location);
+
+                        showInteractiveToast('✅ Trusted location added');
+                        setTimeout(() => goBack('lost-mode-settings'), 1000);
+                    });
+                    break;
+            }
+        }
+
+        function initInteractiveMap() {
+            const mapElement = document.getElementById('demo-map');
+            if (!mapElement) return;
+
+            // Clean up existing map if it exists
+            if (interactiveMap) {
+                interactiveMap.remove();
+                interactiveMap = null;
+            }
+
+            interactiveMap = L.map('demo-map', {
+                center: [37.7749, -122.4194],
+                zoom: 15,
+                zoomControl: false
+            });
+
+            // Use CartoDB Light tiles (experimental light mode)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(interactiveMap);
+
+            // Add scale bar
+            L.control.scale({
+                position: 'bottomleft',
+                imperial: false,
+                metric: true
+            }).addTo(interactiveMap);
+
+            // Add user marker
+            const userIcon = L.divIcon({
+                className: 'user-marker-icon',
+                iconSize: [20, 20]
+            });
+            userMarker = L.marker([37.7749, -122.4194], { icon: userIcon }).addTo(interactiveMap);
+
+            // Add tag markers
+            tagMarkers = mockTags.map(tag => {
+                const tagIcon = L.divIcon({
+                    className: 'tag-marker-icon',
+                    html: tag.icon,
+                    iconSize: [32, 32]
+                });
+                const marker = L.marker([tag.lat, tag.lng], { icon: tagIcon }).addTo(interactiveMap);
+
+                // Bind popup with custom content
+                const popupContent = `
+                    <div class="popup-tag-name">${tag.icon} ${tag.name}</div>
+                    <div class="popup-tag-info">${tag.address}</div>
+                    <div class="popup-tag-info">Updated ${tag.lastUpdate}</div>
+                    <div class="popup-tag-distance" style="margin-top: 8px;">${tag.distance}</div>
+                `;
+                marker.bindPopup(popupContent, {
+                    closeButton: true,
+                    maxWidth: 250,
+                    className: 'custom-popup'
+                });
+
+                return marker;
+            });
+        }
+
+        function attachHomeListeners() {
+            // Banner notification close button
+            const bannerCloseBtn = document.getElementById('demo-banner-close');
+            if (bannerCloseBtn) {
+                bannerCloseBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const banner = document.getElementById('demo-tag-loss-banner');
+                    if (banner) {
+                        banner.classList.add('hidden');
+                        showInteractiveToast('通知已关闭');
+                    }
+                });
+            }
+
+            // Zoom controls
+            document.getElementById('demo-zoom-in')?.addEventListener('click', () => {
+                if (interactiveMap) {
+                    interactiveMap.zoomIn();
+                    showInteractiveToast('Zooming in...');
+                }
+            });
+            document.getElementById('demo-zoom-out')?.addEventListener('click', () => {
+                if (interactiveMap) {
+                    interactiveMap.zoomOut();
+                    showInteractiveToast('Zooming out...');
+                }
+            });
+            document.getElementById('demo-center')?.addEventListener('click', () => {
+                if (interactiveMap) {
+                    interactiveMap.setView([37.7749, -122.4194], 15);
+                    showInteractiveToast('Centering on your location...');
+                }
+            });
+
+            // Add device button
+            document.getElementById('demo-add-device')?.addEventListener('click', () => {
+                showInteractiveScreen('bluetooth');
+            });
+
+            // Refresh button
+            document.getElementById('demo-refresh')?.addEventListener('click', () => {
+                showInteractiveToast('Refreshing tags...');
+            });
+
+            // Drawer handle
+            let drawerExpanded = false;
+            document.getElementById('demo-drawer-handle')?.addEventListener('click', () => {
+                const drawer = document.getElementById('demo-drawer');
+                if (drawerExpanded) {
+                    drawer.style.height = '281px';
+                    drawerExpanded = false;
+                } else {
+                    drawer.style.height = '500px';
+                    drawerExpanded = true;
+                }
+            });
+
+            // Tag item swipe functionality
+            attachSwipeListeners();
+        }
+
+        function attachSwipeListeners() {
+            const tagWrappers = document.querySelectorAll('.tag-item-wrapper');
+
+            tagWrappers.forEach(wrapper => {
+                const content = wrapper.querySelector('.tag-item-content');
+                const clickZone = wrapper.querySelector('.tag-click-zone');
+                const swipeZone = wrapper.querySelector('.tag-swipe-zone');
+                const actionBtn = wrapper.querySelector('.action-btn');
+
+                let startX = 0;
+                let currentX = 0;
+                let isDragging = false;
+                let hasMoved = false;
+
+                // Click zone - for selecting tag
+                if (clickZone) {
+                    clickZone.addEventListener('click', () => {
+                        if (!hasMoved) {
+                            const tagId = wrapper.dataset.tagId;
+                            const tag = mockTags.find(t => t.id == tagId);
+                            showTagDetailView(tag);
+                        }
+                    });
+                }
+
+                // Swipe zone - Mouse events
+                if (swipeZone) {
+                    swipeZone.addEventListener('mousedown', (e) => {
+                        startX = e.clientX;
+                        isDragging = true;
+                        hasMoved = false;
+                        content.style.transition = 'none';
+                    });
+                }
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    currentX = e.clientX;
+                    const deltaX = currentX - startX;
+
+                    if (Math.abs(deltaX) > 5) {
+                        hasMoved = true;
+                    }
+
+                    if (deltaX < 0) {
+                        content.style.transform = `translateX(${Math.max(deltaX, -80)}px)`;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    content.style.transition = 'transform 0.3s ease';
+                    const deltaX = currentX - startX;
+
+                    if (deltaX < -40) {
+                        content.style.transform = 'translateX(-80px)';
+                        content.classList.add('swiped');
+                    } else {
+                        content.style.transform = 'translateX(0)';
+                        content.classList.remove('swiped');
+                    }
+
+                    // Reset hasMoved after a delay
+                    setTimeout(() => { hasMoved = false; }, 300);
+                });
+
+                // Touch events
+                if (swipeZone) {
+                    swipeZone.addEventListener('touchstart', (e) => {
+                        startX = e.touches[0].clientX;
+                        isDragging = true;
+                        hasMoved = false;
+                        content.style.transition = 'none';
+                    });
+                }
+
+                document.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    currentX = e.touches[0].clientX;
+                    const deltaX = currentX - startX;
+
+                    if (Math.abs(deltaX) > 5) {
+                        hasMoved = true;
+                    }
+
+                    if (deltaX < 0) {
+                        content.style.transform = `translateX(${Math.max(deltaX, -80)}px)`;
+                    }
+                });
+
+                document.addEventListener('touchend', () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    content.style.transition = 'transform 0.3s ease';
+                    const deltaX = currentX - startX;
+
+                    if (deltaX < -40) {
+                        content.style.transform = 'translateX(-80px)';
+                        content.classList.add('swiped');
+                    } else {
+                        content.style.transform = 'translateX(0)';
+                        content.classList.remove('swiped');
+                    }
+
+                    setTimeout(() => { hasMoved = false; }, 300);
+                });
+
+                // Info button click
+                actionBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const tagId = wrapper.dataset.tagId;
+                    const tag = mockTags.find(t => t.id == tagId);
+                    showTagInfoModal(tag);
+                });
+            });
+
+            // First-time guide animation - auto swipe the first item
+            if (tagWrappers.length > 0) {
+                const firstWrapper = tagWrappers[0];
+                const firstContent = firstWrapper.querySelector('.tag-item-content');
+
+                setTimeout(() => {
+                    firstContent.style.transition = 'none';
+                    setTimeout(() => {
+                        firstContent.style.transition = 'transform 0.4s ease';
+                        firstContent.style.transform = 'translateX(-10px)';
+                        setTimeout(() => {
+                            firstContent.style.transform = 'translateX(0)';
+                        }, 600);
+                    }, 50);
+                }, 500);
+            }
+        }
+
+        function showTagDetailView(tag) {
+            const content = document.getElementById('interactive-content');
+            content.innerHTML = `
+                <div style="position: relative; height: 100%; overflow: hidden;">
+                    <button class="icon-btn back-btn" id="demo-tag-detail-back" style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
+                        <i data-lucide="arrow-left"></i>
+                    </button>
+
+                    <!-- Map focused on tag -->
+                    <div class="map-container" style="height: 644px; position: relative;">
+                        <div id="demo-tag-detail-map" style="width: 100%; height: 100%;"></div>
+
+                        <div class="map-controls">
+                            <button class="control-btn" id="demo-tag-zoom-in">
+                                <i data-lucide="plus"></i>
+                            </button>
+                            <button class="control-btn" id="demo-tag-zoom-out">
+                                <i data-lucide="minus"></i>
+                            </button>
+                            <button class="control-btn" id="demo-tag-center">
+                                <i data-lucide="crosshair"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Selected Tag Info Drawer -->
+                    <div class="drawer" style="height: 200px;">
+                        <div style="padding: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="font-size: 28px;">${tag.icon}</div>
+                                    <div>
+                                        <h3 class="title-secondary" style="font-size: 22px; margin-bottom: 6px;">${tag.name}</h3>
+                                        <div class="text-body" style="font-size: 13px; margin-bottom: 4px;">${tag.address}</div>
+                                        <div class="text-body" style="font-size: 12px;">Updated ${tag.lastUpdate}</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="icon-btn" id="demo-tag-share">
+                                        <i data-lucide="share-2"></i>
+                                    </button>
+                                    <button class="icon-btn" id="demo-tag-detail-close">
+                                        <i data-lucide="x"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div style="display: flex; justify-content: space-between; gap: 8px;">
+                                <button class="tag-action-btn" id="demo-tag-nav" data-action="nav">
+                                    <div class="tag-action-icon" style="background: linear-gradient(135deg, #3A8BFF 0%, #2563EB 100%);">
+                                        <i data-lucide="navigation"></i>
+                                    </div>
+                                    <span>Nav</span>
+                                </button>
+                                <button class="tag-action-btn" id="demo-tag-ring" data-action="ring">
+                                    <div class="tag-action-icon" style="background: linear-gradient(135deg, #FF9E4A 0%, #F97316 100%);">
+                                        <i data-lucide="bell"></i>
+                                    </div>
+                                    <span>Ring</span>
+                                </button>
+                                <button class="tag-action-btn" id="demo-tag-path" data-action="path">
+                                    <div class="tag-action-icon" style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);">
+                                        <i data-lucide="route"></i>
+                                    </div>
+                                    <span>Path</span>
+                                </button>
+                                <button class="tag-action-btn" id="demo-tag-lost" data-action="lost">
+                                    <div class="tag-action-icon" style="background: linear-gradient(135deg, #EC6C70 0%, #E43B41 100%);">
+                                        <i data-lucide="alert-triangle"></i>
+                                    </div>
+                                    <span>Lost</span>
+                                </button>
+                                <button class="tag-action-btn" id="demo-tag-fence" data-action="fence">
+                                    <div class="tag-action-icon" style="background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%);">
+                                        <i data-lucide="map-pinned"></i>
+                                    </div>
+                                    <span>Fence</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation App Modal -->
+                    <div class="modal-overlay" id="demo-nav-modal-overlay">
+                        <div class="modal-content">
+                            <h3 class="title-secondary" style="font-size: 20px; margin-bottom: 20px; text-align: center;">
+                                Choose Navigation App
+                            </h3>
+                            <button class="btn-secondary" style="margin-bottom: 12px; text-align: left; padding-left: 24px;" id="demo-nav-google">
+                                <i data-lucide="map"></i>
+                                Google Maps
+                            </button>
+                            <button class="btn-secondary" style="margin-bottom: 12px; text-align: left; padding-left: 24px;" id="demo-nav-amap">
+                                <i data-lucide="map-pin"></i>
+                                高德地图
+                            </button>
+                            <button class="btn-secondary" style="margin-bottom: 20px; text-align: left; padding-left: 24px;" id="demo-nav-baidu">
+                                <i data-lucide="compass"></i>
+                                百度地图
+                            </button>
+                            <button class="btn-secondary" id="demo-nav-cancel">Cancel</button>
+                        </div>
+                    </div>
+
+                    <!-- Ring Modal -->
+                    <div class="modal-overlay" id="demo-tag-ring-modal-overlay">
+                        <div class="modal-content">
+                            <div style="text-align: center; margin-bottom: 24px;">
+                                <div style="font-size: 64px; margin-bottom: 16px; animation: pulse 2s ease-in-out infinite;">🔔</div>
+                                <h3 class="title-secondary" style="font-size: 20px; margin-bottom: 8px;">Ring Tag?</h3>
+                                <p class="text-body" style="font-size: 14px;">Your tag will beep to help you locate it</p>
+                            </div>
+
+                            <div style="display: flex; gap: 12px;">
+                                <button class="btn-secondary" style="flex: 1;" id="demo-tag-ring-cancel">Cancel</button>
+                                <button class="btn-primary btn-breathing" style="flex: 1;" id="demo-tag-ring-now">
+                                    <i data-lucide="bell"></i>
+                                    Ring Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Initialize icons
+            lucide.createIcons();
+
+            // Initialize map focused on tag
+            setTimeout(() => {
+                const detailMap = L.map('demo-tag-detail-map', {
+                    center: [tag.lat, tag.lng],
+                    zoom: 16,
+                    zoomControl: false
+                });
+
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    subdomains: 'abcd',
+                    maxZoom: 20
+                }).addTo(detailMap);
+
+                // Add scale bar
+                L.control.scale({
+                    position: 'bottomleft',
+                    imperial: false,
+                    metric: true
+                }).addTo(detailMap);
+
+                // Add tag marker
+                const tagMarkerDiv = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="font-size: 32px;">${tag.icon}</div>`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+                L.marker([tag.lat, tag.lng], { icon: tagMarkerDiv }).addTo(detailMap);
+
+                // Add user marker
+                const userMarkerDiv = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<div style="width: 16px; height: 16px; background: #3A8BFF; border: 3px solid #FFFFFF; border-radius: 50%;"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+                L.marker([37.7749, -122.4194], { icon: userMarkerDiv }).addTo(detailMap);
+
+                // Attach event listeners
+                document.getElementById('demo-tag-detail-back')?.addEventListener('click', () => {
+                    showInteractiveScreen('home');
+                });
+
+                document.getElementById('demo-tag-detail-close')?.addEventListener('click', () => {
+                    showInteractiveScreen('home');
+                });
+
+                // Action buttons
+                document.getElementById('demo-tag-nav')?.addEventListener('click', () => {
+                    document.getElementById('demo-nav-modal-overlay').classList.add('active');
+                });
+
+                document.getElementById('demo-tag-ring')?.addEventListener('click', () => {
+                    document.getElementById('demo-tag-ring-modal-overlay').classList.add('active');
+                });
+
+                document.getElementById('demo-tag-path')?.addEventListener('click', () => {
+                    showInteractiveToast('📍 Path tracking feature coming soon');
+                });
+
+                document.getElementById('demo-tag-share')?.addEventListener('click', () => {
+                    showInteractiveToast('🔗 Share feature coming soon');
+                });
+
+                document.getElementById('demo-tag-lost')?.addEventListener('click', () => {
+                    window.currentTag = tag;  // Store tag context
+                    showInteractiveScreen('lost-mode-settings');
+                });
+
+                document.getElementById('demo-tag-fence')?.addEventListener('click', () => {
+                    showInteractiveToast('🗺️ Geo-fence feature coming soon');
+                });
+
+                // Map controls
+                document.getElementById('demo-tag-zoom-in')?.addEventListener('click', () => {
+                    detailMap.zoomIn();
+                });
+
+                document.getElementById('demo-tag-zoom-out')?.addEventListener('click', () => {
+                    detailMap.zoomOut();
+                });
+
+                document.getElementById('demo-tag-center')?.addEventListener('click', () => {
+                    detailMap.setView([tag.lat, tag.lng], 16);
+                });
+
+                // Ring modal - Cancel button
+                document.getElementById('demo-tag-ring-cancel')?.addEventListener('click', () => {
+                    document.getElementById('demo-tag-ring-modal-overlay').classList.remove('active');
+                });
+
+                // Ring modal - Ring Now button
+                document.getElementById('demo-tag-ring-now')?.addEventListener('click', () => {
+                    document.getElementById('demo-tag-ring-modal-overlay').classList.remove('active');
+                    showInteractiveToast('🔔 Ringing ' + tag.name + '...');
+                });
+
+                // Ring modal - Close when clicking overlay
+                document.getElementById('demo-tag-ring-modal-overlay')?.addEventListener('click', (e) => {
+                    if (e.target.id === 'demo-tag-ring-modal-overlay') {
+                        e.target.classList.remove('active');
+                    }
+                });
+
+                // Navigation app selection handlers
+                document.getElementById('demo-nav-google')?.addEventListener('click', () => {
+                    document.getElementById('demo-nav-modal-overlay').classList.remove('active');
+                    showInteractiveToast('Opening Google Maps for ' + tag.name);
+                });
+
+                document.getElementById('demo-nav-amap')?.addEventListener('click', () => {
+                    document.getElementById('demo-nav-modal-overlay').classList.remove('active');
+                    showInteractiveToast('Opening 高德地图 for ' + tag.name);
+                });
+
+                document.getElementById('demo-nav-baidu')?.addEventListener('click', () => {
+                    document.getElementById('demo-nav-modal-overlay').classList.remove('active');
+                    showInteractiveToast('Opening 百度地图 for ' + tag.name);
+                });
+
+                document.getElementById('demo-nav-cancel')?.addEventListener('click', () => {
+                    document.getElementById('demo-nav-modal-overlay').classList.remove('active');
+                });
+
+                // Close modal when clicking overlay
+                document.getElementById('demo-nav-modal-overlay')?.addEventListener('click', (e) => {
+                    if (e.target.id === 'demo-nav-modal-overlay') {
+                        e.target.classList.remove('active');
+                    }
+                });
+            }, 100);
+        }
+
+        function returnToDrawerOpen() {
+            showInteractiveScreen('home');
+            setTimeout(() => {
+                const userDrawer = document.getElementById('demo-user-drawer');
+                const userDrawerOverlay = document.getElementById('demo-user-drawer-overlay');
+                userDrawer?.classList.add('active');
+                userDrawerOverlay?.classList.add('active');
+            }, 200);
+        }
+
+        function attachUserCenterListeners() {
+            const avatarBtn = document.getElementById('demo-avatar-btn');
+            const userDrawer = document.getElementById('demo-user-drawer');
+            const userDrawerOverlay = document.getElementById('demo-user-drawer-overlay');
+            const editProfileBtn = document.getElementById('demo-edit-profile');
+
+            // Update user profile display if saved
+            if (window.userProfile) {
+                const drawerAvatar = userDrawer.querySelector('.user-drawer-avatar');
+                const drawerName = userDrawer.querySelector('.user-drawer-name');
+                const avatarImgSrc = `resource/avatar/${window.userProfile.avatar}`;
+                drawerAvatar.innerHTML = `<img src="${avatarImgSrc}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                drawerName.textContent = window.userProfile.nickname;
+                avatarBtn.innerHTML = `<img src="${avatarImgSrc}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+            }
+
+            // Open drawer
+            avatarBtn?.addEventListener('click', () => {
+                userDrawer.classList.add('active');
+                userDrawerOverlay.classList.add('active');
+            });
+
+            // Close drawer when clicking overlay
+            userDrawerOverlay?.addEventListener('click', () => {
+                userDrawer.classList.remove('active');
+                userDrawerOverlay.classList.remove('active');
+            });
+
+            // Edit profile button
+            editProfileBtn?.addEventListener('click', () => {
+                userDrawer.classList.remove('active');
+                userDrawerOverlay.classList.remove('active');
+                showInteractiveScreen('profile');
+            });
+
+            // Menu item clicks
+            document.querySelectorAll('.user-menu-item').forEach(item => {
+                if (item.classList.contains('disabled')) return;
+
+                item.addEventListener('click', () => {
+                    const menu = item.dataset.menu;
+
+                    // Close drawer
+                    userDrawer.classList.remove('active');
+                    userDrawerOverlay.classList.remove('active');
+
+                    // Navigate based on menu
+                    switch(menu) {
+                        case 'language':
+                            showInteractiveScreen('language');
+                            break;
+                        case 'reset-password':
+                            navigationHistory = ['home'];  // Clear history and set home as previous
+                            showInteractiveScreen('forgot-password');
+                            break;
+                        case 'about':
+                            showInteractiveScreen('about');
+                            break;
+                        case 'logout':
+                            showInteractiveToast('Logging out...', 'success');
+                            setTimeout(() => showInteractiveScreen('login'), 1500);
+                            break;
+                    }
+                });
+            });
+        }
+
+        function showUpdateModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay active';
+            modal.setAttribute('data-type', 'modal');
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 class="title-secondary" style="font-size: 20px; margin-bottom: 16px; text-align: center;">New Version Available</h3>
+                    <p class="text-body" style="margin-bottom: 20px; text-align: center; font-size: 14px;">
+                        Version 1.1.0 is now available
+                    </p>
+
+                    <div style="background: rgba(26, 31, 43, 0.6); border-radius: 16px; padding: 16px; margin-bottom: 24px;">
+                        <div class="text-body" style="font-size: 13px; line-height: 1.8;">
+                            <strong style="color: #FFFFFF;">What's New:</strong><br>
+                            • Added new tag tracking features<br>
+                            • Improved map performance<br>
+                            • Bug fixes and stability improvements
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn-secondary" style="flex: 1;" id="update-cancel">Later</button>
+                        <button class="btn-primary" style="flex: 1;" id="update-now">
+                            Update Now
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('interactive-container').appendChild(modal);
+            modal.querySelector('.modal-content')?.setAttribute('data-component', 'comp-modal');
+
+            modal.querySelector('#update-cancel').addEventListener('click', () => {
+                modal.remove();
+            });
+
+            modal.querySelector('#update-now').addEventListener('click', () => {
+                showInteractiveToast('Starting update...', 'success');
+                modal.remove();
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        function showTagInfoModal(tag) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay active';
+            modal.setAttribute('data-type', 'modal');
+
+            const availableIcons = ['🔑', '🎒', '🚗', '📱', '💼', '🎧', '⌚', '👜', '🏠', '🚲', '📷', '💻'];
+
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 420px;">
+                    <h3 class="title-secondary" style="font-size: 20px; margin-bottom: 20px; text-align: center;">Tag Information</h3>
+
+                    <!-- Icon Selection -->
+                    <div style="margin-bottom: 16px;">
+                        <div class="text-body" style="font-size: 12px; margin-bottom: 8px;">Tag Icon</div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div id="selected-icon-display" style="font-size: 32px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(58, 139, 255, 0.1); border: 1px solid rgba(58, 139, 255, 0.3); border-radius: 12px;">${tag.icon}</div>
+                            <button class="btn-secondary" style="flex: 1; font-size: 14px;" id="change-icon-btn">
+                                Change Icon
+                            </button>
+                        </div>
+                        <div id="icon-selector" style="display: none; margin-top: 12px; padding: 12px; background: rgba(26, 31, 43, 0.6); border: 1px solid rgba(58, 139, 255, 0.2); border-radius: 12px;">
+                            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
+                                ${availableIcons.map(icon => `
+                                    <button class="icon-option-btn" data-icon="${icon}" style="font-size: 24px; width: 48px; height: 48px; background: rgba(58, 139, 255, 0.1); border: 1px solid rgba(58, 139, 255, 0.2); border-radius: 8px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;">
+                                        ${icon}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Device Name (Editable) -->
+                    <div style="margin-bottom: 16px;">
+                        <label class="text-body" style="display: block; font-size: 12px; margin-bottom: 8px;">Device Name</label>
+                        <input type="text" class="input-field" id="tag-name-input" value="${tag.name}" style="font-size: 15px;">
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <div class="text-body" style="font-size: 12px; margin-bottom: 4px;">MAC Address</div>
+                        <div style="color: #FFFFFF; font-size: 15px; font-family: 'Courier New', monospace;">${tag.mac}</div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <div class="text-body" style="font-size: 12px; margin-bottom: 4px;">Location</div>
+                        <div style="color: #FFFFFF; font-size: 15px;">${tag.lat.toFixed(4)}° N, ${Math.abs(tag.lng).toFixed(4)}° W</div>
+                    </div>
+
+                    <div style="margin-bottom: 24px;">
+                        <div class="text-body" style="font-size: 12px; margin-bottom: 4px;">Last Update</div>
+                        <div style="color: #FFFFFF; font-size: 15px;">${tag.lastUpdate}</div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn-secondary" style="flex: 1;" id="modal-close">Close</button>
+                        <button class="btn-primary" style="flex: 1;" id="modal-save">
+                            Save
+                        </button>
+                        <button class="btn-primary" style="flex: 1; background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);" id="modal-unbind">
+                            Unbind
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('interactive-container').appendChild(modal);
+            modal.querySelector('.modal-content')?.setAttribute('data-component', 'comp-modal');
+
+            let selectedIcon = tag.icon;
+
+            // Icon change button
+            modal.querySelector('#change-icon-btn').addEventListener('click', () => {
+                const iconSelector = modal.querySelector('#icon-selector');
+                iconSelector.style.display = iconSelector.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // Icon selection
+            modal.querySelectorAll('.icon-option-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectedIcon = btn.dataset.icon;
+                    modal.querySelector('#selected-icon-display').textContent = selectedIcon;
+
+                    // Highlight selected icon
+                    modal.querySelectorAll('.icon-option-btn').forEach(b => {
+                        b.style.background = 'rgba(58, 139, 255, 0.1)';
+                        b.style.borderColor = 'rgba(58, 139, 255, 0.2)';
+                    });
+                    btn.style.background = 'rgba(58, 139, 255, 0.3)';
+                    btn.style.borderColor = 'rgba(58, 139, 255, 0.6)';
+                });
+
+                // Highlight currently selected icon
+                if (btn.dataset.icon === tag.icon) {
+                    btn.style.background = 'rgba(58, 139, 255, 0.3)';
+                    btn.style.borderColor = 'rgba(58, 139, 255, 0.6)';
+                }
+            });
+
+            // Add hover effect for icon buttons
+            modal.querySelectorAll('.icon-option-btn').forEach(btn => {
+                btn.addEventListener('mouseenter', () => {
+                    if (btn.dataset.icon !== selectedIcon) {
+                        btn.style.background = 'rgba(58, 139, 255, 0.2)';
+                    }
+                });
+                btn.addEventListener('mouseleave', () => {
+                    if (btn.dataset.icon !== selectedIcon) {
+                        btn.style.background = 'rgba(58, 139, 255, 0.1)';
+                    }
+                });
+            });
+
+            // Close button
+            modal.querySelector('#modal-close').addEventListener('click', () => {
+                modal.remove();
+            });
+
+            // Save button
+            modal.querySelector('#modal-save').addEventListener('click', () => {
+                const newName = modal.querySelector('#tag-name-input').value.trim();
+
+                if (!newName) {
+                    showInteractiveToast('❌ Device name cannot be empty', 'error');
+                    return;
+                }
+
+                // Update tag data
+                tag.name = newName;
+                tag.icon = selectedIcon;
+
+                showInteractiveToast('✅ Tag information updated successfully', 'success');
+                modal.remove();
+
+                // Refresh the tag list display
+                const tagElement = document.querySelector(`[data-tag-id="${tag.id}"] .tag-item-content`);
+                if (tagElement) {
+                    tagElement.querySelector('.tag-icon').textContent = selectedIcon;
+                    tagElement.querySelector('.tag-name').textContent = newName;
+                }
+            });
+
+            // Unbind button
+            modal.querySelector('#modal-unbind').addEventListener('click', () => {
+                showInteractiveToast('Tag unbound successfully', 'success');
+                modal.remove();
+            });
+
+            // Click outside to close
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        function showInteractiveToast(message, type = 'success') {
+            const toast = document.getElementById('interactive-toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        console.log('%c NavTag Interactive Prototype ', 'background: #3A8BFF; color: #FFFFFF; font-size: 16px; padding: 10px; border-radius: 8px;');
+        console.log('Full user flow with real map integration');
+    </script>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

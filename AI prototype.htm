@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>ManifestAI – 可交互原型</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<style>
+  :root{
+    --accent:#6C5CE7; /* 单点高亮 */
+    --ink:#0f172a;    /* 深墨文字 slate-900 */
+    --muted:#64748b;  /* 次级文字 slate-500 */
+    --card:#ffffff;   /* 纯平卡片 */
+    --bg:#f8fafc;     /* 浅背景 */
+  }
+  /* 画板：375x812 + 1px描边 + 巨大圆角 + 局部滚动 */
+  .board{
+    width:375px;height:812px;border:1px solid #e2e8f0;border-radius:2rem;overflow:hidden;background:var(--bg);
+    box-shadow:0 20px 60px rgba(2,6,23,.08), 0 2px 8px rgba(2,6,23,.06);
+    display:flex;flex-direction:column;
+  }
+  .screen-scroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;}
+  /* 卡片悬浮 */
+  .card{
+    background:var(--card); border-radius:1.25rem; box-shadow:0 1px 0 rgba(2,6,23,.04) inset;
+    transition:transform .25s ease, filter .25s ease, box-shadow .25s ease;
+  }
+  .card:hover{
+    transform:translateY(-4px);
+    filter:drop-shadow(0 16px 22px rgba(108,92,231,.14));
+  }
+  /* 动态线图 */
+  .dash-animate{
+    stroke-dasharray: 800; stroke-dashoffset:800; animation:draw 2.4s ease forwards;
+  }
+  @keyframes draw{to{stroke-dashoffset:0;}}
+  /* 顶部状态栏 */
+  .status-dot{width:5px;height:5px;border-radius:9999px;background:#0f172a;}
+  /* 统一格栅：每行6个 */
+  .gallery{display:grid;grid-template-columns:repeat(6,375px);gap:24px;align-items:start}
+  /* 让小屏也能看：缩放并允许横向滚动 */
+  @media (max-width:2400px){
+    .wrap{overflow:auto}
+    .gallery{width:max-content}
+  }
+  /* 通用按钮 */
+  .btn-accent{background:var(--accent);color:white;border-radius:9999px;padding:.75rem 1rem;font-weight:700;}
+  .btn-ghost{background:#eef2ff;color:#3730a3;border-radius:9999px;padding:.75rem 1rem;font-weight:700;}
+  /* Tab Bar 内图标 */
+  .tab-icon{width:22px;height:22px}
+  /* SVG 装饰 */
+  .soft-shadow{filter:drop-shadow(0 12px 18px rgba(108,92,231,.18))}
+  /* 隐式链接样式 */
+  a:not(.btn-accent):not(.btn-ghost){color:inherit;text-decoration:none}
+</style>
+</head>
+<body class="bg-white text-[15px] text-slate-900">
+
+<!-- 矢量图标系统: <symbol> 雪碧图 -->
+<svg aria-hidden="true" width="0" height="0" style="position:absolute">
+  <symbol id="i-home" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+  </symbol>
+  <symbol id="i-target" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 8a4 4 0 1 1-4 4h2a2 2 0 1 0 2-2V8zm0-6a10 10 0 1 1-7.07 2.93L7.05 7A8 8 0 1 0 20 12h2A10 10 0 0 1 12 2z"/>
+  </symbol>
+  <symbol id="i-meditate" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 3a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm-8 16a4 4 0 0 1 4-4h2l2-3 2 3h2a4 4 0 0 1 4 4H4Z"/>
+  </symbol>
+  <symbol id="i-star" viewBox="0 0 24 24">
+    <path fill="currentColor" d="m12 17.27 5.18 3.05-1.64-5.81L20 10.5l-6-.26L12 4 10 10.24 4 10.5l4.46 3.99L6.82 20.3 12 17.27z"/>
+  </symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M19.14,12.94a7.07,7.07,0,0,0,.05-.94,7.07,7.07,0,0,0-.05-.94l2.11-1.65a.5.5,0,0,0,.12-.63l-2-3.46a.5.5,0,0,0-.6-.22l-2.49,1a7.28,7.28,0,0,0-1.63-.94l-.38-2.65A.5.5,0,0,0,12,1h-4a.5.5,0,0,0-.49.41L7.13,4.06a7.28,7.28,0,0,0-1.63.94l-2.49-1a.5.5,0,0,0-.6.22l-2,3.46a.5.5,0,0,0,.12.63L2.73,11.06a7.07,7.07,0,0,0-.05.94,7.07,7.07,0,0,0,.05.94L.54,14.59a.5.5,0,0,0-.12.63l2,3.46a.5.5,0,0,0,.6.22l2.49-1a7.28,7.28,0,0,0,1.63.94l.38,2.65A.5.5,0,0,0,8,23h4a.5.5,0,0,0,.49-.41l.38-2.65a7.28,7.28,0,0,0,1.63-.94l2.49,1a.5.5,0,0,0,.6-.22l2-3.46a.5.5,0,0,0-.12-.63ZM10,15a3,3,0,1,1,3-3A3,3,0,0,1,10,15Z"/>
+  </symbol>
+  <symbol id="i-audio" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 3a3 3 0 0 0-3 3v7a3 3 0 1 0 6 0V6a3 3 0 0 0-3-3Zm-7 9a7 7 0 0 0 14 0h2a9 9 0 0 1-18 0h2Z"/>
+  </symbol>
+  <symbol id="i-book" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M19 2H8a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h11V2Zm-2 16H9a1 1 0 0 1 0-2h8v2Zm0-4H9a1 1 0 0 1 0-2h8v2Zm0-4H9a1 1 0 0 1 0-2h8v2Z"/>
+  </symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12.1 21.35 10 19.28C5.4 14.36 2 11.27 2 7.5A4.5 4.5 0 0 1 6.5 3 5.1 5.1 0 0 1 12 6.09 5.1 5.1 0 0 1 17.5 3 4.5 4.5 0 0 1 22 7.5c0 3.77-3.4 6.86-8 11.78l-1.9 2.07Z"/>
+  </symbol>
+</svg>
+
+<!-- 顶部说明隐藏按钮：一键平滑滚动 -->
+<script>
+  document.addEventListener('click',e=>{
+    const link=e.target.closest('a[href^="#"]'); if(!link) return;
+    const id=link.getAttribute('href'); const el=document.querySelector(id);
+    if(el){ e.preventDefault(); el.scrollIntoView({behavior:'smooth',block:'center',inline:'center'}); }
+  });
+</script>
+
+<div class="wrap p-6">
+  <h1 class="text-3xl font-black tracking-tight mb-4">ManifestAI – 多界面交互原型</h1>
+  <p class="text-slate-600 mb-8">提示：点击各页面底部 Tab 即可切换（锚点跳转）。包含：启动/引导、AI显化剧本、动态愿景板、仪表盘、目标、肯定语、感恩、冥想、设置等。</p>
+
+  <div class="gallery">
+
+    <!-- 0 启动 / Splash（无 Tab） -->
+    <section id="splash" class="board">
+      <!-- 状态栏 -->
+      <div class="px-4 py-2 bg-white/70 backdrop-blur sticky top-0 z-10 border-b border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-700">
+          <span>9:41</span>
+          <div class="flex items-center gap-2">
+            <span class="status-dot"></span><span class="status-dot"></span><span class="status-dot"></span>
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
+        </div>
+      </div>
+      <!-- 内容 -->
+      <div class="screen-scroll">
+        <div class="relative h-full">
+          <!-- 背景装饰 -->
+          <svg class="absolute -top-8 -right-16 w-[420px] soft-shadow" viewBox="0 0 600 400" fill="none">
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#a78bfa"/>
+                <stop offset="1" stop-color="#6C5CE7"/>
+              </linearGradient>
+            </defs>
+            <path d="M80,120 C140,30 320,10 420,80 C520,150 520,290 430,330 C340,370 190,360 110,300 C40,250 20,180 80,120Z" fill="url(#g1)" opacity=".18"/>
+          </svg>
+
+          <div class="pt-24 px-8">
+            <div class="text-center">
+              <div class="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-white card mb-6">
+                <i class="fa-solid fa-sparkles text-[var(--accent)] text-3xl"></i>
+              </div>
+              <h2 class="text-4xl font-black">ManifestAI</h2>
+              <p class="text-slate-500 mt-3">你的私人 AI 显化教练</p>
+            </div>
+
+            <div class="mt-10 space-y-4">
+              <div class="card p-5">
+                <p class="text-slate-600">通过显化剧本 + 动态愿景板，让<strong class="text-slate-900">“已经成功”</strong>的未来在当下发生。</p>
+              </div>
+              <div class="card p-5">
+                <p class="text-slate-600">个性化肯定语、目标拆解、感恩引导，重塑潜意识，稳定推进。</p>
+              </div>
+            </div>
+
+            <div class="mt-10 flex items-center justify-center gap-3">
+              <a href="#onboarding" class="btn-accent">开始描绘我的愿景</a>
+              <a href="#dashboard" class="btn-ghost">先看看主页</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1 引导对话 / Onboarding (Initiation)（无 Tab） -->
+    <section id="onboarding" class="board">
+      <div class="px-4 py-2 bg-white/70 backdrop-blur sticky top-0 z-10 border-b border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-700">
+          <span>9:41</span>
+          <div class="flex items-center gap-2">
+            <span class="status-dot"></span><span class="status-dot"></span><span class="status-dot"></span>
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
+        </div>
+      </div>
+      <div class="screen-scroll">
+        <div class="p-5 space-y-4">
+          <h3 class="text-2xl font-black">你好，我是 <span class="text-[var(--accent)]">Aura</span> 👋</h3>
+          <div class="card p-4">
+            <p class="text-slate-700">当你闭上眼睛想象完美的未来，你看到了什么？感觉到了什么？</p>
+          </div>
+          <!-- 聊天气泡 -->
+          <div class="space-y-3">
+            <div class="flex gap-2">
+              <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center"><i class="fa-solid fa-sparkles text-indigo-600"></i></div>
+              <div class="card p-3 max-w-[75%]">
+                <p class="text-slate-700">你提到“财务自由”，是海边别墅远程工作，还是环游世界？</p>
+              </div>
+            </div>
+            <div class="flex gap-2 justify-end">
+              <div class="card p-3 max-w-[75%] bg-indigo-50">
+                <p>我在海边带着家人生活，每天写作和冲浪。</p>
+              </div>
+              <div class="w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold">我</div>
+            </div>
+            <div class="flex gap-2">
+              <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center"><i class="fa-solid fa-sparkles text-indigo-600"></i></div>
+              <div class="card p-3 max-w-[75%]">
+                <p>关于“健康”，是精力充沛地登山，还是每天神清气爽地醒来？</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <label class="block text-slate-500 mb-2">用自然语言描述你的愿景…</label>
+            <textarea class="w-full rounded-2xl border border-slate-200 p-4 focus:outline-none focus:ring-2 focus:ring-indigo-400" rows="4" placeholder="例如：清晨阳光洒在我的原木书桌上，我打开笔电写下新书章节…"></textarea>
+            <div class="mt-3 flex items-center gap-3">
+              <button class="btn-accent"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>生成显化剧本</button>
+              <a href="#script" class="btn-ghost">查看示例</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 显化剧本 + 语音朗读 -->
+    <section id="script" class="board">
+      <div class="px-4 py-2 bg-white/70 backdrop-blur sticky top-0 z-10 border-b border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-700">
+          <span>9:41</span>
+          <div class="flex items-center gap-2">
+            <span class="status-dot"></span><span class="status-dot"></span><span class="status-dot"></span>
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
+        </div>
+      </div>
+      <div class="screen-scroll">
+        <div class="p-5 space-y-4">
+          <h3 class="text-2xl font-black">“梦想成真”剧本</h3>
+          <div class="card p-5 space-y-3">
+            <p class="leading-relaxed text-slate-700">
+              我每天清晨醒来，阳光洒在我的原木书桌上。海风拂过窗帘，我深呼吸，感到身体轻盈、思维澄明。我打开文档，自信地写下新章节。午后我与家人在海边散步，傍晚完成今日的 5000 字写作计划。我的作品正在被更多人阅读和讨论，我自然地用创意影响世界。
+            </p>
+            <div class="flex items-center gap-2 text-sm text-slate-500">
+              <i class="fa-solid fa-tags"></i><span>海边别墅、畅销书封面、健康有机餐、家人笑脸</span>
+            </div>
+          </div>
+
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-semibold">语音朗读</p>
+                <p class="text-sm text-slate-500">选择音色与背景</p>
+              </div>
+              <button class="btn-accent"><svg class="inline tab-icon mr-2"><use href="#i-audio"/></svg>一键生成音频</button>
+            </div>
+            <div class="grid grid-cols-3 gap-3 mt-4">
+              <button class="card p-3 text-center">温暖男声</button>
+              <button class="card p-3 text-center">治愈女声</button>
+              <button class="card p-3 text-center">沉稳旁白</button>
+            </div>
+            <div class="grid grid-cols-3 gap-3 mt-3">
+              <button class="card p-3 text-center">冥想</button>
+              <button class="card p-3 text-center">轻快</button>
+              <button class="card p-3 text-center">史诗</button>
+            </div>
+          </div>
+
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <p class="font-semibold">自动愿景板（示例）</p>
+              <a href="#vision" class="text-[var(--accent)] font-semibold">查看完整</a>
+            </div>
+            <!-- 用 SVG <image> 外链 Unsplash -->
+            <div class="grid grid-cols-3 gap-3 mt-3">
+              <svg viewBox="0 0 100 100" class="w-full rounded-2xl overflow-hidden">
+                <image href="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop" width="100%" height="100%"/>
+              </svg>
+              <svg viewBox="0 0 100 100" class="w-full rounded-2xl overflow-hidden">
+                <image href="https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=600&auto=format&fit=crop" width="100%" height="100%"/>
+              </svg>
+              <svg viewBox="0 0 100 100" class="w-full rounded-2xl overflow-hidden">
+                <image href="https://images.unsplash.com/photo-1511920170033-f8396924c348?q=80&w=600&auto=format&fit=crop" width="100%" height="100%"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab -->
+      <div class="bg-white sticky bottom-0 border-t border-slate-200">
+        <nav class="flex justify-around py-3 text-slate-500">
+          <a href="#dashboard" class="text-slate-900"><svg class="tab-icon"><use href="#i-home"/></svg><div class="text-[11px]">主页</div></a>
+          <a href="#goals"><svg class="tab-icon"><use href="#i-target"/></svg><div class="text-[11px]">目标</div></a>
+          <a href="#meditation"><svg class="tab-icon"><use href="#i-meditate"/></svg><div class="text-[11px]">冥想</div></a>
+          <a href="#settings"><svg class="tab-icon"><use href="#i-settings"/></svg><div class="text-[11px]">设置</div></a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 3 仪表盘 / Dashboard -->
+    <section id="dashboard" class="board">
+      <div class="px-4 py-2 bg-white/70 backdrop-blur sticky top-0 z-10 border-b border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-700">
+          <span>9:41</span>
+          <div class="flex items-center gap-2">
+            <span class="status-dot"></span><span class="status-dot"></span><span class="status-dot"></span>
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
+        </div>
+      </div>
+      <div class="screen-scroll">
+        <div class="p-5 space-y-5">
+          <h3 class="text-2xl font-black">早上好，Alex 🌤️</h3>
+
+          <!-- AI 日签/精选 -->
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <p class="font-semibold">今日 AI 精选</p>
+              <a href="#affirm" class="text-[var(--accent)] font-semibold">更多</a>
+            </div>
+            <p class="mt-2 text-lg">“我自信地向全世界分享我的创意。”</p>
+          </div>
+
+          <!-- 智能任务/感恩引导 -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="card p-5">
+              <p class="text-sm text-slate-500">智能任务提示</p>
+              <p class="mt-2 font-semibold">今天花 15 分钟做伸展运动。</p>
+              <button class="btn-accent mt-3 w-full">开始</button>
+            </div>
+            <div class="card p-5">
+              <p class="text-sm text-slate-500">感恩智能引导</p>
+              <p class="mt-2 font-semibold">为财务健康做了什么值得感谢的小事？</p>
+              <button class="btn-ghost mt-3 w-full">记录一下</button>
+            </div>
+          </div>
+
+          <!-- 动态折线图：连续练习趋势 -->
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <p class="font-semibold">本周专注曲线</p>
+              <span class="text-sm text-slate-500">4h 32min</span>
+            </div>
+            <svg viewBox="0 0 320 120" class="w-full mt-3">
+              <defs>
+                <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#6C5CE7" stop-opacity="0.28"/>
+                  <stop offset="1" stop-color="#6C5CE7" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,90 C40,60 60,80 90,50 C120,20 160,30 190,60 C220,90 260,40 320,55" fill="none" stroke="#6C5CE7" stroke-width="3" class="dash-animate" />
+              <path d="M0,120 L0,90 C40,60 60,80 90,50 C120,20 160,30 190,60 C220,90 260,40 320,55 L320,120 Z" fill="url(#lg)" opacity=".7"/>
+            </svg>
+          </div>
+
+          <!-- 快捷入口 -->
+          <div class="grid grid-cols-3 gap-4">
+            <a href="#vision" class="card p-4 text-center">
+              <svg class="mx-auto tab-icon text-[var(--accent)]"><use href="#i-star"/></svg>
+              <div class="mt-2 text-sm font-semibold">愿景板</div>
+            </a>
+            <a href="#goals" class="card p-4 text-center">
+              <svg class="mx-auto tab-icon text-[var(--accent)]"><use href="#i-target"/></svg>
+              <div class="mt-2 text-sm font-semibold">目标</div>
+            </a>
+            <a href="#gratitude" class="card p-4 text-center">
+              <svg class="mx-auto tab-icon text-[var(--accent)]"><use href="#i-heart"/></svg>
+              <div class="mt-2 text-sm font-semibold">感恩</div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab -->
+      <div class="bg-white sticky bottom-0 border-t border-slate-200">
+        <nav class="flex justify-around py-3 text-slate-500">
+          <a href="#dashboard" class="text-slate-900"><svg class="tab-icon"><use href="#i-home"/></svg><div class="text-[11px]">主页</div></a>
+          <a href="#goals"><svg class="tab-icon"><use href="#i-target"/></svg><div class="text-[11px]">目标</div></a>
+          <a href="#meditation"><svg class="tab-icon"><use href="#i-meditate"/></svg><div class="text-[11px]">冥想</div></a>
+          <a href="#settings"><svg class="tab-icon"><use href="#i-settings"/></svg><div class="text-[11px]">设置</div></a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 4 目标列表 / Goals -->
+    <section id="goals" class="board">
+      <div class="px-4 py-2 bg-white/70 backdrop-blur sticky top-0 z-10 border-b border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-700">
+          <span>9:41</span>
+          <div class="flex items-center gap-2">
+            <span class="status-dot"></span><span class="status-dot"></span><span class="status-dot"></span>
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
+        </div>
+      </div>
+      <div class="screen-scroll">
+        <div class="p-5 space-y-4">
+          <div class="flex items-end justify-between">
+            <h3 class="text-2xl font-black">目标</h3>
+            <a href="#goal-flow" class="btn-accent"><i class="fa-solid fa-plus mr-2"></i>新建</a>
+          </div>
+
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-semibold">出版一本小说</p>
+                <p class="text-sm text-slate-500">长期 · 来自显化剧本</p>
+              </div>
+              <span class="text-[11px] px-2 py-1 rounded-full bg-indigo-50 text-indigo-700">进行中</span>
+            </div>
+            <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
+              <div class="card p-3"><i class="fa-solid fa-list-check mr-2"></i>完成故事大纲</div>
+              <div class="card p-3"><i class="fa-solid fa-pen-nib mr-2"></i>每周写作 5000 字</div>
+              <div class="card p-3"><i class="fa-solid fa-building mr-2"></i>联系 3 家出版社</div>
+            </div>
+          </div>
+
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-semibold">健康生活</p>
+                <p class="text-sm text-slate-500">长期 · 来自显化剧本</p>
+              </div>
+              <span class="text-[11px] px-2 py-1 rounded-full bg-emerald-50 text-emerald-700">良好</span>
+            </div>
+            <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
+              <div class="card p-3"><i class="fa-solid fa-person-walking mr-2"></i>每日步数 8k</div>
+              <div class="card p-3"><i class="fa-solid fa-bowl-food mr-2"></i>有机饮食</div>
+              <div class="card p-3"><i class="fa-solid fa-bed mr-2"></i>23:30 入睡</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="bg-white sticky bottom-0 border-t border-slate-200">
+        <nav class="flex justify-around py-3 text-slate-500">
+          <a href="#dashboard"><svg class="tab-icon"><use href="#i-home"/></svg><div class="text-[11px]">主页</div></a>
+          <a href="#goals" class="text-slate-900"><svg class="tab-icon"><use href="#i-target"/></svg><div class="text-[11px]">目标</div></a>
+          <a href="#meditation"><svg class="tab-icon"><use href="#i-meditate"/></svg><div class="text-[11px]">冥想</div></a>
+          <a href="#settings"><svg class="tab-icon"><use href="#i-settings"/></svg><div class="text-[11px]">设置</div></a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 5 肯定语 / Affirmations -->
+    <section id="affirm" class="board">
+      <div class="px-4 py-2 bg-white/70 backdrop-blur sticky top-0 z-10 border-b border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-700">
+          <span>9:41</span>
+          <div class="flex items-center gap-2">
+            <span class="status-dot"></span><span class="status-dot"></span><span class="status-dot"></span>
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
+        </div>
+      </div>
+      <div class="screen-scroll">
+        <div class="p-5 space-y-4">
+          <h3 class="text-2xl font-black">肯定语</h3>
+
+          <div class="card p-5">
+            <p class="text-lg font-semibold">我自信地与世界分享我的创意。</p>
+            <div class="mt-3 flex gap-3">
+              <button class="btn-accent"><i class="fa-solid fa-bolt mr-2"></i>专注朗读</button>
+              <button class="btn-ghost">收藏</button>
+            </div>
+          </div>
+
+          <div class="card p-5">
+            <p class="text-lg font-semibold">我正在享受一个健康、充满活力的身体。</p>
+            <div class="mt-3 flex gap-3">
+              <button class="btn-accent"><i class="fa-solid fa-bolt mr-2"></i>专注朗读</button>
+              <button class="btn-ghost">收藏</button>
+            </div>
+          </div>
+
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-semibold">情景式生成</p>
+                <p class="text-sm text-slate-500">告诉 Aura 你的场景</p>
+              </div>
+              <button class="btn-accent"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>生成</button>
+            </div>
+            <input class="w-full mt-3 border border-slate-200 rounded-2xl p-3" placeholder="例如：我今天有个重要面试，有些紧张…" />
+          </div>
+        </div>
+      </div>
+      <div class="bg-white sticky bottom-0 border-t border-slate-200">
+        <nav class="flex justify-around py-3 text-slate-500">
+          <a href="#dashboard"><svg class="tab-icon"><use href="#i-home"/></svg><div class="text-[11px]">主页</div></a>
+          <a href="#goals"><svg class="tab-icon"><use href="#i-target"/></svg><div class="text-[11px]">目标</div></a>
+          <a href="#meditation"><svg class="tab-icon"><use href="#i-meditate"/></svg><div class="text-[11px]">冥想</div></a>
+          <a href="#settings"><svg class="tab-icon"><use href="#i-settings"/></svg><div class="text-[11px]">设置</div></a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 6 感恩日记 / Gratitude -->
+    <section id="gratitude" class="board">
+      <div class="px-4 py-2 bg-white/70 backdrop-blur sticky top-0 z-10 border-b border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-700">
+          <span>9:41</span>
+          <div class="flex items-center gap-2">
+            <span class="status-dot"></span><span class="status-dot"></span><span class="status-dot"></span>
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
+        </div>
+      </div>
+      <div class="screen-scroll">
+        <div class="p-5 space-y-4">
+          <h3 class="text-2xl font-black">感恩</h3>
+          <div class="card p-5">
+            <p class="text-sm text-slate-500">AI 引导式提问</p>
+            <p class="mt-2 font-semibold">回顾今天，哪件事让你更靠近“写作者”的人生？</p>
+            <textarea class="w-full mt-3 border border-slate-200 rounded-2xl p-3" rows="4" placeholder="随手写下你的感恩…"></textarea>
+            <div class="mt-3 flex gap-3">
+              <button class="btn-accent">保存</button>
+              <button class="btn-ghost">查看历史</button>
+            </div>
+          </div>
+
+          <!-- 情感分析（可选） -->
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <p class="font-semibold">情感洞察</p>
+              <span class="text-[11px] px-2 py-1 rounded-full bg-amber-50 text-amber-700">实验</span>
+            </div>
+            <p class="mt-2 text-slate-600">你在提到「与人交流」时具备高正向能量，这与“有影响力的领导者”形象一致。</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white sticky bottom-0 border-t border-slate-200">
+        <nav class="flex justify-around py-3 text-slate-500">
+          <a href="#dashboard"><svg class="tab-icon"><use href="#i-home"/></svg><div class="text-[11px]">主页</div></a>
+          <a href="#goals"><svg class="tab-icon"><use href="#i-target"/></svg><div class="text-[11px]">目标</div></a>
+          <a href="#meditation"><svg class="tab-icon"><use href="#i-meditate"/></svg><div class="text-[11px]">冥想</div></a>
+          <a href="#settings"><svg class="tab-icon"><use href="#i-settings"/></svg><div class="text-[11px]">设置</div></a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 7 愿景板 / Vision Board -->
+    <section id="vision" class="board">
+      <div class="px-4 py-2 bg-white/70 backdrop-blur sticky top-0 z-10 border-b border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-700">
+          <span>9:41</span>
+          <div class="flex items-center gap-2">
+            <span class="status-dot"></span><span class="status-dot"></span><span class="status-dot"></span>
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
+        </div>
+      </div>
+      <div class="screen-scroll">
+        <div class="p-5 space-y-4">
+          <div class="flex items-end justify-between">
+            <h3 class="text-2xl font-black">愿景板</h3>
+            <button class="btn-accent"><i class="fa-solid fa-rotate mr-2"></i>基于剧本更新</button>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <!-- 九宫格：SVG<image> -->
+            <svg viewBox="0 0 100 100" class="w-full rounded-2xl overflow-hidden">
+              <image href="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=600&auto=format&fit=crop" width="100%" height="100%"/>
+            </svg>
+            <svg viewBox="0 0 100 100" class="w-full rounded-2xl overflow-hidden">
+              <image href="https://images.unsplash.com/photo-1522195085-cc5d1553dbdd?q=80&w=600&auto=format&fit=crop" width="100%" height="100%"/>
+            </svg>
+            <svg viewBox="0 0 100 100" class="w-full rounded-2xl overflow-hidden">
+              <image href="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=600&auto=format&fit=crop" width="100%" height="100%"/>
+            </svg>
+            <svg viewBox="0 0 100 100" class="w-full rounded-2xl overflow-hidden">
+              <image href="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=600&auto=format&fit=crop" width="100%" height="100%"/>
+            </svg>
+            <svg viewBox="0 0 100 100" class="w-full rounded-2xl overflow-hidden">
+              <image href="https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=600&auto=format&fit=crop" width="100%" height="100%"/>
+            </svg>
+            <svg viewBox="0 0 100 100" class="w-full rounded-2xl overflow-hidden">
+              <image href="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600&auto=format&fit=crop" width="100%" height="100%"/>
+            </svg>
+            <svg viewBox="0 0 100 100" class="w-full rounded-2xl overflow-hidden">
+              <image href="https://images.unsplash.com/photo-1483721310020-03333e577078?q=80&w=600&auto=format&fit=crop" width="100%" height="100%"/>
+            </svg>
+            <svg viewBox="0 0 100 100" class="w-full rounded-2xl overflow-hidden">
+              <image href="https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?q=80&w=600&auto=format&fit=crop" width="100%" height="100%"/>
+            </svg>
+            <svg viewBox="0 0 100 100" class="w-full rounded-2xl overflow-hidden">
+              <image href="https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=600&auto=format&fit=crop" width="100%" height="100%"/>
+            </svg>
+          </div>
+          <div class="flex gap-3">
+            <button class="btn-ghost w-full"><i class="fa-solid fa-image mr-2"></i>替换</button>
+            <button class="btn-ghost w-full"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>生成更多</button>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white sticky bottom-0 border-t border-slate-200">
+        <nav class="flex justify-around py-3 text-slate-500">
+          <a href="#dashboard"><svg class="tab-icon"><use href="#i-home"/></svg><div class="text-[11px]">主页</div></a>
+          <a href="#goals"><svg class="tab-icon"><use href="#i-target"/></svg><div class="text-[11px]">目标</div></a>
+          <a href="#meditation"><svg class="tab-icon"><use href="#i-meditate"/></svg><div class="text-[11px]">冥想</div></a>
+          <a href="#settings"><svg class="tab-icon"><use href="#i-settings"/></svg><div class="text-[11px]">设置</div></a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 8 冥想 / Meditation -->
+    <section id="meditation" class="board">
+      <div class="px-4 py-2 bg-white/70 backdrop-blur sticky top-0 z-10 border-b border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-700">
+          <span>9:41</span>
+          <div class="flex items-center gap-2">
+            <span class="status-dot"></span><span class="status-dot"></span><span class="status-dot"></span>
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
+        </div>
+      </div>
+      <div class="screen-scroll">
+        <div class="p-5 space-y-5">
+          <h3 class="text-2xl font-black">冥想 · 显化朗读</h3>
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-semibold">清晨充能 · 7 分钟</p>
+                <p class="text-sm text-slate-500">治愈女声 + 冥想底音</p>
+              </div>
+              <button class="btn-accent"><i class="fa-solid fa-play mr-2"></i>播放</button>
+            </div>
+            <div class="mt-4">
+              <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-indigo-500 w-2/5"></div>
+              </div>
+              <div class="flex justify-between text-xs text-slate-500 mt-1"><span>02:12</span><span>07:00</span></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <button class="card p-4 text-center"><i class="fa-solid fa-sun text-[var(--accent)]"></i><div class="mt-1 text-sm font-semibold">晨起</div></button>
+            <button class="card p-4 text-center"><i class="fa-solid fa-cloud-moon text-[var(--accent)]"></i><div class="mt-1 text-sm font-semibold">入睡</div></button>
+            <button class="card p-4 text-center"><i class="fa-solid fa-mountain text-[var(--accent)]"></i><div class="mt-1 text-sm font-semibold">专注</div></button>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white sticky bottom-0 border-t border-slate-200">
+        <nav class="flex justify-around py-3 text-slate-500">
+          <a href="#dashboard"><svg class="tab-icon"><use href="#i-home"/></svg><div class="text-[11px]">主页</div></a>
+          <a href="#goals"><svg class="tab-icon"><use href="#i-target"/></svg><div class="text-[11px]">目标</div></a>
+          <a href="#meditation" class="text-slate-900"><svg class="tab-icon"><use href="#i-meditate"/></svg><div class="text-[11px]">冥想</div></a>
+          <a href="#settings"><svg class="tab-icon"><use href="#i-settings"/></svg><div class="text-[11px]">设置</div></a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 9 设置 / Settings -->
+    <section id="settings" class="board">
+      <div class="px-4 py-2 bg-white/70 backdrop-blur sticky top-0 z-10 border-b border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-700">
+          <span>9:41</span>
+          <div class="flex items-center gap-2">
+            <span class="status-dot"></span><span class="status-dot"></span><span class="status-dot"></span>
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
+        </div>
+      </div>
+      <div class="screen-scroll">
+        <div class="p-5 space-y-4">
+          <h3 class="text-2xl font-black">设置</h3>
+          <div class="card p-5">
+            <p class="font-semibold">声音与音色</p>
+            <div class="mt-3 grid grid-cols-3 gap-3">
+              <button class="card p-3">男声</button>
+              <button class="card p-3">女声</button>
+              <button class="card p-3">旁白</button>
+            </div>
+          </div>
+          <div class="card p-5">
+            <p class="font-semibold">主题色</p>
+            <div class="mt-3 flex gap-3">
+              <button class="w-8 h-8 rounded-full bg-indigo-500"></button>
+              <button class="w-8 h-8 rounded-full bg-emerald-500"></button>
+              <button class="w-8 h-8 rounded-full bg-rose-500"></button>
+            </div>
+          </div>
+          <div class="card p-5">
+            <p class="font-semibold">关于 ManifestAI</p>
+            <p class="text-sm text-slate-500 mt-2">分层式扁平设计 · 由 AI 驱动的显化教练。</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white sticky bottom-0 border-t border-slate-200">
+        <nav class="flex justify-around py-3 text-slate-500">
+          <a href="#dashboard"><svg class="tab-icon"><use href="#i-home"/></svg><div class="text-[11px]">主页</div></a>
+          <a href="#goals"><svg class="tab-icon"><use href="#i-target"/></svg><div class="text-[11px]">目标</div></a>
+          <a href="#meditation"><svg class="tab-icon"><use href="#i-meditate"/></svg><div class="text-[11px]">冥想</div></a>
+          <a href="#settings" class="text-slate-900"><svg class="tab-icon"><use href="#i-settings"/></svg><div class="text-[11px]">设置</div></a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 10 目标设定流程（示例 Step）无 Tab -->
+    <section id="goal-flow" class="board">
+      <div class="px-4 py-2 bg-white/70 backdrop-blur sticky top-0 z-10 border-b border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-700">
+          <span>9:41</span>
+          <div class="flex items-center gap-2">
+            <span class="status-dot"></span><span class="status-dot"></span><span class="status-dot"></span>
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
+        </div>
+      </div>
+      <div class="screen-scroll">
+        <div class="p-5 space-y-4">
+          <div class="flex items-center gap-2 text-sm text-slate-500">
+            <a href="#goals" class="text-[var(--accent)]"><i class="fa-solid fa-chevron-left mr-1"></i>返回</a>
+            <span>·</span><span>目标设定</span>
+          </div>
+          <h3 class="text-2xl font-black">AI 拆解你的目标</h3>
+          <div class="card p-5 space-y-3">
+            <label class="text-sm text-slate-500">我想要达成</label>
+            <input class="w-full border border-slate-200 rounded-2xl p-3" placeholder="例如：出版一本小说" />
+            <button class="btn-accent w-full mt-1"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>让 AI 来优化</button>
+          </div>
+
+          <div class="card p-5">
+            <p class="font-semibold">AI 建议的短期拆解</p>
+            <ul class="mt-3 space-y-2 text-sm">
+              <li class="card p-3"><i class="fa-solid fa-list-check mr-2"></i>完成故事大纲</li>
+              <li class="card p-3"><i class="fa-solid fa-pen-nib mr-2"></i>每周写作 5000 字</li>
+              <li class="card p-3"><i class="fa-solid fa-building mr-2"></i>寻找 3 家合适的出版社</li>
+            </ul>
+            <div class="mt-4 flex gap-3">
+              <button class="btn-accent w-full">保存</button>
+              <a href="#goals" class="btn-ghost w-full">稍后</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 无 Tab -->
+    </section>
+
+  </div>
+</div>
+
+</body>
+</html>
