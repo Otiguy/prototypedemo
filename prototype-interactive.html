@@ -1451,6 +1451,29 @@
             transform: scale(0.95);
         }
 
+        /* ========== Update Badge (Red Dot) ========== */
+        .update-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 12px;
+            height: 12px;
+            background: #EF4444;
+            border-radius: 50%;
+            border: 2px solid #0D111A;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% {
+                box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+            }
+            50% {
+                box-shadow: 0 0 12px rgba(239, 68, 68, 1);
+            }
+        }
+
         /* ========== Lost Mode Settings Styles ========== */
 
         .setting-row {
@@ -2002,7 +2025,10 @@
                 lng: -122.4194,
                 distance: 'Around You',
                 lastUpdate: '2025-11-27 17:24:21',
-                mac: '8F:42:A1:D3:7E:C9'
+                mac: '8F:42:A1:D3:7E:C9',
+                firmwareVersion: 'v0.1.0',
+                hasUpdate: true,
+                battery: 85
             },
             {
                 id: 2,
@@ -2013,7 +2039,10 @@
                 lng: -122.4114,
                 distance: '1.2km',
                 lastUpdate: '2025-11-27 17:19:21',
-                mac: '3A:91:B2:E4:8F:D1'
+                mac: '3A:91:B2:E4:8F:D1',
+                firmwareVersion: 'v0.1.0',
+                hasUpdate: true,
+                battery: 45
             },
             {
                 id: 3,
@@ -2024,7 +2053,10 @@
                 lng: -122.4274,
                 distance: '2.8km',
                 lastUpdate: '2025-11-27 17:09:21',
-                mac: 'D7:C2:F3:A5:9E:B8'
+                mac: 'D7:C2:F3:A5:9E:B8',
+                firmwareVersion: 'v0.1.0',
+                hasUpdate: true,
+                battery: 20
             }
         ];
 
@@ -2438,27 +2470,19 @@
 
                                 <div id="demo-tag-list">
                                     ${mockTags.map(tag => `
-                                        <div class="tag-item-wrapper" data-tag-id="${tag.id}">
-                                            <div class="tag-item-actions">
-                                                <button class="action-btn" data-action="info">
-                                                    <i data-lucide="info"></i>
-                                                </button>
-                                            </div>
-                                            <div class="tag-item-content" style="padding: 16px;">
-                                                <div class="tag-click-zone"></div>
-                                                <div class="tag-swipe-zone"></div>
-                                                <div style="display: flex; align-items: center; gap: 12px; position: relative;">
-                                                    <div style="font-size: 28px;">${tag.icon}</div>
-                                                    <div style="flex: 1;">
-                                                        <div style="color: #FFFFFF; font-weight: 600; margin-bottom: 4px;">${tag.name}</div>
-                                                        <div class="text-body" style="font-size: 12px;">${tag.address}</div>
-                                                        <div class="text-body" style="font-size: 11px; margin-top: 2px;">Updated ${tag.lastUpdate}</div>
-                                                    </div>
-                                                    <div style="text-align: right;">
-                                                        <div style="color: #3A8BFF; font-weight: 600; font-size: 14px;">${tag.distance}</div>
-                                                    </div>
+                                        <div class="tag-item-wrapper" data-tag-id="${tag.id}" style="cursor: pointer; padding: 16px; position: relative;">
+                                            <div style="display: flex; align-items: center; gap: 12px; position: relative;">
+                                                <div style="font-size: 28px;">${tag.icon}</div>
+                                                <div style="flex: 1;">
+                                                    <div style="color: #FFFFFF; font-weight: 600; margin-bottom: 4px;">${tag.name}</div>
+                                                    <div class="text-body" style="font-size: 12px;">${tag.address}</div>
+                                                    <div class="text-body" style="font-size: 11px; margin-top: 2px;">Updated ${tag.lastUpdate}</div>
+                                                </div>
+                                                <div style="text-align: right;">
+                                                    <div style="color: #3A8BFF; font-weight: 600; font-size: 14px;">${tag.distance}</div>
                                                 </div>
                                             </div>
+                                            ${tag.hasUpdate ? '<span class="update-badge" style="top: 8px; right: 8px;"></span>' : ''}
                                         </div>
                                     `).join('')}
                                 </div>
@@ -2733,6 +2757,117 @@
                                 <i data-lucide="plus" style="margin-right: 8px;"></i>
                                 Add Trusted Location
                             </button>
+                        </div>
+                    </div>
+                `,
+                'tag-info': `
+                    <div style="padding: 28px; height: 100%; display: flex; flex-direction: column;">
+                        <button class="icon-btn back-btn" id="tag-info-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <div style="margin-top: 70px; margin-bottom: 24px;">
+                            <h2 class="title-secondary">Tag Information</h2>
+                            <p class="text-body" style="font-size: 13px;">View and edit tag details</p>
+                        </div>
+
+                        <!-- Icon 编辑区 -->
+                        <div style="margin-bottom: 24px;">
+                            <div class="text-body" style="font-size: 12px; margin-bottom: 8px;">Tag Icon</div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div id="tag-info-icon-display" style="font-size: 32px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(58, 139, 255, 0.1); border: 1px solid rgba(58, 139, 255, 0.3); border-radius: 12px;"></div>
+                                <button class="btn-secondary" style="flex: 1; font-size: 14px;" id="tag-info-change-icon">
+                                    Change Icon
+                                </button>
+                            </div>
+                            <div id="tag-info-icon-selector" style="display: none; margin-top: 12px; padding: 12px; background: rgba(26, 31, 43, 0.6); border: 1px solid rgba(58, 139, 255, 0.2); border-radius: 12px;">
+                                <div id="tag-info-icon-grid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Name 编辑区 -->
+                        <div style="margin-bottom: 24px;">
+                            <label class="text-body" style="display: block; font-size: 12px; margin-bottom: 8px;">Device Name</label>
+                            <input type="text" class="input-field" id="tag-info-name-input" style="font-size: 15px;">
+                        </div>
+
+                        <!-- MAC Address (只读) -->
+                        <div style="margin-bottom: 24px;">
+                            <div class="text-body" style="font-size: 12px; margin-bottom: 8px;">MAC Address</div>
+                            <div id="tag-info-mac" style="color: #FFFFFF; font-size: 15px; font-family: 'Courier New', monospace;"></div>
+                        </div>
+
+                        <!-- Location (只读) -->
+                        <div style="margin-bottom: 24px;">
+                            <div class="text-body" style="font-size: 12px; margin-bottom: 8px;">Location</div>
+                            <div id="tag-info-location" style="color: #FFFFFF; font-size: 15px;"></div>
+                        </div>
+
+                        <!-- Last Update (只读) -->
+                        <div style="margin-bottom: 24px;">
+                            <div class="text-body" style="font-size: 12px; margin-bottom: 8px;">Last Update</div>
+                            <div id="tag-info-last-update" style="color: #FFFFFF; font-size: 15px;"></div>
+                        </div>
+
+                        <!-- Firmware Version (新增，带升级按钮) -->
+                        <div style="margin-bottom: 24px;">
+                            <div class="text-body" style="font-size: 12px; margin-bottom: 8px;">Firmware Version</div>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div id="tag-info-firmware" style="color: #FFFFFF; font-size: 15px; font-family: 'Courier New', monospace;"></div>
+                                <button class="icon-btn" id="check-firmware-btn" style="width: 36px; height: 36px; position: relative;">
+                                    <i data-lucide="cloud-download"></i>
+                                    <span id="firmware-update-badge" class="update-badge" style="display: none;"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 底部按钮 -->
+                        <div style="display: flex; gap: 12px; margin-top: 20px;">
+                            <button class="btn-secondary" style="flex: 1;" id="tag-info-unbind">Unbind</button>
+                            <button class="btn-primary" style="flex: 1;" id="tag-info-save">Save</button>
+                        </div>
+                    </div>
+                `,
+                'firmware-update': `
+                    <div style="padding: 28px; height: 100%; display: flex; flex-direction: column;">
+                        <button class="icon-btn back-btn" id="firmware-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <div style="margin-top: 70px; margin-bottom: 20px; text-align: center;">
+                            <h2 class="title-secondary" style="font-size: 22px; margin-bottom: 8px;">New Firmware Available</h2>
+                            <p class="text-body" style="font-size: 14px; color: #3A8BFF;">Version 1.1.0 is now available</p>
+                        </div>
+
+                        <!-- 更新说明（可滚动） -->
+                        <div style="max-height: 120px; overflow-y: auto; margin-bottom: 20px; padding: 16px; background: rgba(26, 31, 43, 0.6); border: 1px solid rgba(58, 139, 255, 0.2); border-radius: 16px;">
+                            <p class="text-body" style="margin-bottom: 12px;">This update includes performance improvements, bug fixes, and enhanced battery optimization.</p>
+                            <p class="text-body" style="margin-bottom: 12px;">Key features: Improved Bluetooth connectivity, faster location updates, and extended battery life.</p>
+                            <p class="text-body">We recommend updating all your tags for the best experience.</p>
+                        </div>
+
+                        <!-- 预下载按钮 / 进度条 -->
+                        <div style="margin-bottom: 24px;" id="download-section">
+                            <button class="btn-primary btn-breathing" id="pre-download-btn" style="padding: 10px 20px; font-size: 14px;">
+                                <i data-lucide="download"></i>
+                                Pre-Download Firmware
+                            </button>
+                            <!-- 进度条（初始隐藏） -->
+                            <div id="download-progress" style="display: none;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                    <span class="text-body" style="font-size: 13px;" id="download-status">Downloading...</span>
+                                    <span class="text-body" style="font-size: 13px;" id="download-percent">0%</span>
+                                </div>
+                                <div style="width: 100%; height: 8px; background: rgba(26, 31, 43, 0.6); border: 1px solid rgba(58, 139, 255, 0.2); border-radius: 4px; overflow: hidden;">
+                                    <div id="download-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3A8BFF 0%, #2563EB 100%); transition: width 0.3s ease;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tags Available for OTA -->
+                        <div style="flex: 1; min-height: 0;">
+                            <h3 class="text-body" style="font-weight: 600; color: #FFFFFF; margin-bottom: 12px; font-size: 14px;">Tags Available for OTA</h3>
+                            <div id="ota-tags-list" style="height: 100%; overflow-y: auto;"></div>
                         </div>
                     </div>
                 `,
@@ -3287,6 +3422,280 @@
                     renderLocations();
                     break;
 
+                case 'tag-info':
+                    const currentTag = window.currentTag;
+                    if (!currentTag) {
+                        console.error('No tag context for tag-info screen');
+                        goBack('home');
+                        return;
+                    }
+
+                    const availableIcons = ['🔑', '🎒', '🚗', '📱', '💼', '🎧', '⌚', '👜', '🏠', '🚲', '📷', '💻'];
+                    let selectedIcon = currentTag.icon;
+
+                    // Populate tag info fields
+                    document.getElementById('tag-info-icon-display').textContent = currentTag.icon;
+                    document.getElementById('tag-info-name-input').value = currentTag.name;
+                    document.getElementById('tag-info-mac').textContent = currentTag.mac;
+                    document.getElementById('tag-info-location').textContent = `${currentTag.lat.toFixed(4)}° N, ${Math.abs(currentTag.lng).toFixed(4)}° W`;
+                    document.getElementById('tag-info-last-update').textContent = currentTag.lastUpdate;
+                    document.getElementById('tag-info-firmware').textContent = currentTag.firmwareVersion;
+
+                    // Show firmware update badge if available
+                    if (currentTag.hasUpdate) {
+                        document.getElementById('firmware-update-badge').style.display = 'block';
+                    }
+
+                    // Populate icon grid
+                    const iconGrid = document.getElementById('tag-info-icon-grid');
+                    iconGrid.innerHTML = availableIcons.map(icon => `
+                        <button class="tag-info-icon-option" data-icon="${icon}" style="font-size: 24px; width: 48px; height: 48px; background: ${icon === currentTag.icon ? 'rgba(58, 139, 255, 0.3)' : 'rgba(58, 139, 255, 0.1)'}; border: 1px solid ${icon === currentTag.icon ? 'rgba(58, 139, 255, 0.6)' : 'rgba(58, 139, 255, 0.2)'}; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;">
+                            ${icon}
+                        </button>
+                    `).join('');
+
+                    // Back button
+                    document.getElementById('tag-info-back')?.addEventListener('click', () => {
+                        showTagDetailView(currentTag);
+                    });
+
+                    // Change icon button
+                    document.getElementById('tag-info-change-icon')?.addEventListener('click', () => {
+                        const iconSelector = document.getElementById('tag-info-icon-selector');
+                        iconSelector.style.display = iconSelector.style.display === 'none' ? 'block' : 'none';
+                    });
+
+                    // Icon selection
+                    document.querySelectorAll('.tag-info-icon-option').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            selectedIcon = btn.dataset.icon;
+                            document.getElementById('tag-info-icon-display').textContent = selectedIcon;
+
+                            // Highlight selected icon
+                            document.querySelectorAll('.tag-info-icon-option').forEach(b => {
+                                b.style.background = 'rgba(58, 139, 255, 0.1)';
+                                b.style.borderColor = 'rgba(58, 139, 255, 0.2)';
+                            });
+                            btn.style.background = 'rgba(58, 139, 255, 0.3)';
+                            btn.style.borderColor = 'rgba(58, 139, 255, 0.6)';
+                        });
+
+                        // Hover effect
+                        btn.addEventListener('mouseenter', () => {
+                            if (btn.dataset.icon !== selectedIcon) {
+                                btn.style.background = 'rgba(58, 139, 255, 0.2)';
+                            }
+                        });
+                        btn.addEventListener('mouseleave', () => {
+                            if (btn.dataset.icon !== selectedIcon) {
+                                btn.style.background = 'rgba(58, 139, 255, 0.1)';
+                            }
+                        });
+                    });
+
+                    // Check firmware button
+                    document.getElementById('check-firmware-btn')?.addEventListener('click', () => {
+                        if (currentTag.hasUpdate) {
+                            // Navigate to firmware update screen
+                            showInteractiveScreen('firmware-update');
+                        } else {
+                            showInteractiveToast('✅ Firmware is up to date');
+                        }
+                    });
+
+                    // Save button
+                    document.getElementById('tag-info-save')?.addEventListener('click', () => {
+                        const newName = document.getElementById('tag-info-name-input').value.trim();
+
+                        if (!newName) {
+                            showInteractiveToast('❌ Device name cannot be empty', 'error');
+                            return;
+                        }
+
+                        // Update tag data
+                        currentTag.name = newName;
+                        currentTag.icon = selectedIcon;
+
+                        showInteractiveToast('✅ Tag information updated successfully', 'success');
+                        setTimeout(() => {
+                            showTagDetailView(currentTag);
+                        }, 1000);
+                    });
+
+                    // Unbind button
+                    document.getElementById('tag-info-unbind')?.addEventListener('click', () => {
+                        showInteractiveToast('Tag unbound successfully', 'success');
+                        setTimeout(() => {
+                            showInteractiveScreen('home');
+                        }, 1000);
+                    });
+
+                    lucide.createIcons();
+                    break;
+
+                case 'firmware-update':
+                    let isDownloaded = false;
+
+                    // Populate OTA tags list with 4 demo tags
+                    const otaTagsData = [
+                        { id: 1, name: 'My Keys', icon: '🔑', version: 'v0.1.0', battery: 85, scenario: 'success', isUpdated: false },
+                        { id: 2, name: 'Backpack', icon: '🎒', version: 'v0.1.0', battery: 45, scenario: 'connection-failed', isUpdated: false },
+                        { id: 3, name: 'Car', icon: '🚗', version: 'v0.1.0', battery: 20, scenario: 'low-battery', isUpdated: false },
+                        { id: 4, name: 'Wallet', icon: '💼', version: 'v0.1.0', battery: 60, scenario: 'write-interrupted', isUpdated: false }
+                    ];
+
+                    // Sort tags: 可更新的 > 已更新的 > 按名字排序
+                    otaTagsData.sort((a, b) => {
+                        // 第一优先级：可更新的（未更新的）排前面
+                        if (!a.isUpdated && b.isUpdated) return -1;
+                        if (a.isUpdated && !b.isUpdated) return 1;
+                        // 第二优先级：同级别内按名字排序
+                        return a.name.localeCompare(b.name);
+                    });
+
+                    const otaTagsList = document.getElementById('ota-tags-list');
+                    otaTagsList.innerHTML = otaTagsData.map(tag => `
+                        <div class="ota-tag-item" data-tag-id="${tag.id}" style="background: rgba(26, 31, 43, 0.6); border: 1px solid rgba(58, 139, 255, 0.2); border-radius: 16px; padding: 12px; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                                    <span style="font-size: 24px;">${tag.icon}</span>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                            <div style="color: #FFFFFF; font-weight: 600; font-size: 15px;">${tag.name}</div>
+                                            <!-- 电量图标紧跟在名字后面 -->
+                                            <div style="width: 32px; height: 16px; border: 2px solid ${tag.battery > 30 ? '#3A8BFF' : '#EF4444'}; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                                <span style="font-size: 10px; color: ${tag.battery > 30 ? '#3A8BFF' : '#EF4444'}; font-weight: 600;">${tag.battery}%</span>
+                                            </div>
+                                        </div>
+                                        <div style="color: #8B94A4; font-size: 12px;">${tag.version} → v1.1.0</div>
+                                    </div>
+                                </div>
+                                <!-- Update 按钮（下载完成后显示） -->
+                                <button class="icon-btn ota-update-btn" data-tag-id="${tag.id}" data-scenario="${tag.scenario}" style="display: none; width: 36px; height: 36px;">
+                                    <i data-lucide="hard-drive-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    // Back button
+                    document.getElementById('firmware-back')?.addEventListener('click', () => {
+                        goBack('tag-info');
+                    });
+
+                    // Pre-download button
+                    document.getElementById('pre-download-btn')?.addEventListener('click', () => {
+                        const downloadBtn = document.getElementById('pre-download-btn');
+                        const downloadProgress = document.getElementById('download-progress');
+                        const downloadFill = document.getElementById('download-fill');
+                        const downloadPercent = document.getElementById('download-percent');
+                        const downloadStatus = document.getElementById('download-status');
+
+                        downloadBtn.style.display = 'none';
+                        downloadProgress.style.display = 'block';
+
+                        // Simulate download progress
+                        let progress = 0;
+                        const downloadInterval = setInterval(() => {
+                            progress += 5;
+                            downloadFill.style.width = progress + '%';
+                            downloadPercent.textContent = progress + '%';
+
+                            if (progress >= 100) {
+                                clearInterval(downloadInterval);
+                                isDownloaded = true;
+                                downloadStatus.textContent = 'Download completed';
+                                setTimeout(() => {
+                                    showInteractiveToast('✅ Firmware downloaded successfully');
+                                    // Show all update buttons
+                                    document.querySelectorAll('.ota-update-btn').forEach(btn => {
+                                        btn.style.display = 'flex';
+                                    });
+                                }, 300);
+                            }
+                        }, 100);
+                    });
+
+                    // OTA Update button handlers - will be added after download
+                    setTimeout(() => {
+                        document.querySelectorAll('.ota-update-btn').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                if (!isDownloaded) {
+                                    showInteractiveToast('❌ Please download firmware first', 'error');
+                                    return;
+                                }
+
+                                const tagId = parseInt(this.dataset.tagId);
+                                const scenario = this.dataset.scenario;
+                                const tagItem = document.querySelector(`.ota-tag-item[data-tag-id="${tagId}"]`);
+
+                                // Disable button during update
+                                this.disabled = true;
+
+                                // Simulate OTA update based on scenario
+                                setTimeout(() => {
+                                    switch(scenario) {
+                                        case 'success':
+                                            // Success scenario
+                                            showInteractiveToast('🔗 Connecting to tag...');
+                                            setTimeout(() => {
+                                                showInteractiveToast('🔋 Checking battery...');
+                                                setTimeout(() => {
+                                                    showInteractiveToast('📝 Writing firmware...');
+                                                    setTimeout(() => {
+                                                        showInteractiveToast('✅ Update successful!');
+                                                        // Update version display
+                                                        tagItem.querySelector('div[style*="color: #8B94A4"]').textContent = 'v1.1.0 (Up to date)';
+                                                        this.style.display = 'none';
+                                                    }, 2000);
+                                                }, 1000);
+                                            }, 1000);
+                                            break;
+
+                                        case 'connection-failed':
+                                            // Connection failed scenario
+                                            showInteractiveToast('🔗 Connecting to tag...');
+                                            setTimeout(() => {
+                                                showInteractiveToast('❌ Connection failed. Please ensure tag is nearby.', 'error');
+                                                this.disabled = false;
+                                            }, 2000);
+                                            break;
+
+                                        case 'low-battery':
+                                            // Low battery scenario
+                                            showInteractiveToast('🔗 Connecting to tag...');
+                                            setTimeout(() => {
+                                                showInteractiveToast('🔋 Checking battery...');
+                                                setTimeout(() => {
+                                                    showInteractiveToast('❌ Battery too low (< 30%). Please charge the tag first.', 'error');
+                                                    this.disabled = false;
+                                                }, 1000);
+                                            }, 1000);
+                                            break;
+
+                                        case 'write-interrupted':
+                                            // Write interrupted scenario
+                                            showInteractiveToast('🔗 Connecting to tag...');
+                                            setTimeout(() => {
+                                                showInteractiveToast('🔋 Checking battery...');
+                                                setTimeout(() => {
+                                                    showInteractiveToast('📝 Writing firmware...');
+                                                    setTimeout(() => {
+                                                        showInteractiveToast('❌ Write interrupted. Tag moved out of range.', 'error');
+                                                        this.disabled = false;
+                                                    }, 1500);
+                                                }, 1000);
+                                            }, 1000);
+                                            break;
+                                    }
+                                }, 500);
+                            });
+                        });
+                    }, 100);
+
+                    lucide.createIcons();
+                    break;
+
                 case 'add-trusted-location':
                     let trustedLocationMap;
                     let selectedCenter = null;
@@ -3303,13 +3712,13 @@
                         trustedLocationMap = L.map('demo-trusted-location-map', {
                             center: [37.7749, -122.4194],
                             zoom: 15,
-                            zoomControl: false
+                            zoomControl: false,
+                            attributionControl: false
                         });
 
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                            attribution: '&copy; OpenStreetMap contributors',
-                            subdomains: 'abcd',
-                            maxZoom: 20
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            subdomains: ['a', 'b', 'c'],
+                            maxZoom: 19
                         }).addTo(trustedLocationMap);
 
                         // Map click handler
@@ -3491,14 +3900,14 @@
             interactiveMap = L.map('demo-map', {
                 center: [37.7749, -122.4194],
                 zoom: 15,
-                zoomControl: false
+                zoomControl: false,
+                attributionControl: false
             });
 
-            // Use CartoDB Light tiles (experimental light mode)
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap contributors',
-                subdomains: 'abcd',
-                maxZoom: 20
+            // Use OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                subdomains: ['a', 'b', 'c'],
+                maxZoom: 19
             }).addTo(interactiveMap);
 
             // Add scale bar
@@ -3598,156 +4007,55 @@
                 }
             });
 
-            // Tag item swipe functionality
-            attachSwipeListeners();
-        }
-
-        function attachSwipeListeners() {
+            // Tag item click functionality
             const tagWrappers = document.querySelectorAll('.tag-item-wrapper');
-
             tagWrappers.forEach(wrapper => {
-                const content = wrapper.querySelector('.tag-item-content');
-                const clickZone = wrapper.querySelector('.tag-click-zone');
-                const swipeZone = wrapper.querySelector('.tag-swipe-zone');
-                const actionBtn = wrapper.querySelector('.action-btn');
-
-                let startX = 0;
-                let currentX = 0;
-                let isDragging = false;
-                let hasMoved = false;
-
-                // Click zone - for selecting tag
-                if (clickZone) {
-                    clickZone.addEventListener('click', () => {
-                        if (!hasMoved) {
-                            const tagId = wrapper.dataset.tagId;
-                            const tag = mockTags.find(t => t.id == tagId);
-                            showTagDetailView(tag);
-                        }
-                    });
-                }
-
-                // Swipe zone - Mouse events
-                if (swipeZone) {
-                    swipeZone.addEventListener('mousedown', (e) => {
-                        startX = e.clientX;
-                        isDragging = true;
-                        hasMoved = false;
-                        content.style.transition = 'none';
-                    });
-                }
-
-                document.addEventListener('mousemove', (e) => {
-                    if (!isDragging) return;
-                    currentX = e.clientX;
-                    const deltaX = currentX - startX;
-
-                    if (Math.abs(deltaX) > 5) {
-                        hasMoved = true;
-                    }
-
-                    if (deltaX < 0) {
-                        content.style.transform = `translateX(${Math.max(deltaX, -80)}px)`;
-                    }
-                });
-
-                document.addEventListener('mouseup', () => {
-                    if (!isDragging) return;
-                    isDragging = false;
-                    content.style.transition = 'transform 0.3s ease';
-                    const deltaX = currentX - startX;
-
-                    if (deltaX < -40) {
-                        content.style.transform = 'translateX(-80px)';
-                        content.classList.add('swiped');
-                    } else {
-                        content.style.transform = 'translateX(0)';
-                        content.classList.remove('swiped');
-                    }
-
-                    // Reset hasMoved after a delay
-                    setTimeout(() => { hasMoved = false; }, 300);
-                });
-
-                // Touch events
-                if (swipeZone) {
-                    swipeZone.addEventListener('touchstart', (e) => {
-                        startX = e.touches[0].clientX;
-                        isDragging = true;
-                        hasMoved = false;
-                        content.style.transition = 'none';
-                    });
-                }
-
-                document.addEventListener('touchmove', (e) => {
-                    if (!isDragging) return;
-                    currentX = e.touches[0].clientX;
-                    const deltaX = currentX - startX;
-
-                    if (Math.abs(deltaX) > 5) {
-                        hasMoved = true;
-                    }
-
-                    if (deltaX < 0) {
-                        content.style.transform = `translateX(${Math.max(deltaX, -80)}px)`;
-                    }
-                });
-
-                document.addEventListener('touchend', () => {
-                    if (!isDragging) return;
-                    isDragging = false;
-                    content.style.transition = 'transform 0.3s ease';
-                    const deltaX = currentX - startX;
-
-                    if (deltaX < -40) {
-                        content.style.transform = 'translateX(-80px)';
-                        content.classList.add('swiped');
-                    } else {
-                        content.style.transform = 'translateX(0)';
-                        content.classList.remove('swiped');
-                    }
-
-                    setTimeout(() => { hasMoved = false; }, 300);
-                });
-
-                // Info button click
-                actionBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
+                wrapper.addEventListener('click', () => {
                     const tagId = wrapper.dataset.tagId;
                     const tag = mockTags.find(t => t.id == tagId);
-                    showTagInfoModal(tag);
+                    showTagDetailView(tag);
                 });
             });
-
-            // First-time guide animation - auto swipe the first item
-            if (tagWrappers.length > 0) {
-                const firstWrapper = tagWrappers[0];
-                const firstContent = firstWrapper.querySelector('.tag-item-content');
-
-                setTimeout(() => {
-                    firstContent.style.transition = 'none';
-                    setTimeout(() => {
-                        firstContent.style.transition = 'transform 0.4s ease';
-                        firstContent.style.transform = 'translateX(-10px)';
-                        setTimeout(() => {
-                            firstContent.style.transform = 'translateX(0)';
-                        }, 600);
-                    }, 50);
-                }, 500);
-            }
         }
 
+
         function showTagDetailView(tag) {
+            // Find current tag index
+            const currentIndex = mockTags.findIndex(t => t.id === tag.id);
+            const totalTags = mockTags.length;
+
             const content = document.getElementById('interactive-content');
             content.innerHTML = `
                 <div style="position: relative; height: 100%; overflow: hidden;">
-                    <button class="icon-btn back-btn" id="demo-tag-detail-back" style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
+                    <!-- <button class="icon-btn back-btn" id="demo-tag-detail-back" style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
                         <i data-lucide="arrow-left"></i>
-                    </button>
+                    </button> -->
 
                     <!-- Map focused on tag -->
                     <div class="map-container" style="height: 644px; position: relative;">
                         <div id="demo-tag-detail-map" style="width: 100%; height: 100%;"></div>
+
+                        <!-- Tag Switching Controls (Floating) -->
+                        <div style="position: absolute; bottom: 50px; left: 0; right: 0; z-index: 900; pointer-events: none;">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; pointer-events: auto;">
+                                <!-- Previous Button -->
+                                <button class="icon-btn" id="demo-tag-prev" style="width: 40px; height: 40px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+                                    <i data-lucide="chevron-left"></i>
+                                </button>
+
+                                <!-- Tag Indicators -->
+                                <div style="display: flex; gap: 6px; align-items: center; padding: 10px 16px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(58, 139, 255, 0.3); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+                                    ${mockTags.map((t, i) => `
+                                        <div class="tag-indicator-dot" data-tag-index="${i}" style="width: ${i === currentIndex ? '24px' : '8px'}; height: 8px; border-radius: 4px; background: ${i === currentIndex ? '#3A8BFF' : 'rgba(255,255,255,0.3)'}; transition: all 0.3s ease; cursor: pointer;"></div>
+                                    `).join('')}
+                                </div>
+
+                                <!-- Next Button -->
+                                <button class="icon-btn" id="demo-tag-next" style="width: 40px; height: 40px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+                                    <i data-lucide="chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
 
                         <div class="map-controls">
                             <button class="control-btn" id="demo-tag-zoom-in">
@@ -3766,15 +4074,18 @@
                     <div class="drawer" style="height: 200px;">
                         <div style="padding: 20px;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="font-size: 28px;">${tag.icon}</div>
-                                    <div>
+                                <!-- Tag Info (Swipeable) -->
+                                <div id="tag-info-swipeable" style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; touch-action: pan-y; transition: opacity 0.3s ease;">
+                                    <div style="font-size: 28px; flex-shrink: 0;">${tag.icon}</div>
+                                    <div style="flex: 1; min-width: 0;">
                                         <h3 class="title-secondary" style="font-size: 22px; margin-bottom: 6px;">${tag.name}</h3>
                                         <div class="text-body" style="font-size: 13px; margin-bottom: 4px;">${tag.address}</div>
                                         <div class="text-body" style="font-size: 12px;">Updated ${tag.lastUpdate}</div>
                                     </div>
                                 </div>
-                                <div style="display: flex; gap: 8px;">
+
+                                <!-- Action Buttons (Share & Close) -->
+                                <div style="display: flex; gap: 8px; flex-shrink: 0;">
                                     <button class="icon-btn" id="demo-tag-share">
                                         <i data-lucide="share-2"></i>
                                     </button>
@@ -3815,6 +4126,13 @@
                                         <i data-lucide="map-pinned"></i>
                                     </div>
                                     <span>Fence</span>
+                                </button>
+                                <button class="tag-action-btn" id="demo-tag-info" data-action="info">
+                                    <div class="tag-action-icon" style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); position: relative;">
+                                        <i data-lucide="info"></i>
+                                        ${tag.hasUpdate ? '<span class="update-badge"></span>' : ''}
+                                    </div>
+                                    <span>Info</span>
                                 </button>
                             </div>
                         </div>
@@ -3871,13 +4189,13 @@
                 const detailMap = L.map('demo-tag-detail-map', {
                     center: [tag.lat, tag.lng],
                     zoom: 16,
-                    zoomControl: false
+                    zoomControl: false,
+                    attributionControl: false
                 });
 
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; OpenStreetMap contributors',
-                    subdomains: 'abcd',
-                    maxZoom: 20
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    subdomains: ['a', 'b', 'c'],
+                    maxZoom: 19
                 }).addTo(detailMap);
 
                 // Add scale bar
@@ -3905,10 +4223,73 @@
                 });
                 L.marker([37.7749, -122.4194], { icon: userMarkerDiv }).addTo(detailMap);
 
-                // Attach event listeners
-                document.getElementById('demo-tag-detail-back')?.addEventListener('click', () => {
-                    showInteractiveScreen('home');
+                // Tag switching functions
+                const switchToTag = (newIndex) => {
+                    if (newIndex >= 0 && newIndex < mockTags.length) {
+                        const tagInfoDiv = document.getElementById('tag-info-swipeable');
+                        tagInfoDiv.style.opacity = '0';
+                        setTimeout(() => {
+                            showTagDetailView(mockTags[newIndex]);
+                        }, 200);
+                    }
+                };
+
+                // Previous/Next button listeners with circular navigation
+                document.getElementById('demo-tag-prev')?.addEventListener('click', () => {
+                    const currentIndex = mockTags.findIndex(t => t.id === tag.id);
+                    // Circular: if at first tag, go to last tag
+                    const newIndex = currentIndex === 0 ? mockTags.length - 1 : currentIndex - 1;
+                    switchToTag(newIndex);
                 });
+
+                document.getElementById('demo-tag-next')?.addEventListener('click', () => {
+                    const currentIndex = mockTags.findIndex(t => t.id === tag.id);
+                    // Circular: if at last tag, go to first tag
+                    const newIndex = currentIndex === mockTags.length - 1 ? 0 : currentIndex + 1;
+                    switchToTag(newIndex);
+                });
+
+                // Indicator dots click listeners
+                document.querySelectorAll('.tag-indicator-dot').forEach(dot => {
+                    dot.addEventListener('click', () => {
+                        const targetIndex = parseInt(dot.dataset.tagIndex);
+                        const currentIndex = mockTags.findIndex(t => t.id === tag.id);
+                        if (targetIndex !== currentIndex) {
+                            switchToTag(targetIndex);
+                        }
+                    });
+                });
+
+                // Swipe gesture support with circular navigation
+                const swipeableArea = document.getElementById('tag-info-swipeable');
+                let touchStartX = 0;
+                let touchEndX = 0;
+
+                swipeableArea?.addEventListener('touchstart', (e) => {
+                    touchStartX = e.touches[0].clientX;
+                }, { passive: true });
+
+                swipeableArea?.addEventListener('touchend', (e) => {
+                    touchEndX = e.changedTouches[0].clientX;
+                    const diff = touchEndX - touchStartX;
+                    const currentIndex = mockTags.findIndex(t => t.id === tag.id);
+
+                    // Swipe right (previous tag) - circular
+                    if (diff > 50) {
+                        const newIndex = currentIndex === 0 ? mockTags.length - 1 : currentIndex - 1;
+                        switchToTag(newIndex);
+                    }
+                    // Swipe left (next tag) - circular
+                    else if (diff < -50) {
+                        const newIndex = currentIndex === mockTags.length - 1 ? 0 : currentIndex + 1;
+                        switchToTag(newIndex);
+                    }
+                }, { passive: true });
+
+                // Attach event listeners
+                // document.getElementById('demo-tag-detail-back')?.addEventListener('click', () => {
+                //     showInteractiveScreen('home');
+                // });
 
                 document.getElementById('demo-tag-detail-close')?.addEventListener('click', () => {
                     showInteractiveScreen('home');
@@ -3938,6 +4319,11 @@
 
                 document.getElementById('demo-tag-fence')?.addEventListener('click', () => {
                     showInteractiveToast('🗺️ Geo-fence feature coming soon');
+                });
+
+                document.getElementById('demo-tag-info')?.addEventListener('click', () => {
+                    window.currentTag = tag;  // Store tag context
+                    showInteractiveScreen('tag-info');
                 });
 
                 // Map controls
