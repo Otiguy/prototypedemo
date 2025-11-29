@@ -1,0 +1,39 @@
+<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024.000000" height="1023.999878" fill="none" customFrame="#000000">
+	<defs>
+		<g id="pixso_custom_effect_0">
+			<effect x="5.000000" y="5.000000" visibility="visible" fill="rgb(0,0,0)" fill-opacity="0.25" effectType="dropShadow" stdDeviation="5" radius="0" />
+		</g>
+		<filter id="filter_0" width="910.000000" height="909.999878" x="62.000000" y="62.000000" filterUnits="userSpaceOnUse" customEffect="url(#pixso_custom_effect_0)" color-interpolation-filters="sRGB">
+			<feFlood flood-opacity="0" result="BackgroundImageFix" />
+			<feColorMatrix result="hardAlpha" in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0 " />
+			<feOffset dx="5.000000" dy="5.000000" in="hardAlpha" />
+			<feGaussianBlur stdDeviation="1.66666663" />
+			<feComposite k2="-1" k3="1" in2="hardAlpha" operator="out" />
+			<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0 " />
+			<feBlend result="effect_dropShadow_1" in2="BackgroundImageFix" mode="normal" />
+			<feBlend result="shape" in="SourceGraphic" in2="effect_dropShadow_1" mode="normal" />
+		</filter>
+		<clipPath id="clipPath_0">
+			<rect width="900.000000" height="899.999878" x="62.000000" y="62.000000" fill="rgb(255,255,255)" />
+		</clipPath>
+		<linearGradient id="paint_linear_0" x1="284.259277" x2="737.243469" y1="286.004395" y2="740.487061" gradientUnits="userSpaceOnUse">
+			<stop stop-color="rgb(229,242,170)" offset="0" stop-opacity="1" />
+			<stop stop-color="rgb(67,197,233)" offset="1" stop-opacity="1" />
+		</linearGradient>
+		<linearGradient id="paint_linear_1" x1="696.883789" x2="830.290771" y1="705.141357" y2="838.695923" gradientUnits="userSpaceOnUse">
+			<stop stop-color="rgb(229,242,170)" offset="0" stop-opacity="1" />
+			<stop stop-color="rgb(67,197,233)" offset="1" stop-opacity="1" />
+		</linearGradient>
+		<linearGradient id="paint_linear_2" x1="61.9999695" x2="961.999756" y1="62.0000916" y2="961.999878" gradientUnits="userSpaceOnUse">
+			<stop stop-color="rgb(229,242,170)" offset="0" stop-opacity="1" />
+			<stop stop-color="rgb(67,197,233)" offset="1" stop-opacity="1" />
+		</linearGradient>
+	</defs>
+	<rect id="Splash_gradient" width="1024.000000" height="1023.999878" x="0.000000" y="0.000000" fill="rgb(255,255,255)" fill-opacity="0" />
+	<g id="logo" filter="url(#filter_0)" customFrame="url(#clipPath_0)">
+		<rect id="logo" width="900.000000" height="899.999878" x="62.000000" y="62.000000" />
+		<path id="矢量 1" d="M511.502 738.991C386.917 738.991 284.259 637.442 284.259 512C284.259 386.557 386.917 286.004 511.502 286.004C636.087 286.004 738.745 387.553 738.745 512.995C738.745 638.438 637.083 738.991 511.502 738.991ZM511.502 405.473C452.698 405.473 404.857 453.261 404.857 512C404.857 570.739 452.698 618.526 511.502 618.526C570.306 618.526 618.146 570.739 618.146 512C618.146 453.261 570.306 405.473 511.502 405.473Z" fill="url(#paint_linear_0)" fill-rule="nonzero" />
+		<ellipse id="椭圆 3" rx="66.777344" ry="66.703552" cx="763.661133" cy="771.84491" fill="url(#paint_linear_1)" />
+		<path id="矢量 2" d="M511.502 962C263.329 962 62 759.898 62 512C62 264.102 263.329 62 511.502 62C759.675 62 962 264.102 962 512C962 581.69 946.053 648.394 916.153 711.115L808.512 658.349C831.435 612.553 842.399 563.77 842.399 512.995C842.399 330.805 693.894 182.465 511.502 182.465C329.11 182.465 181.601 330.805 181.601 512C181.601 693.195 330.106 842.531 511.502 842.531C560.339 842.531 608.18 831.58 652.033 810.672L703.861 919.19C644.06 947.066 579.276 962 511.502 962Z" fill="url(#paint_linear_2)" fill-rule="nonzero" />
+	</g>
+</svg>
