@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DMG 交互式原型演示入口</title>
+  <style>
+    html,body{height:100%;margin:0}
+    body{display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;background:#0f172a;color:#e2e8f0}
+    .card{max-width:520px;padding:32px;border-radius:16px;background:#111827;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    h1{margin:0 0 12px;font-size:24px}
+    p{margin:0 0 24px;color:#94a3b8}
+    .btn{display:inline-block;padding:12px 18px;border-radius:10px;background:#22c55e;color:#0b1020;text-decoration:none;font-weight:600}
+    .btn:focus,.btn:hover{background:#16a34a}
+    .link{display:block;margin-top:12px;color:#93c5fd;text-decoration:underline}
+    .btn-group{display:flex;flex-direction:column;gap:12px}
+  </style>
+  <meta name="description" content="DMG 交互式原型演示入口，通过此页进入 admin-management-prototype.html">
+</head>
+<body>
+  <main class="card" role="main">
+    <h1>DMG 管理原型入口</h1>
+    <p>选择要进入的原型页面：</p>
+    <div class="btn-group">
+      <a class="btn" href="./prototype-interactive.html" target="_self">NavTag 交互原型</a>
+      <!-- <a class="btn" href="./artist-miniprogram-prototype.html" target="_self">艺人视角小程序原型</a>
+      <a class="btn" href="./manager-miniprogram-prototype.html" target="_self">经纪人视角小程序原型（公司高层视角大部分一样）</a> -->
+    </div>
+
+  </main>
+  <script>
+    (function(){
+      var el=document.querySelector('.btn');
+      if(el){el.focus();}
+    })();
+  </script>
+</body>
+</html>
