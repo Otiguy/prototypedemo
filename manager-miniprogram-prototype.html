@@ -1,0 +1,4201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>经纪人端小程序原型 - DMG</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    .phone-container {
+      width: 390px;
+      height: 844px;
+      border: 1px solid #ddd;
+      overflow: hidden;
+      position: relative;
+      background: #fff;
+    }
+    .status-bar { height: 44px; }
+    .main-content { height: 664px; overflow-y: auto; }
+    .tab-bar { height: 92px; border-top: 1px solid #e5e5e5; }
+    .hidden { display: none !important; }
+    .album-group.collapsed .album-songs { display: none; }
+    .album-group.collapsed .collapse-icon { transform: rotate(-90deg); }
+    .collapse-icon { transition: transform 0.3s; }
+    .badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: #ff3b30;
+      color: white;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 500;
+      width: 17px;
+      height: 17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 16px;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      background: #f0f0f0;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin: 2px;
+      font-size: 14px;
+    }
+    .tag-remove {
+      margin-left: 4px;
+      cursor: pointer;
+      color: #999;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 350px;
+      max-height: 600px;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .chart-container { width: 100%; height: 280px; }
+    .chart-container-tall { width: 100%; height: 560px; }
+    .fab-button {
+      position: absolute;
+      bottom: 110px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #F93B3D;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(249, 59, 61, 0.4);
+      cursor: pointer;
+      z-index: 999;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .fab-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(249, 59, 61, 0.5);
+    }
+    .fab-button:active {
+      transform: scale(0.95);
+    }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e5e5e5;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #F93B3D, #FF6B6D);
+      transition: width 0.3s;
+      border-radius: 4px;
+    }
+    .filter-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .chip {
+      padding: 6px 12px;
+      border-radius: 16px;
+      border: 1px solid #d1d5db;
+      background: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .chip.active {
+      background: #F93B3D;
+      color: white;
+      border-color: #F93B3D;
+    }
+    .chip:hover:not(.active) {
+      background: #f3f4f6;
+    }
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+    .breadcrumb-item {
+      cursor: pointer;
+    }
+    .breadcrumb-item:hover {
+      color: #F93B3D;
+    }
+    .breadcrumb-separator {
+      color: #d1d5db;
+    }
+    /* 微信小程序导航栏样式 */
+    .mp-statusbar {
+      height: 44px;
+      background: #fff;
+    }
+    .mp-navbar {
+      height: 44px;
+      background: #fff;
+      border-bottom: 1px solid #e5e5e5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .mp-navbar-left {
+      width: 80px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mp-navbar-center {
+      flex: 1;
+      text-align: center;
+      font-weight: 500;
+      font-size: 16px;
+    }
+    .mp-navbar-right {
+      width: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+    .mp-btn-back, .mp-btn-home {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .mp-capsule {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 16px;
+    }
+    /* 手风琴折叠面板样式 */
+    .accordion-panel {
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: #f9fafb;
+      cursor: pointer;
+      user-select: none;
+    }
+    .accordion-header:hover {
+      background: #f3f4f6;
+    }
+    .accordion-title {
+      font-weight: 500;
+      font-size: 14px;
+    }
+    .accordion-icon {
+      transition: transform 0.3s;
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .accordion-panel.collapsed .accordion-icon {
+      transform: rotate(-90deg);
+    }
+    .accordion-content {
+      padding: 12px;
+      background: white;
+    }
+    .accordion-panel.collapsed .accordion-content {
+      display: none;
+    }
+    .accordion-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    /* 返回顶部按钮 */
+    .back-to-top {
+      position: absolute;
+      bottom: 120px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(249, 59, 61, 0.9);
+      color: white;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s;
+    }
+    .back-to-top:hover {
+      background: rgba(249, 59, 61, 1);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(249, 59, 61, 0.4);
+    }
+    .back-to-top.show {
+      display: flex;
+    }
+    /* 筛选标签样式 */
+    .filter-tag {
+      padding: 6px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      background: white;
+      font-size: 13px;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .filter-tag.active {
+      background: #FEE2E2;
+      border-color: #F93B3D;
+      color: #F93B3D;
+      font-weight: 500;
+    }
+    .filter-tag:hover:not(.active) {
+      background: #F9FAFB;
+      border-color: #9CA3AF;
+    }
+
+    /* 图表 Tooltip 下钻链接样式 */
+    .tooltip-drilldown-link {
+      color: #F93B3D;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #eee;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .tooltip-drilldown-link:hover {
+      color: #d32f2f;
+      text-decoration: underline;
+    }
+
+    /* 滚动选择器样式 */
+    .picker-container {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .picker-column {
+      height: 100%;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .picker-column::-webkit-scrollbar {
+      display: none;
+    }
+
+    .picker-scroller {
+      padding: 96px 0;
+    }
+
+    .picker-item {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #999;
+      scroll-snap-align: center;
+      transition: all 0.2s;
+    }
+
+    .picker-item.selected {
+      font-weight: 600;
+      color: #333;
+      font-size: 18px;
+      transform: scale(1.1);
+    }
+
+    .picker-mask {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(255, 255, 255, 0) 25%,
+        rgba(255, 255, 255, 0) 75%,
+        rgba(255, 255, 255, 0.95) 100%
+      );
+      z-index: 1;
+    }
+
+    .picker-indicator {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 40px;
+      transform: translateY(-50%);
+      border-top: 1px solid #e5e5e5;
+      border-bottom: 1px solid #e5e5e5;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 时间模式标签选中效果 */
+    #start-time-tab,
+    #end-time-tab {
+      position: relative;
+      padding-bottom: 6px;
+      transition: all 0.2s;
+    }
+
+    #start-time-tab.active,
+    #end-time-tab.active {
+      color: #F93B3D;
+    }
+
+    #start-time-tab.active::after,
+    #end-time-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #F93B3D;
+      border-radius: 1.5px;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="phone-container mx-auto my-8" data-page="app-container">
+
+    <!-- 状态栏占位 -->
+    <div class="mp-statusbar" data-role="statusbar"></div>
+
+    <!-- 自定义导航栏 -->
+    <div class="mp-navbar" data-role="navbar" id="mpNavbar">
+      <div class="mp-navbar-left" id="navbarLeft">
+        <!-- 返回按钮会根据页面动态显示 -->
+      </div>
+      <div class="mp-navbar-center" id="navbarTitle">数据中心</div>
+      <div class="mp-navbar-right">
+        <div class="mp-capsule">
+          <span style="font-size: 16px;">···</span>
+          <span style="font-size: 16px;">⭕</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content bg-gray-50" id="mainContent" data-component="main-content">
+
+      <!-- 数据中心页面 -->
+      <div id="page-data" class="page-container" data-page="data-center">
+        <!-- 二级Tab导航 -->
+        <div class="bg-white border-b sticky top-0 z-10" data-component="tab-nav">
+          <div class="flex overflow-x-auto">
+            <button class="flex-1 py-3 text-sm font-medium border-b-2 border-red-500 text-red-500 whitespace-nowrap" onclick="switchDataTab('overview')" id="tab-overview" data-type="tab">总览</button>
+            <button class="flex-1 py-3 text-sm font-medium text-gray-500 whitespace-nowrap" onclick="switchDataTab('works')" id="tab-works" data-type="tab">作品经营</button>
+            <button class="flex-1 py-3 text-sm font-medium text-gray-500 whitespace-nowrap" onclick="switchDataTab('content')" id="tab-content" data-type="tab">内容经营</button>
+            <button class="flex-1 py-3 text-sm font-medium text-gray-500 whitespace-nowrap" onclick="switchDataTab('fans')" id="tab-fans" data-type="tab">粉丝经营</button>
+            <button class="flex-1 py-3 text-sm font-medium text-gray-500 whitespace-nowrap" onclick="switchDataTab('fire')" id="tab-fire" data-type="tab">火力指数</button>
+          </div>
+        </div>
+
+        <!-- 总览Tab内容 -->
+        <div id="data-overview" class="data-tab-content overflow-y-auto">
+          <!-- 指标卡片 -->
+          <div class="p-4 bg-gray-50">
+            <h3 class="font-medium text-sm mb-3">选择指标</h3>
+            <div class="grid grid-cols-4 gap-2">
+            <!-- 艺人人数 -->
+            <div class="bg-white rounded p-2 shadow-sm cursor-pointer" onclick="selectOverviewMetric('artists')">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between mb-1">
+                  <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+                  <input type="radio" name="overview-metric" value="artists" checked>
+                </div>
+                <span class="text-xs text-gray-600 mb-1">艺人人数</span>
+                <div class="text-lg font-bold text-gray-900">42</div>
+                <div class="text-xs text-green-500">↑ 12.5%</div>
+              </div>
+            </div>
+
+            <!-- 作品数 -->
+            <div class="bg-white rounded p-2 shadow-sm cursor-pointer" onclick="selectOverviewMetric('works')">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between mb-1">
+                  <svg class="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20"><path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/></svg>
+                  <input type="radio" name="overview-metric" value="works">
+                </div>
+                <span class="text-xs text-gray-600 mb-1">作品数</span>
+                <div class="text-lg font-bold text-gray-900">2,847</div>
+                <div class="text-xs text-green-500">↑ 8.3%</div>
+              </div>
+            </div>
+
+            <!-- 播放量 -->
+            <div class="bg-white rounded p-2 shadow-sm cursor-pointer" onclick="selectOverviewMetric('plays')">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between mb-1">
+                  <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"/></svg>
+                  <input type="radio" name="overview-metric" value="plays">
+                </div>
+                <span class="text-xs text-gray-600 mb-1">播放量</span>
+                <div class="text-lg font-bold text-gray-900">15.8M</div>
+                <div class="text-xs text-green-500">↑ 23.7%</div>
+              </div>
+            </div>
+
+            <!-- 下载量 -->
+            <div class="bg-white rounded p-2 shadow-sm cursor-pointer" onclick="selectOverviewMetric('downloads')">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between mb-1">
+                  <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/></svg>
+                  <input type="radio" name="overview-metric" value="downloads">
+                </div>
+                <span class="text-xs text-gray-600 mb-1">下载量</span>
+                <div class="text-lg font-bold text-gray-900">3.2M</div>
+                <div class="text-xs text-green-500">↑ 15.2%</div>
+              </div>
+            </div>
+
+            <!-- 销售量 -->
+            <div class="bg-white rounded p-2 shadow-sm cursor-pointer" onclick="selectOverviewMetric('sales')">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between mb-1">
+                  <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
+                  <input type="radio" name="overview-metric" value="sales">
+                </div>
+                <span class="text-xs text-gray-600 mb-1">销售量</span>
+                <div class="text-lg font-bold text-gray-900">¥8.4M</div>
+                <div class="text-xs text-green-500">↑ 19.6%</div>
+              </div>
+            </div>
+
+            <!-- 粉丝量 -->
+            <div class="bg-white rounded p-2 shadow-sm cursor-pointer" onclick="selectOverviewMetric('fans')">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between mb-1">
+                  <svg class="w-4 h-4 text-pink-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/></svg>
+                  <input type="radio" name="overview-metric" value="fans">
+                </div>
+                <span class="text-xs text-gray-600 mb-1">粉丝量</span>
+                <div class="text-lg font-bold text-gray-900">1.2M</div>
+                <div class="text-xs text-green-500">↑ 27.3%</div>
+              </div>
+            </div>
+
+            <!-- 收入(CNY) -->
+            <div class="bg-white rounded p-2 shadow-sm cursor-pointer" onclick="selectOverviewMetric('revenue-cny')">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between mb-1">
+                  <svg class="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"/></svg>
+                  <input type="radio" name="overview-metric" value="revenue-cny">
+                </div>
+                <span class="text-xs text-gray-600 mb-1">收入(CNY)</span>
+                <div class="text-lg font-bold text-gray-900">¥42.8M</div>
+                <div class="text-xs text-green-500">↑ 31.4%</div>
+              </div>
+            </div>
+
+            <!-- 收入(EUR) -->
+            <div class="bg-white rounded p-2 shadow-sm cursor-pointer" onclick="selectOverviewMetric('revenue-eur')">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between mb-1">
+                  <svg class="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20"><path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"/></svg>
+                  <input type="radio" name="overview-metric" value="revenue-eur">
+                </div>
+                <span class="text-xs text-gray-600 mb-1">收入(EUR)</span>
+                <div class="text-lg font-bold text-gray-900">€4.2M</div>
+                <div class="text-xs text-green-500">↑ 28.7%</div>
+              </div>
+            </div>
+            </div>
+          </div>
+
+          <!-- 时间范围选择 -->
+          <div class="px-4 pb-4 bg-gray-50">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-600">时间:</span>
+              <button onclick="showPeriodPicker('overview')" class="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-300 rounded bg-white">
+                <span id="overview-period-display">2024.01.01 - 2024.04.30</span>
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+              </button>
+              <button onclick="showFilterPanel('overview')" class="text-sm px-3 py-1.5 rounded border border-gray-300 text-gray-600">
+                筛选
+              </button>
+            </div>
+          </div>
+
+          <!-- 趋势图表 -->
+          <div class="bg-white p-4 m-4 rounded-lg shadow-sm">
+            <h3 class="font-medium mb-4">趋势分析</h3>
+            <div class="chart-container" id="chart-overview-trend"></div>
+          </div>
+        </div>
+
+        <!-- 作品经营Tab内容 -->
+        <div id="data-works" class="data-tab-content hidden overflow-y-auto">
+          <!-- 三级分页快速导航 -->
+          <div class="bg-white p-3 border-b flex gap-2 overflow-x-auto" data-component="sub-nav">
+            <button class="px-3 py-1 text-xs rounded-full bg-red-500 text-white whitespace-nowrap" onclick="scrollToSection('revenue')">经营情况</button>
+            <button class="px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-700 whitespace-nowrap" onclick="scrollToSection('platform-dist')">平台分布</button>
+          </div>
+
+          <div class="p-4 space-y-6">
+            <!-- 经营情况 -->
+            <div id="revenue" class="bg-white rounded-lg p-4 shadow-sm" data-component="revenue-chart">
+              <!-- 标题行 -->
+              <h3 id="revenue-title" class="font-medium mb-3">经营情况 - CNY</h3>
+
+              <!-- 时间筛选和筛选按钮 -->
+              <div class="flex items-center gap-2 mb-3" id="revenue-time-filter">
+                <span class="text-sm text-gray-600">时间:</span>
+                <button onclick="showPeriodPicker('revenue')" class="flex items-center gap-1 px-3 py-1.5 text-xs border border-gray-300 rounded bg-white">
+                  <span id="revenue-period-display">2024.01 - 2024.04</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </button>
+                <button id="filter-btn-revenue" onclick="showFilterPanel('revenue')" class="text-xs px-3 py-1.5 rounded border border-gray-300 text-gray-600">
+                  筛选
+                </button>
+              </div>
+
+              <!-- 面包屑导航 (仅用于图表点击下钻) -->
+              <div class="breadcrumb" id="revenue-breadcrumb">
+                <span class="breadcrumb-item" onclick="resetChartDrilldown('revenue')">全部数据</span>
+              </div>
+
+              <div style="position: relative;">
+                <div class="chart-container" id="chart-revenue"></div>
+                <!-- 图表 Tooltip -->
+                <div id="chart-tooltip-revenue" class="hidden absolute bg-white shadow-xl rounded-lg p-3 border border-gray-200" style="z-index: 100; max-width: 200px; pointer-events: auto;">
+                  <div id="tooltip-content-revenue"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 平台分布 -->
+            <div id="platform-dist" class="bg-white rounded-lg p-4 shadow-sm" data-component="platform-chart">
+              <!-- 标题行 -->
+              <h3 id="platform-dist-title" class="font-medium mb-3">平台分布 - CNY</h3>
+
+              <!-- 时间筛选和筛选按钮 -->
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-sm text-gray-600">时间:</span>
+                <button onclick="showPeriodPicker('platform')" class="flex items-center gap-1 px-3 py-1.5 text-xs border border-gray-300 rounded bg-white">
+                  <span id="period-display">2024.01 - 2024.04</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </button>
+                <button onclick="showFilterPanel('platform-dist')" class="text-xs px-3 py-1.5 rounded border border-gray-300 text-gray-600">
+                  筛选
+                </button>
+              </div>
+              <div class="chart-container-tall" id="chart-platform"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 内容经营Tab内容 -->
+        <div id="data-content" class="data-tab-content hidden overflow-y-auto">
+          <!-- 指标卡片 -->
+          <div class="p-4 bg-gray-50">
+            <h3 class="font-medium text-sm mb-3">选择指标</h3>
+            <div class="grid grid-cols-4 gap-2">
+              <!-- 歌曲数 -->
+              <div class="bg-white rounded p-2 shadow-sm cursor-pointer" onclick="selectMetric('songs')" id="metric-songs">
+                <div class="flex flex-col">
+                  <div class="flex items-center justify-between mb-1">
+                    <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/></svg>
+                    <input type="radio" name="content-metric" value="songs" checked>
+                  </div>
+                  <span class="text-xs text-gray-600 mb-1">歌曲数</span>
+                  <div class="text-lg font-bold text-gray-900">12</div>
+                  <div class="text-xs text-green-500">↑ 20.0%</div>
+                </div>
+              </div>
+
+              <!-- 点播数 -->
+              <div class="bg-white rounded p-2 shadow-sm cursor-pointer" onclick="selectMetric('plays')" id="metric-plays">
+                <div class="flex flex-col">
+                  <div class="flex items-center justify-between mb-1">
+                    <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"/></svg>
+                    <input type="radio" name="content-metric" value="plays">
+                  </div>
+                  <span class="text-xs text-gray-600 mb-1">点播数</span>
+                  <div class="text-lg font-bold text-gray-900">1.2M</div>
+                  <div class="text-xs text-green-500">↑ 15.3%</div>
+                </div>
+              </div>
+
+              <!-- 点赞数 -->
+              <div class="bg-white rounded p-2 shadow-sm cursor-pointer" onclick="selectMetric('likes')" id="metric-likes">
+                <div class="flex flex-col">
+                  <div class="flex items-center justify-between mb-1">
+                    <svg class="w-4 h-4 text-pink-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/></svg>
+                    <input type="radio" name="content-metric" value="likes">
+                  </div>
+                  <span class="text-xs text-gray-600 mb-1">点赞数</span>
+                  <div class="text-lg font-bold text-gray-900">35K</div>
+                  <div class="text-xs text-green-500">↑ 28.7%</div>
+                </div>
+              </div>
+
+              <!-- 评论数 -->
+              <div class="bg-white rounded p-2 shadow-sm cursor-pointer" onclick="selectMetric('comments')" id="metric-comments">
+                <div class="flex flex-col">
+                  <div class="flex items-center justify-between mb-1">
+                    <svg class="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"/></svg>
+                    <input type="radio" name="content-metric" value="comments">
+                  </div>
+                  <span class="text-xs text-gray-600 mb-1">评论数</span>
+                  <div class="text-lg font-bold text-gray-900">8.5K</div>
+                  <div class="text-xs text-green-500">↑ 12.4%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 趋势图表 -->
+          <div class="bg-white p-4 m-4 rounded-lg shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-medium" id="selectedMetricTitle">歌曲数趋势</h3>
+            </div>
+
+            <!-- 时间筛选和筛选按钮 -->
+            <div class="flex items-center gap-2 mb-3" id="content-time-filter">
+              <span class="text-sm text-gray-600">时间:</span>
+              <button onclick="showPeriodPicker('content')" class="flex items-center gap-1 px-3 py-1.5 text-xs border border-gray-300 rounded bg-white">
+                <span id="content-period-display">2024.01 - 2024.04</span>
+                <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+              </button>
+              <button onclick="showFilterPanel('content')" class="text-xs px-3 py-1.5 rounded border border-gray-300 text-gray-600">
+                筛选
+              </button>
+            </div>
+
+            <div class="chart-container" id="chart-content"></div>
+          </div>
+        </div>
+
+        <!-- 粉丝经营Tab内容 -->
+        <div id="data-fans" class="data-tab-content hidden p-4">
+          <div class="bg-white rounded-lg p-6 text-center">
+            <div class="text-4xl mb-2">🚧</div>
+            <p class="text-gray-500">功能开发中,敬请期待</p>
+          </div>
+        </div>
+
+        <!-- 火力指数Tab内容 -->
+        <div id="data-fire" class="data-tab-content hidden p-4">
+          <div class="bg-white rounded-lg p-6 text-center">
+            <div class="text-4xl mb-2">🚧</div>
+            <p class="text-gray-500">功能开发中,敬请期待</p>
+          </div>
+        </div>
+
+        <!-- 返回顶部按钮 -->
+        <div class="back-to-top" id="backToTop" onclick="scrollToTop()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+          </svg>
+        </div>
+
+        <!-- 时间段选择弹窗 -->
+        <div id="period-picker-modal" class="absolute inset-0 bg-black bg-opacity-50 hidden flex items-end" style="z-index: 100;" onclick="hidePeriodPicker()">
+          <div class="bg-white rounded-t-2xl w-full" onclick="event.stopPropagation()">
+
+            <!-- 标题 -->
+            <div class="text-center py-4 border-b">
+              <h3 class="font-medium text-lg" id="picker-title">选择月份</h3>
+            </div>
+
+            <!-- 快捷选项 -->
+            <div class="px-4 py-3 flex gap-2 border-b" id="quick-options">
+              <button class="px-3 py-1.5 text-xs rounded chip" onclick="selectQuickOption(3)">近3月</button>
+              <button class="px-3 py-1.5 text-xs rounded chip" onclick="selectQuickOption(6)">近6月</button>
+              <button class="px-3 py-1.5 text-xs rounded chip" onclick="selectQuickOption(12)">近12月</button>
+              <button class="px-3 py-1.5 text-xs rounded chip active" onclick="selectQuickOption(0)">自定义</button>
+            </div>
+
+            <!-- 当前选择显示 -->
+            <div class="px-4 py-3 bg-gray-50 flex items-center justify-center gap-2 text-sm">
+              <div class="flex items-center cursor-pointer" onclick="switchTimeMode('start')" id="start-time-tab">
+                <span class="text-gray-500">开始时间</span>
+                <span id="start-display" class="ml-2 text-gray-900 font-medium">2024.01</span>
+              </div>
+              <span class="text-gray-400 mx-1">-</span>
+              <div class="flex items-center cursor-pointer" onclick="switchTimeMode('end')" id="end-time-tab">
+                <span class="text-gray-500">结束时间</span>
+                <span id="end-display" class="ml-2 text-gray-900 font-medium">2024.04</span>
+              </div>
+            </div>
+
+            <!-- 双列滚动选择器 (月粒度) -->
+            <div class="picker-container flex h-64 relative" id="month-picker-container">
+              <!-- 遮罩层 -->
+              <div class="picker-mask"></div>
+
+              <!-- 选中指示条 -->
+              <div class="picker-indicator"></div>
+
+              <!-- 左列:年份 -->
+              <div class="picker-column flex-1">
+                <div class="picker-scroller" id="year-scroller">
+                  <div class="picker-item" data-value="2022">2022年</div>
+                  <div class="picker-item" data-value="2023">2023年</div>
+                  <div class="picker-item selected" data-value="2024">2024年</div>
+                  <div class="picker-item" data-value="2025">2025年</div>
+                  <div class="picker-item" data-value="2026">2026年</div>
+                  <div class="picker-item" data-value="2027">2027年</div>
+                  <div class="picker-item" data-value="2028">2028年</div>
+                </div>
+              </div>
+
+              <!-- 右列:月份 -->
+              <div class="picker-column flex-1">
+                <div class="picker-scroller" id="month-scroller">
+                  <div class="picker-item selected" data-value="01">1月</div>
+                  <div class="picker-item" data-value="02">2月</div>
+                  <div class="picker-item" data-value="03">3月</div>
+                  <div class="picker-item" data-value="04">4月</div>
+                  <div class="picker-item" data-value="05">5月</div>
+                  <div class="picker-item" data-value="06">6月</div>
+                  <div class="picker-item" data-value="07">7月</div>
+                  <div class="picker-item" data-value="08">8月</div>
+                  <div class="picker-item" data-value="09">9月</div>
+                  <div class="picker-item" data-value="10">10月</div>
+                  <div class="picker-item" data-value="11">11月</div>
+                  <div class="picker-item" data-value="12">12月</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 三列滚动选择器 (日粒度) -->
+            <div class="picker-container flex h-64 relative hidden" id="date-picker-container">
+              <!-- 遮罩层 -->
+              <div class="picker-mask"></div>
+
+              <!-- 选中指示条 -->
+              <div class="picker-indicator"></div>
+
+              <!-- 左列:年份 -->
+              <div class="picker-column flex-1">
+                <div class="picker-scroller" id="date-year-scroller">
+                  <div class="picker-item" data-value="2022">2022年</div>
+                  <div class="picker-item" data-value="2023">2023年</div>
+                  <div class="picker-item selected" data-value="2024">2024年</div>
+                  <div class="picker-item" data-value="2025">2025年</div>
+                </div>
+              </div>
+
+              <!-- 中列:月份 -->
+              <div class="picker-column flex-1">
+                <div class="picker-scroller" id="date-month-scroller">
+                  <div class="picker-item selected" data-value="01">1月</div>
+                  <div class="picker-item" data-value="02">2月</div>
+                  <div class="picker-item" data-value="03">3月</div>
+                  <div class="picker-item" data-value="04">4月</div>
+                  <div class="picker-item" data-value="05">5月</div>
+                  <div class="picker-item" data-value="06">6月</div>
+                  <div class="picker-item" data-value="07">7月</div>
+                  <div class="picker-item" data-value="08">8月</div>
+                  <div class="picker-item" data-value="09">9月</div>
+                  <div class="picker-item" data-value="10">10月</div>
+                  <div class="picker-item" data-value="11">11月</div>
+                  <div class="picker-item" data-value="12">12月</div>
+                </div>
+              </div>
+
+              <!-- 右列:日期 -->
+              <div class="picker-column flex-1">
+                <div class="picker-scroller" id="date-day-scroller">
+                  <div class="picker-item selected" data-value="01">1日</div>
+                  <div class="picker-item" data-value="02">2日</div>
+                  <div class="picker-item" data-value="03">3日</div>
+                  <div class="picker-item" data-value="04">4日</div>
+                  <div class="picker-item" data-value="05">5日</div>
+                  <div class="picker-item" data-value="06">6日</div>
+                  <div class="picker-item" data-value="07">7日</div>
+                  <div class="picker-item" data-value="08">8日</div>
+                  <div class="picker-item" data-value="09">9日</div>
+                  <div class="picker-item" data-value="10">10日</div>
+                  <div class="picker-item" data-value="11">11日</div>
+                  <div class="picker-item" data-value="12">12日</div>
+                  <div class="picker-item" data-value="13">13日</div>
+                  <div class="picker-item" data-value="14">14日</div>
+                  <div class="picker-item" data-value="15">15日</div>
+                  <div class="picker-item" data-value="16">16日</div>
+                  <div class="picker-item" data-value="17">17日</div>
+                  <div class="picker-item" data-value="18">18日</div>
+                  <div class="picker-item" data-value="19">19日</div>
+                  <div class="picker-item" data-value="20">20日</div>
+                  <div class="picker-item" data-value="21">21日</div>
+                  <div class="picker-item" data-value="22">22日</div>
+                  <div class="picker-item" data-value="23">23日</div>
+                  <div class="picker-item" data-value="24">24日</div>
+                  <div class="picker-item" data-value="25">25日</div>
+                  <div class="picker-item" data-value="26">26日</div>
+                  <div class="picker-item" data-value="27">27日</div>
+                  <div class="picker-item" data-value="28">28日</div>
+                  <div class="picker-item" data-value="29">29日</div>
+                  <div class="picker-item" data-value="30">30日</div>
+                  <div class="picker-item" data-value="31">31日</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 确定按钮 -->
+            <div class="p-4">
+              <button class="w-full py-3 rounded-lg font-medium text-white" style="background-color: #ea580c;" onclick="confirmPeriod()">
+                确定
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 个人中心页面 -->
+      <div id="page-profile" class="page-container hidden overflow-y-auto" data-page="profile">
+        <!-- Profile -->
+        <div class="bg-white p-4 border-b" data-component="profile-header">
+          <div class="flex items-center gap-4" onclick="editProfile()" style="cursor: pointer;">
+            <div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center text-2xl">👤</div>
+            <div class="flex-1">
+              <div class="font-medium text-lg">艺人昵称</div>
+              <div class="text-sm text-gray-500">UID: 123456789</div>
+            </div>
+            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"/></svg>
+          </div>
+        </div>
+
+        <!-- 菜单列表 -->
+        <div class="p-4 space-y-3">
+          <!-- 消息 -->
+          <div class="bg-white rounded-lg shadow-sm" data-component="menu-item">
+            <button class="w-full p-4 flex items-center justify-between" onclick="showMessages()">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center relative">
+                  <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+                  <span class="badge">3</span>
+                </div>
+                <div class="text-left">
+                  <div class="font-medium">消息</div>
+                  <div class="text-xs text-gray-500">查看系统通知</div>
+                </div>
+              </div>
+              <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 消息列表页面 -->
+      <div id="page-messages" class="page-container hidden h-full flex flex-col bg-white" data-page="messages">
+        <div class="flex-1 overflow-y-auto" id="messageList">
+          <!-- 消息1 -->
+          <div class="message-item p-4 border-b hover:bg-gray-50 cursor-pointer" onclick="showMessageDetail(1)" data-read="false">
+            <div class="flex items-start gap-3">
+              <div class="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+              <div class="flex-1">
+                <div class="font-medium mb-1">新人入驻申请</div>
+                <div class="text-sm text-gray-600 mb-1">艺人"李明"提交了入驻申请，请到Web端进行审核处理</div>
+                <div class="text-xs text-gray-400">2024-04-15 14:30</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 消息2 -->
+          <div class="message-item p-4 border-b hover:bg-gray-50 cursor-pointer" onclick="showMessageDetail(2)" data-read="false">
+            <div class="flex items-start gap-3">
+              <div class="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+              <div class="flex-1">
+                <div class="font-medium mb-1">艺人歌曲上传</div>
+                <div class="text-sm text-gray-600 mb-1">艺人"张三"上传了新歌曲《春天的故事》，请到Web端审核</div>
+                <div class="text-xs text-gray-400">2024-04-14 16:20</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 消息3 -->
+          <div class="message-item p-4 border-b hover:bg-gray-50 cursor-pointer" onclick="showMessageDetail(3)" data-read="false">
+            <div class="flex items-start gap-3">
+              <div class="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+              <div class="flex-1">
+                <div class="font-medium mb-1">经营数据更新通知</div>
+                <div class="text-sm text-gray-600 mb-1">网易云音乐平台已导入新一批经营数据，请查看</div>
+                <div class="text-xs text-gray-400">2024-04-14 09:15</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 已读消息 -->
+          <div class="message-item p-4 border-b hover:bg-gray-50 cursor-pointer opacity-60" onclick="showMessageDetail(4)" data-read="true">
+            <div class="flex items-start gap-3">
+              <div class="w-2 h-2 bg-transparent rounded-full mt-2 flex-shrink-0"></div>
+              <div class="flex-1">
+                <div class="font-medium mb-1">经营数据更新通知</div>
+                <div class="text-sm text-gray-600 mb-1">TME平台已导入新一批经营数据，请查看</div>
+                <div class="text-xs text-gray-400">2024-04-12 10:00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 消息详情页面 -->
+      <div id="page-message-detail" class="page-container hidden h-full flex flex-col bg-white" data-page="message-detail">
+        <div class="flex-1 overflow-y-auto p-4">
+          <div id="messageDetailContent">
+            <h2 class="text-xl font-medium mb-2">作品审核通过</h2>
+            <p class="text-sm text-gray-500 mb-4">2024-04-15 14:30</p>
+            <div class="text-gray-700 leading-relaxed">
+              <p>尊敬的艺人,</p>
+              <br>
+              <p>您提交的歌曲《春天的故事》已通过平台审核。</p>
+              <br>
+              <p>当前状态: 待上线</p>
+              <p>下一步: 等待经纪人确认后即可上线发布</p>
+              <br>
+              <p>感谢您的支持!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 合同查看页面 -->
+      <div id="page-contracts" class="page-container hidden h-full flex flex-col bg-white" data-page="contracts">
+        <div class="flex-1 overflow-y-auto">
+          <div class="p-4 bg-yellow-50 border-b">
+            <p class="text-sm text-gray-700">📄 调用腾讯电子签查看合同(iframe模式)</p>
+          </div>
+          <iframe src="about:blank" class="w-full" style="height: 600px; border: none;" title="腾讯电子签合同查看"></iframe>
+          <div class="p-4 text-center text-sm text-gray-500">
+            实际使用时此处将嵌入腾讯电子签的webview
+          </div>
+        </div>
+      </div>
+
+      <!-- 个人资料编辑页面 -->
+      <div id="page-profile-edit" class="page-container hidden h-full flex flex-col bg-gray-50" data-page="profile-edit">
+        <div class="flex-1 overflow-y-auto">
+          <!-- 头像 -->
+          <div class="bg-white p-4 border-b">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">头像</span>
+              <div class="flex items-center gap-3">
+                <div class="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center text-2xl">👤</div>
+                <button class="text-red-500 text-sm" onclick="uploadAvatar()">更换头像</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 昵称 -->
+          <div class="bg-white p-4 border-b mt-3">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">昵称</span>
+              <div class="flex items-center gap-2">
+                <input type="text" value="艺人昵称" class="text-sm text-right border-none outline-none" style="width: 150px;" id="nickname-input" onblur="saveField('nickname')">
+                <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 性别 -->
+          <div class="bg-white p-4 border-b" onclick="showGenderPicker()">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">性别</span>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-900" id="gender-display">男</span>
+                <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 生日 -->
+          <div class="bg-white p-4 border-b">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">生日</span>
+              <div class="flex items-center gap-2">
+                <input type="date" value="1990-01-01" class="text-sm text-right border-none outline-none text-gray-900" id="birthday-input" onchange="saveField('birthday')">
+                <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 绑定手机 -->
+          <div class="bg-white p-4 border-b mt-3" onclick="showPhoneBinding()">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">绑定手机</span>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-900" id="phone-display">138****5678</span>
+                <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- UID（只读，可复制） -->
+          <div class="bg-white p-4 border-b" onclick="copyUID()" style="cursor: pointer;">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">UID</span>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500" id="uid-text">123456789</span>
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 个人信息收集 -->
+          <div class="bg-white p-4 border-b mt-3" onclick="showPrivacyInfo('collect')">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">个人信息收集</span>
+              <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"/></svg>
+            </div>
+          </div>
+
+          <!-- 权限清单 -->
+          <div class="bg-white p-4 border-b" onclick="showPrivacyInfo('permission')">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">权限清单</span>
+              <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"/></svg>
+            </div>
+          </div>
+
+          <!-- 退出登录按钮 -->
+          <div class="p-4">
+            <button class="w-full py-3 bg-white text-red-500 rounded-lg font-medium border border-red-200" onclick="confirmLogout()">退出登录</button>
+          </div>
+
+          <!-- 用户协议和隐私政策 -->
+          <div class="px-4 pb-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+            <a href="javascript:void(0)" onclick="showAgreement('user')" class="text-red-500 underline">用户协议</a>
+            <span>|</span>
+            <a href="javascript:void(0)" onclick="showAgreement('privacy')" class="text-red-500 underline">隐私政策</a>
+          </div>
+
+          <!-- 注销账号（暂时隐藏） -->
+          <div class="px-4 pb-6 flex justify-center hidden">
+            <a href="javascript:void(0)" onclick="showAccountDeletion()" class="text-xs text-gray-400 underline">注销账号</a>
+          </div>
+        </div>
+
+        <!-- 手机绑定弹窗（移到容器内） -->
+        <div id="phone-binding-modal" class="absolute inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 100;" onclick="hidePhoneBinding()">
+          <div class="bg-white rounded-lg w-11/12 max-w-sm p-6" onclick="event.stopPropagation()">
+            <h3 class="text-lg font-medium mb-4">绑定手机号</h3>
+
+            <div class="space-y-4">
+              <div>
+                <label class="text-sm text-gray-600">手机号</label>
+                <input type="tel" placeholder="请输入手机号" class="w-full mt-1 px-3 py-2 border rounded-lg" id="new-phone-input" maxlength="11">
+              </div>
+
+              <div class="flex gap-2">
+                <input type="text" placeholder="请输入验证码" class="flex-1 px-3 py-2 border rounded-lg" id="verify-code-input" maxlength="6">
+                <button class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm whitespace-nowrap" onclick="sendVerifyCode()" id="send-code-btn">发送验证码</button>
+              </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+              <button class="flex-1 py-2 border border-gray-300 rounded-lg" onclick="hidePhoneBinding()">取消</button>
+              <button class="flex-1 py-2 bg-red-500 text-white rounded-lg" onclick="confirmPhoneBinding()">确认</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 性别选择弹窗（移到容器内） -->
+        <div id="gender-picker-modal" class="absolute inset-0 bg-black bg-opacity-50 hidden flex items-end" style="z-index: 100;" onclick="hideGenderPicker()">
+          <div class="bg-white rounded-t-lg w-full" onclick="event.stopPropagation()">
+            <div class="p-4 border-b flex items-center justify-between">
+              <button class="text-gray-500" onclick="hideGenderPicker()">取消</button>
+              <span class="font-medium">选择性别</span>
+              <button class="text-red-500" onclick="confirmGender()">确定</button>
+            </div>
+            <div class="divide-y">
+              <button class="w-full p-4 text-left hover:bg-gray-50" onclick="selectGender('男')">
+                <span id="gender-option-male">男</span>
+                <span class="float-right text-red-500 hidden" id="check-male">✓</span>
+              </button>
+              <button class="w-full p-4 text-left hover:bg-gray-50" onclick="selectGender('女')">
+                <span id="gender-option-female">女</span>
+                <span class="float-right text-red-500 hidden" id="check-female">✓</span>
+              </button>
+              <button class="w-full p-4 text-left hover:bg-gray-50" onclick="selectGender('其他')">
+                <span id="gender-option-other">其他</span>
+                <span class="float-right text-red-500 hidden" id="check-other">✓</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 保存成功提示（淡出动画） -->
+        <div id="save-success-tip" class="absolute top-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg text-sm opacity-0 transition-opacity duration-300" style="z-index: 50; pointer-events: none;">
+          保存成功
+        </div>
+      </div>
+
+      <!-- 账号注销须知页面 -->
+      <div id="page-account-deletion" class="page-container hidden h-full flex flex-col bg-gray-50" data-page="account-deletion">
+        <div class="flex-1 overflow-y-auto">
+          <!-- 注销声明 -->
+          <div class="bg-white p-4 mt-3">
+            <h3 class="font-medium text-base mb-3">注销声明</h3>
+            <div class="text-sm text-gray-700 space-y-2">
+              <p>在您申请注销账号前，请仔细阅读以下内容：</p>
+              <ul class="list-disc list-inside space-y-1 text-xs text-gray-600">
+                <li>注销后，您将<span class="text-red-500 font-medium">无法再登录</span>本账号</li>
+                <li>注销后，您的<span class="text-red-500 font-medium">个人资料、作品信息将被永久删除</span>且无法恢复</li>
+                <li>注销后，您将<span class="text-red-500 font-medium">失去所有收益权益</span>，未提现的收益将无法领取</li>
+                <li>注销后，您与平台签订的<span class="text-red-500 font-medium">所有合同将自动解除</span></li>
+                <li>注销后，您在平台的<span class="text-red-500 font-medium">所有数据（粉丝、播放量、评论等）将被清空</span></li>
+                <li>注销后，您的手机号将在<span class="text-red-500 font-medium">30天后</span>可重新注册</li>
+              </ul>
+              <p class="mt-3 text-xs text-gray-500">请确保您已了解注销后果，谨慎操作。</p>
+            </div>
+          </div>
+
+          <!-- 手机号验证 -->
+          <div class="bg-white p-4 mt-3">
+            <h3 class="font-medium text-base mb-3">身份验证</h3>
+            <div class="text-sm text-gray-600 mb-3">为保护您的账号安全，请验证绑定的手机号</div>
+
+            <div class="space-y-3">
+              <div>
+                <label class="text-sm text-gray-700">手机号</label>
+                <input type="tel" value="138****5678" class="w-full mt-1 px-3 py-2 border rounded-lg bg-gray-100" disabled>
+              </div>
+
+              <div class="flex gap-2">
+                <input type="text" placeholder="请输入验证码" class="flex-1 px-3 py-2 border rounded-lg" id="deletion-verify-code" maxlength="6">
+                <button class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm whitespace-nowrap" onclick="sendDeletionCode()" id="deletion-send-btn">发送验证码</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 注销服务须知 -->
+          <div class="bg-white p-4 mt-3">
+            <div class="flex items-start gap-2">
+              <input type="checkbox" id="deletion-agree-checkbox" class="mt-1" onchange="checkDeletionEnable()">
+              <label for="deletion-agree-checkbox" class="text-xs text-gray-700 flex-1">
+                我已阅读并同意<a href="javascript:void(0)" onclick="showDeletionTerms()" class="text-red-500 underline">《注销服务须知》</a>
+              </label>
+            </div>
+          </div>
+
+          <!-- 同意注销按钮 -->
+          <div class="p-4">
+            <button class="w-full py-3 bg-gray-300 text-gray-500 rounded-lg font-medium" id="confirm-deletion-btn" onclick="confirmAccountDeletion()" disabled>同意注销</button>
+          </div>
+
+          <!-- 温馨提示 -->
+          <div class="px-4 pb-6">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <div class="flex items-start gap-2">
+                <span class="text-yellow-600">⚠️</span>
+                <div class="text-xs text-gray-700">
+                  <div class="font-medium mb-1">温馨提示</div>
+                  <p>账号注销是<span class="text-red-500">不可逆操作</span>，请再次确认您的决定。如有疑问，请联系客服协助处理。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast提示 -->
+      <div id="toast" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-80 text-white px-6 py-3 rounded-lg hidden" style="z-index: 10000;">
+        <span id="toast-message"></span>
+      </div>
+
+      <!-- 经营情况筛选浮层 -->
+      <div id="filter-panel-revenue" class="absolute inset-0 bg-black bg-opacity-50 hidden" style="z-index: 200;" onclick="hideFilterPanel('revenue')">
+        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden" onclick="event.stopPropagation()">
+          <!-- 顶部拖动条 -->
+          <div class="flex justify-center py-2 bg-gray-50">
+            <div class="w-10 h-1 bg-gray-300 rounded-full"></div>
+          </div>
+
+          <!-- 标题和重置 -->
+          <div class="flex items-center justify-between px-4 py-3 border-b">
+            <span class="font-medium">筛选条件</span>
+            <button onclick="resetFilters('revenue')" class="text-sm text-red-500">重置</button>
+          </div>
+
+          <!-- 可滚动内容区域 -->
+          <div class="max-h-[60vh] overflow-y-auto">
+
+            <!-- 币种分组 -->
+            <div class="border-b">
+              <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                <span class="text-sm font-medium text-gray-700">币种</span>
+              </div>
+              <div id="currency-options-revenue" class="px-4 py-3">
+                <div class="flex flex-wrap gap-2">
+                  <button class="filter-tag active" data-value="cny" onclick="selectFilter('revenue', 'currency', 'cny', this)">CNY</button>
+                  <button class="filter-tag" data-value="eur" onclick="selectFilter('revenue', 'currency', 'eur', this)">EUR</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 艺人分组 -->
+            <div class="border-b">
+              <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                <span class="text-sm font-medium text-gray-700">艺人</span>
+                <button id="artist-expand-btn-revenue" onclick="toggleExpand('revenue', 'artist')" class="text-xs text-blue-500 hidden">展开</button>
+              </div>
+              <div id="artist-options-revenue" class="px-4 py-3" data-expanded="true">
+                <div class="flex flex-wrap gap-2">
+                  <button class="filter-tag active" data-value="all" onclick="selectFilter('revenue', 'artist', 'all', this)">全部</button>
+                  <button class="filter-tag" data-value="artist1" onclick="selectFilter('revenue', 'artist', 'artist1', this)">张三</button>
+                  <button class="filter-tag" data-value="artist2" onclick="selectFilter('revenue', 'artist', 'artist2', this)">李四</button>
+                  <button class="filter-tag" data-value="artist3" onclick="selectFilter('revenue', 'artist', 'artist3', this)">王五</button>
+                  <button class="filter-tag" data-value="artist4" onclick="selectFilter('revenue', 'artist', 'artist4', this)">赵六</button>
+                  <button class="filter-tag" data-value="artist5" onclick="selectFilter('revenue', 'artist', 'artist5', this)">孙七</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 平台分组 -->
+            <div class="border-b">
+              <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                <span class="text-sm font-medium text-gray-700">平台</span>
+                <button id="platform-expand-btn-revenue" onclick="toggleExpand('revenue', 'platform')" class="text-xs text-blue-500 hidden">展开</button>
+              </div>
+              <div id="platform-options-revenue" class="px-4 py-3" data-expanded="true">
+                <div class="flex flex-wrap gap-2">
+                  <button class="filter-tag active" data-value="all" onclick="selectFilter('revenue', 'platform', 'all', this)">全部</button>
+                  <button class="filter-tag" data-value="netease" onclick="selectFilter('revenue', 'platform', 'netease', this)">网易</button>
+                  <button class="filter-tag" data-value="tme" onclick="selectFilter('revenue', 'platform', 'tme', this)">TME</button>
+                  <button class="filter-tag" data-value="kugou" onclick="selectFilter('revenue', 'platform', 'kugou', this)">酷狗</button>
+                  <button class="filter-tag" data-value="aiting" onclick="selectFilter('revenue', 'platform', 'aiting', this)">爱听</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 专辑分组 -->
+            <div class="border-b">
+              <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                <span class="text-sm font-medium text-gray-700">专辑</span>
+                <button id="album-expand-btn-revenue" onclick="toggleExpand('revenue', 'album')" class="text-xs text-blue-500 hidden">展开</button>
+              </div>
+              <div id="album-options-revenue" class="px-4 py-3" data-expanded="true">
+                <div class="flex flex-wrap gap-2">
+                  <button class="filter-tag active" data-value="all" onclick="selectFilter('revenue', 'album', 'all', this)">全部</button>
+                  <button class="filter-tag" data-value="albumA" onclick="selectFilter('revenue', 'album', 'albumA', this)">专辑A</button>
+                  <button class="filter-tag" data-value="albumB" onclick="selectFilter('revenue', 'album', 'albumB', this)">专辑B</button>
+                  <button class="filter-tag" data-value="albumC" onclick="selectFilter('revenue', 'album', 'albumC', this)">专辑C</button>
+                  <button class="filter-tag" data-value="albumD" onclick="selectFilter('revenue', 'album', 'albumD', this)">专辑D</button>
+                  <button class="filter-tag" data-value="albumE" onclick="selectFilter('revenue', 'album', 'albumE', this)">专辑E</button>
+                  <button class="filter-tag" data-value="albumF" onclick="selectFilter('revenue', 'album', 'albumF', this)">专辑F</button>
+                  <button class="filter-tag" data-value="albumG" onclick="selectFilter('revenue', 'album', 'albumG', this)">专辑G</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 歌曲分组 -->
+            <div class="border-b">
+              <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                <span class="text-sm font-medium text-gray-700">歌曲</span>
+                <button id="song-expand-btn-revenue" onclick="toggleExpand('revenue', 'song')" class="text-xs text-blue-500 hidden">展开</button>
+              </div>
+              <div id="song-options-revenue" class="px-4 py-3" data-expanded="true">
+                <div class="flex flex-wrap gap-2">
+                  <button class="filter-tag active" data-value="all" onclick="selectFilter('revenue', 'song', 'all', this)">全部</button>
+                  <button class="filter-tag" data-value="song1" onclick="selectFilter('revenue', 'song', 'song1', this)">春天的故事</button>
+                  <button class="filter-tag" data-value="song2" onclick="selectFilter('revenue', 'song', 'song2', this)">夏日回忆</button>
+                  <button class="filter-tag" data-value="song3" onclick="selectFilter('revenue', 'song', 'song3', this)">秋天的童话</button>
+                  <button class="filter-tag" data-value="song4" onclick="selectFilter('revenue', 'song', 'song4', this)">冬日暖阳</button>
+                  <button class="filter-tag" data-value="song5" onclick="selectFilter('revenue', 'song', 'song5', this)">星空下的约定</button>
+                  <button class="filter-tag" data-value="song6" onclick="selectFilter('revenue', 'song', 'song6', this)">月光小夜曲</button>
+                  <button class="filter-tag" data-value="song7" onclick="selectFilter('revenue', 'song', 'song7', this)">梦想的翅膀</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 底部固定确定按钮 -->
+          <div class="p-4 bg-white border-t">
+            <button onclick="applyFilters('revenue')" class="w-full py-3 bg-red-500 text-white rounded-lg font-medium">确定</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 总览筛选面板 -->
+      <div id="filter-panel-overview" class="absolute inset-0 bg-black bg-opacity-50 hidden" style="z-index: 200;" onclick="hideFilterPanel('overview')">
+        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden" onclick="event.stopPropagation()">
+          <!-- 顶部拖动条 -->
+          <div class="flex justify-center py-2 bg-gray-50">
+            <div class="w-10 h-1 bg-gray-300 rounded-full"></div>
+          </div>
+
+          <!-- 标题和重置 -->
+          <div class="flex items-center justify-between px-4 py-3 border-b">
+            <span class="font-medium">筛选条件</span>
+            <button onclick="resetFilters('overview')" class="text-sm text-red-500">重置</button>
+          </div>
+
+          <!-- 可滚动内容区域 -->
+          <div class="max-h-[60vh] overflow-y-auto">
+
+            <!-- 艺人分组 -->
+            <div class="border-b">
+              <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                <span class="text-sm font-medium text-gray-700">艺人</span>
+                <button id="artist-expand-btn-overview" onclick="toggleExpand('overview', 'artist')" class="text-xs text-blue-500 hidden">展开</button>
+              </div>
+              <div id="artist-options-overview" class="px-4 py-3" data-expanded="true">
+                <div class="flex flex-wrap gap-2">
+                  <button class="filter-tag active" data-value="all">全部</button>
+                  <button class="filter-tag" data-value="artist1">张三</button>
+                  <button class="filter-tag" data-value="artist2">李四</button>
+                  <button class="filter-tag" data-value="artist3">王五</button>
+                  <button class="filter-tag" data-value="artist4">赵六</button>
+                  <button class="filter-tag" data-value="artist5">孙七</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 底部固定确定按钮 -->
+          <div class="p-4 bg-white border-t">
+            <button onclick="applyFilters('overview')" class="w-full py-3 bg-red-500 text-white rounded-lg font-medium">确定</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Content 筛选浮层 -->
+      <div id="filter-panel-content" class="absolute inset-0 bg-black bg-opacity-50 hidden" style="z-index: 200;" onclick="hideFilterPanel('content')">
+        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden" onclick="event.stopPropagation()">
+          <!-- 顶部拖动条 -->
+          <div class="flex justify-center py-2 bg-gray-50">
+            <div class="w-10 h-1 bg-gray-300 rounded-full"></div>
+          </div>
+
+          <!-- 标题和重置 -->
+          <div class="flex items-center justify-between px-4 py-3 border-b">
+            <span class="font-medium">筛选条件</span>
+            <button onclick="resetFilters('content')" class="text-sm text-red-500">重置</button>
+          </div>
+
+          <!-- 可滚动内容区域 -->
+          <div class="max-h-[60vh] overflow-y-auto">
+
+            <!-- 专辑分组 -->
+            <div class="border-b">
+              <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                <span class="text-sm font-medium text-gray-700">专辑</span>
+                <button id="album-expand-btn-content" onclick="toggleExpand('content', 'album')" class="text-xs text-blue-500 hidden">展开</button>
+              </div>
+              <div id="album-options-content" class="px-4 py-3" data-expanded="true">
+                <div class="flex flex-wrap gap-2">
+                  <button class="filter-tag active" data-value="all">全部</button>
+                  <button class="filter-tag" data-value="albumA">专辑A</button>
+                  <button class="filter-tag" data-value="albumB">专辑B</button>
+                  <button class="filter-tag" data-value="albumC">专辑C</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 歌曲分组 -->
+            <div class="border-b">
+              <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                <span class="text-sm font-medium text-gray-700">歌曲</span>
+                <button id="song-expand-btn-content" onclick="toggleExpand('content', 'song')" class="text-xs text-blue-500 hidden">展开</button>
+              </div>
+              <div id="song-options-content" class="px-4 py-3" data-expanded="true">
+                <div class="flex flex-wrap gap-2">
+                  <button class="filter-tag active" data-value="all">全部</button>
+                  <button class="filter-tag" data-value="song1">春天的故事</button>
+                  <button class="filter-tag" data-value="song2">夏日回忆</button>
+                  <button class="filter-tag" data-value="song3">秋叶飘零</button>
+                  <button class="filter-tag" data-value="song4">冬日暖阳</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 底部固定确定按钮 -->
+          <div class="p-4 bg-white border-t">
+            <button onclick="applyFilters('content')" class="w-full py-3 bg-red-500 text-white rounded-lg font-medium">确定</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 平台分布筛选浮层 -->
+      <div id="filter-panel-platform-dist" class="absolute inset-0 bg-black bg-opacity-50 hidden" style="z-index: 200;" onclick="hideFilterPanel('platform-dist')">
+        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden" onclick="event.stopPropagation()">
+          <div class="flex justify-center py-2 bg-gray-50">
+            <div class="w-10 h-1 bg-gray-300 rounded-full"></div>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3 border-b">
+            <span class="font-medium">筛选条件</span>
+            <button onclick="resetFilters('platform-dist')" class="text-sm text-red-500">重置</button>
+          </div>
+          <div class="max-h-[60vh] overflow-y-auto">
+            <!-- 币种分组 -->
+            <div class="border-b">
+              <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                <span class="text-sm font-medium text-gray-700">币种</span>
+              </div>
+              <div id="currency-options-platform-dist" class="px-4 py-3">
+                <div class="flex flex-wrap gap-2">
+                  <button class="filter-tag active" data-value="cny" onclick="selectFilter('platform-dist', 'currency', 'cny', this)">CNY</button>
+                  <button class="filter-tag" data-value="eur" onclick="selectFilter('platform-dist', 'currency', 'eur', this)">EUR</button>
+                </div>
+              </div>
+            </div>
+            <!-- 艺人分组 -->
+            <div class="border-b">
+              <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                <span class="text-sm font-medium text-gray-700">艺人</span>
+                <button id="artist-expand-btn-platform-dist" onclick="toggleExpand('platform-dist', 'artist')" class="text-xs text-blue-500 hidden">展开</button>
+              </div>
+              <div id="artist-options-platform-dist" class="px-4 py-3" data-expanded="true">
+                <div class="flex flex-wrap gap-2">
+                  <button class="filter-tag active" data-value="all" onclick="selectFilter('platform-dist', 'artist', 'all', this)">全部</button>
+                  <button class="filter-tag" data-value="artist1" onclick="selectFilter('platform-dist', 'artist', 'artist1', this)">张三</button>
+                  <button class="filter-tag" data-value="artist2" onclick="selectFilter('platform-dist', 'artist', 'artist2', this)">李四</button>
+                  <button class="filter-tag" data-value="artist3" onclick="selectFilter('platform-dist', 'artist', 'artist3', this)">王五</button>
+                  <button class="filter-tag" data-value="artist4" onclick="selectFilter('platform-dist', 'artist', 'artist4', this)">赵六</button>
+                  <button class="filter-tag" data-value="artist5" onclick="selectFilter('platform-dist', 'artist', 'artist5', this)">孙七</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p-4 bg-white border-t">
+            <button onclick="applyFilters('platform-dist')" class="w-full py-3 bg-red-500 text-white rounded-lg font-medium">确定</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar bg-white flex items-center justify-around" data-component="tab-bar">
+      <button class="flex-1 flex flex-col items-center py-2 text-red-500" onclick="switchPage('data')" id="btn-data" data-type="tab">
+        <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+        <span class="text-xs">数据中心</span>
+      </button>
+      <button class="flex-1 flex flex-col items-center py-2 text-gray-400" onclick="switchPage('profile')" id="btn-profile" data-type="tab">
+        <div class="relative">
+          <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
+          <span class="badge" style="top: -5px; right: -10px;">3</span>
+        </div>
+        <span class="text-xs">个人中心</span>
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // 全局变量
+    let currentPage = 'data';
+    let currentDataTab = 'overview';
+    let artistTags = [];
+    let unreadMessageCount = 3;
+    let charts = {};
+    let currentContentMetric = 'songs';  // 当前选中的内容经营指标
+    let contentTimeRange = 3;  // 当前时间范围（月数）
+
+    // 内容经营下钻状态
+    const contentDrilldownState = {
+      album: 'all',
+      song: 'all'
+    };
+
+    // 更新导航栏
+    function updateNavbar(title, showBack = false, backHandler = null, rightButton = null) {
+      document.getElementById('navbarTitle').textContent = title;
+      const navbarLeft = document.getElementById('navbarLeft');
+      const navbarRight = document.querySelector('.mp-navbar-right');
+
+      if (showBack) {
+        navbarLeft.innerHTML = `
+          <div class="mp-btn-back" onclick="${backHandler || 'history.back()'}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </div>
+        `;
+      } else {
+        navbarLeft.innerHTML = '';
+      }
+
+      // 处理右侧按钮
+      if (rightButton) {
+        navbarRight.innerHTML = rightButton;
+      } else {
+        navbarRight.innerHTML = `
+          <div class="mp-capsule">
+            <span style="font-size: 16px;">···</span>
+            <span style="font-size: 16px;">⭕</span>
+          </div>
+        `;
+      }
+    }
+
+    // 页面切换
+    function switchPage(page) {
+      // 首先隐藏所有子页面，防止叠加显示
+      const subPages = ['page-messages', 'page-message-detail', 'page-contracts', 'works-form-view', 'page-profile-edit', 'page-account-deletion'];
+      subPages.forEach(subPageId => {
+        const subPage = document.getElementById(subPageId);
+        if (subPage) {
+          subPage.classList.add('hidden');
+        }
+      });
+
+      const pages = ['data', 'profile'];
+      pages.forEach(p => {
+        const pageElement = document.getElementById(`page-${p}`);
+        const btnElement = document.getElementById(`btn-${p}`);
+        if (pageElement) pageElement.classList.toggle('hidden', p !== page);
+        if (btnElement) {
+          btnElement.classList.toggle('text-red-500', p === page);
+          btnElement.classList.toggle('text-gray-400', p !== page);
+        }
+      });
+      currentPage = page;
+
+      // 更新导航栏标题
+      const titles = {
+        data: '数据中心',
+        profile: '个人中心'
+      };
+      updateNavbar(titles[page], false);
+
+      // 初始化图表(如果是数据中心页)
+      if (page === 'data') {
+        setTimeout(() => {
+          initCharts();
+        }, 100);
+      }
+    }
+
+    // 手风琴折叠切换
+    function toggleAccordion(panelId) {
+      const panel = document.getElementById(panelId);
+      panel.classList.toggle('collapsed');
+    }
+
+    // 数据中心Tab切换
+    function switchDataTab(tab) {
+      const tabs = ['overview', 'works', 'content', 'fans', 'fire'];
+      tabs.forEach(t => {
+        const dataEl = document.getElementById(`data-${t}`);
+        const btn = document.getElementById(`tab-${t}`);
+        if (dataEl) dataEl.classList.toggle('hidden', t !== tab);
+        if (btn) {
+          if (t === tab) {
+            btn.classList.add('border-b-2', 'border-red-500', 'text-red-500');
+            btn.classList.remove('text-gray-500');
+          } else {
+            btn.classList.remove('border-b-2', 'border-red-500', 'text-red-500');
+            btn.classList.add('text-gray-500');
+          }
+        }
+      });
+      currentDataTab = tab;
+
+      // 切换tab时重置图表下钻状态
+      if (tab === 'works') {
+        resetChartDrilldown('revenue');
+      }
+
+      if (tab === 'overview') {
+        setTimeout(() => initOverviewChart(), 100);
+      } else if (tab === 'works' || tab === 'content') {
+        setTimeout(() => initCharts(), 100);
+      }
+    }
+
+    // 初始化图表
+    function initCharts() {
+      // 经营情况图表
+      if (!charts.revenue) {
+        const chartRevenue = echarts.init(document.getElementById('chart-revenue'));
+        charts.revenue = chartRevenue;
+        const optionRevenue = {
+          tooltip: { show: false },  // 完全禁用 ECharts 自带 tooltip
+          legend: { data: ['收入', '播放量', '销售量', '下载量'], bottom: 0 },
+          grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+          xAxis: { type: 'category', data: ['1月', '2月', '3月'] },
+          yAxis: [
+            { type: 'value', name: '收入(¥)', position: 'left' },
+            { type: 'value', name: '数量', position: 'right' }
+          ],
+          series: [
+            { name: '收入', type: 'line', data: [12000, 15000, 18000], yAxisIndex: 0 },
+            { name: '播放量', type: 'bar', data: [120000, 150000, 180000], yAxisIndex: 1 },
+            { name: '销售量', type: 'bar', data: [3200, 4100, 5000], yAxisIndex: 1 },
+            { name: '下载量', type: 'bar', data: [2100, 2800, 3500], yAxisIndex: 1 }
+          ]
+        };
+        chartRevenue.setOption(optionRevenue);
+
+        // 添加点击事件监听器 - 显示tips并下钻
+        chartRevenue.on('click', function(params) {
+          showChartTooltip('revenue', params, chartRevenue);
+          handleChartClick('revenue', params);
+        });
+      }
+
+      // 平台分布图表
+      if (!charts.platform) {
+        const chartPlatform = echarts.init(document.getElementById('chart-platform'));
+        charts.platform = chartPlatform;
+        const optionPlatform = {
+          title: [
+            {
+              text: '播放量占比',
+              left: '50%',
+              top: '3%',
+              textAlign: 'center',
+              textStyle: { fontSize: 14, fontWeight: 'normal', color: '#6b7280' }
+            },
+            {
+              text: '收入占比',
+              left: '50%',
+              top: '52%',
+              textAlign: 'center',
+              textStyle: { fontSize: 14, fontWeight: 'normal', color: '#6b7280' }
+            }
+          ],
+          tooltip: {
+            trigger: 'item',
+            formatter: function(params) {
+              const seriesName = params.seriesName;
+              const name = params.name;
+              const value = params.value;
+              const percent = params.percent;
+              const unit = seriesName.includes('播放') ? '次' : '元';
+              const actualValue = seriesName.includes('播放') ? value * 1000 : value * 1000;
+              return `${name}<br/>${seriesName}: ${actualValue.toLocaleString()}${unit} (${percent}%)`;
+            }
+          },
+          legend: { bottom: 10, orient: 'horizontal' },
+          series: [
+            {
+              name: '播放量占比',
+              type: 'pie',
+              radius: '35%',
+              center: ['50%', '28%'],
+              label: {
+                show: true,
+                formatter: function(params) {
+                  return `${params.name}\n${(params.value * 1000).toLocaleString()}次\n(${params.percent}%)`;
+                },
+                position: 'outside'
+              },
+              labelLine: { show: true, length: 8, length2: 12 },
+              data: [
+                { value: 35, name: '网易' },
+                { value: 30, name: 'TME' },
+                { value: 20, name: '酷狗' },
+                { value: 15, name: '爱听' }
+              ]
+            },
+            {
+              name: '收入占比',
+              type: 'pie',
+              radius: '35%',
+              center: ['50%', '72%'],
+              label: {
+                show: true,
+                formatter: function(params) {
+                  return `${params.name}\n¥${(params.value * 1000).toLocaleString()}\n(${params.percent}%)`;
+                },
+                position: 'outside'
+              },
+              labelLine: { show: true, length: 8, length2: 12 },
+              data: [
+                { value: 40, name: '网易' },
+                { value: 28, name: 'TME' },
+                { value: 18, name: '酷狗' },
+                { value: 14, name: '爱听' }
+              ]
+            }
+          ]
+        };
+        chartPlatform.setOption(optionPlatform);
+      }
+
+      // 内容经营图表
+      if (currentDataTab === 'content' && !charts.content) {
+        const chartContent = echarts.init(document.getElementById('chart-content'));
+        charts.content = chartContent;
+        updateContentChart('songs');
+      }
+    }
+
+    // 生成内容经营数据
+    function generateContentData(months, metric) {
+      const granularity = metric === 'songs' ? 'month' : 'day';
+      const xAxisData = [];
+      const seriesData = [];
+
+      if (granularity === 'month') {
+        // 歌曲发布数：按月
+        for (let i = months; i > 0; i--) {
+          const date = new Date();
+          date.setMonth(date.getMonth() - i + 1);
+          const year = date.getFullYear() % 100;  // 获取年份后两位
+          xAxisData.push(`${year}年${date.getMonth() + 1}月`);
+          seriesData.push(Math.floor(1 + Math.random() * 5));  // 1-6首歌
+        }
+      } else {
+        // 其他指标：按日（每月取5个采样点）
+        const daysPerMonth = 5;
+        for (let i = months; i > 0; i--) {
+          for (let j = 0; j < daysPerMonth; j++) {
+            const date = new Date();
+            date.setMonth(date.getMonth() - i + 1);
+            date.setDate((j + 1) * 6);  // 每6天一个数据点
+            const year = date.getFullYear() % 100;  // 获取年份后两位
+            xAxisData.push(`${year}年${date.getMonth() + 1}/${date.getDate()}`);
+
+            // 根据指标类型生成不同范围的数据
+            if (metric === 'plays') {
+              seriesData.push(Math.floor(100000 + Math.random() * 100000));
+            } else if (metric === 'likes') {
+              seriesData.push(Math.floor(3000 + Math.random() * 3000));
+            } else {  // comments
+              seriesData.push(Math.floor(800 + Math.random() * 700));
+            }
+          }
+        }
+      }
+
+      return { xAxisData, seriesData };
+    }
+
+    // 更新内容经营图表
+    function updateContentChart() {
+      const metricsInfo = {
+        songs: { title: '歌曲数' },
+        plays: { title: '点播数' },
+        likes: { title: '点赞数' },
+        comments: { title: '评论数' }
+      };
+
+      const info = metricsInfo[currentContentMetric];
+      document.getElementById('selectedMetricTitle').textContent = info.title + '趋势';
+
+      // 生成数据
+      const { xAxisData, seriesData } = generateContentData(contentTimeRange, currentContentMetric);
+
+      // 根据下钻状态调整数据
+      const state = contentDrilldownState;
+      const multiplier = state.album === 'all' ? 1 :
+                        state.song === 'all' ? 0.6 : 0.3;
+
+      const adjustedData = seriesData.map(val => Math.floor(val * multiplier));
+
+      const option = {
+        tooltip: { trigger: 'axis' },
+        grid: { left: '3%', right: '4%', bottom: '10%', containLabel: true },
+        xAxis: {
+          type: 'category',
+          data: xAxisData,
+          axisLabel: { rotate: currentContentMetric !== 'songs' ? 45 : 0, fontSize: 10 }
+        },
+        yAxis: { type: 'value' },
+        series: [{
+          name: info.title,
+          type: 'line',
+          data: adjustedData,
+          smooth: true,
+          itemStyle: { color: '#F93B3D' }
+        }]
+      };
+
+      if (charts.content) {
+        charts.content.setOption(option);
+      }
+    }
+
+    // 指标卡选择
+    function selectMetric(metric) {
+      currentContentMetric = metric;
+
+      // 更新单选按钮状态
+      document.querySelectorAll('input[name="content-metric"]').forEach(radio => {
+        radio.checked = (radio.value === metric);
+      });
+
+      // 更新标题
+      const titleMap = {
+        songs: '歌曲数趋势',
+        plays: '点播数趋势',
+        likes: '点赞数趋势',
+        comments: '评论数趋势'
+      };
+      const titleEl = document.getElementById('selectedMetricTitle');
+      if (titleEl) {
+        titleEl.textContent = titleMap[metric] || '趋势';
+      }
+
+      // 更新图表
+      updateContentChart();
+    }
+
+    // 内容经营时间范围更新
+    function updateContentTimeRange(months, button) {
+      contentTimeRange = months;
+
+      // 更新按钮样式
+      const container = document.getElementById('content-time-filter');
+      container.querySelectorAll('.chip').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      button.classList.add('active');
+
+      // 更新图表
+      updateContentChart();
+    }
+
+    // 专辑选择处理
+    function handleContentAlbumChange(album) {
+      contentDrilldownState.album = album;
+      contentDrilldownState.song = 'all';
+
+      updateContentBreadcrumb();
+
+      // 启用/禁用歌曲下拉框
+      const songSelect = document.getElementById('content-song-select');
+      if (album !== 'all') {
+        songSelect.disabled = false;
+        songSelect.value = 'all';
+      } else {
+        songSelect.disabled = true;
+        songSelect.value = 'all';
+      }
+
+      updateContentChart();
+    }
+
+    // 歌曲选择处理
+    function handleContentSongChange(song) {
+      contentDrilldownState.song = song;
+      updateContentBreadcrumb();
+      updateContentChart();
+    }
+
+    // 更新面包屑
+    function updateContentBreadcrumb() {
+      const breadcrumb = document.getElementById('content-breadcrumb');
+      const state = contentDrilldownState;
+
+      const albumNames = {
+        all: '全部专辑',
+        albumA: '专辑A',
+        albumB: '专辑B'
+      };
+
+      const songNames = {
+        all: '全部歌曲',
+        song1: '春天的故事',
+        song2: '夏日回忆'
+      };
+
+      let html = '<span class="breadcrumb-item" onclick="resetContentDrilldown()">全部数据</span>';
+
+      if (state.album !== 'all') {
+        html += '<span class="breadcrumb-separator">></span>';
+        html += `<span class="breadcrumb-item">${albumNames[state.album]}</span>`;
+      }
+
+      if (state.song !== 'all') {
+        html += '<span class="breadcrumb-separator">></span>';
+        html += `<span class="breadcrumb-item">${songNames[state.song]}</span>`;
+      }
+
+      breadcrumb.innerHTML = html;
+    }
+
+    // 重置内容经营下钻
+    function resetContentDrilldown() {
+      contentDrilldownState.album = 'all';
+      contentDrilldownState.song = 'all';
+
+      // 重置下拉选择框
+      document.getElementById('content-album-select').value = 'all';
+      document.getElementById('content-song-select').value = 'all';
+      document.getElementById('content-song-select').disabled = true;
+
+      updateContentBreadcrumb();
+      updateContentChart();
+    }
+
+    // 作品管理相关
+    function toggleAlbumGroup(element) {
+      element.parentElement.classList.toggle('collapsed');
+    }
+
+    // 搜索和筛选作品
+    function filterSongs() {
+      const searchValue = document.getElementById('searchInput').value.toLowerCase();
+      const albumFilter = document.getElementById('albumFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+
+      const songItems = document.querySelectorAll('.song-item');
+      const albumGroups = document.querySelectorAll('.album-group');
+      let visibleCount = 0;
+
+      // 遍历所有歌曲
+      songItems.forEach(item => {
+        const songName = item.querySelector('.font-medium').textContent.toLowerCase();
+        const songStatus = item.getAttribute('data-status');
+
+        // 获取歌曲所属专辑
+        let songAlbum = '';
+        const albumGroup = item.closest('.album-group');
+        if (albumGroup) {
+          songAlbum = albumGroup.getAttribute('data-album');
+        }
+
+        // 判断是否匹配搜索条件
+        const matchSearch = songName.includes(searchValue);
+        const matchAlbum = !albumFilter || songAlbum === albumFilter;
+        const matchStatus = !statusFilter || songStatus === statusFilter;
+
+        // 显示或隐藏歌曲
+        if (matchSearch && matchAlbum && matchStatus) {
+          item.style.display = 'flex';
+          visibleCount++;
+        } else {
+          item.style.display = 'none';
+        }
+      });
+
+      // 处理专辑组的显示/隐藏
+      albumGroups.forEach(group => {
+        const visibleSongs = group.querySelectorAll('.song-item[style*="display: flex"]');
+        if (visibleSongs.length > 0) {
+          group.style.display = 'block';
+        } else {
+          group.style.display = 'none';
+        }
+      });
+
+      // 显示/隐藏空状态
+      const emptyState = document.getElementById('emptyState');
+      const songListContainer = document.getElementById('songListContainer');
+
+      if (visibleCount === 0) {
+        emptyState.classList.remove('hidden');
+        songListContainer.style.display = 'none';
+      } else {
+        emptyState.classList.add('hidden');
+        songListContainer.style.display = 'block';
+      }
+    }
+
+    // 绑定搜索和筛选事件
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('searchInput');
+      const albumFilter = document.getElementById('albumFilter');
+      const statusFilter = document.getElementById('statusFilter');
+
+      if (searchInput) {
+        searchInput.addEventListener('input', filterSongs);
+      }
+      if (albumFilter) {
+        albumFilter.addEventListener('change', filterSongs);
+      }
+      if (statusFilter) {
+        statusFilter.addEventListener('change', filterSongs);
+      }
+
+      // 初始化筛选器标签事件监听
+      initFilterTagListeners();
+    });
+
+    // 初始化筛选器标签点击事件
+    function initFilterTagListeners() {
+      ['revenue', 'platform-dist', 'overview'].forEach(currency => {
+        let types;
+        if (currency === 'overview') {
+          types = ['artist'];
+        } else if (currency === 'platform-dist') {
+          types = ['currency', 'artist'];
+        } else if (currency === 'revenue') {
+          types = ['currency', 'artist', 'platform', 'album', 'song'];
+        } else {
+          types = ['artist', 'platform', 'album', 'song'];
+        }
+
+        types.forEach(type => {
+          const container = document.getElementById(`${type}-options-${currency}`);
+          if (container) {
+            const tags = container.querySelectorAll('.filter-tag');
+            tags.forEach(tag => {
+              tag.addEventListener('click', function() {
+                selectFilter(currency, type, this.dataset.value, this);
+              });
+            });
+          }
+        });
+
+        // 添加浮层背景点击关闭事件
+        const panel = document.getElementById(`filter-panel-${currency}`);
+        if (panel) {
+          panel.addEventListener('click', function(e) {
+            if (e.target === this) {
+              hideFilterPanel(currency);
+            }
+          });
+        }
+
+      });
+
+      // 添加点击图表外关闭 tooltip
+      const mainContent = document.getElementById('mainContent');
+      if (mainContent) {
+        mainContent.addEventListener('click', function(e) {
+          const isChartClick = e.target.closest('.chart-container');
+          const isTooltipClick = e.target.closest('[id^="chart-tooltip-"]');
+          const isFilterPanelClick = e.target.closest('[id^="filter-panel-"]');
+
+          if (!isChartClick && !isTooltipClick && !isFilterPanelClick) {
+            hideChartTooltip('revenue');
+          }
+        });
+      }
+    }
+
+    function showCreateSong() {
+      document.getElementById('works-list-view').classList.add('hidden');
+      document.getElementById('works-form-view').classList.remove('hidden');
+      document.getElementById('fabCreate').classList.add('hidden');
+      updateNavbar('上传新作', true, 'showWorksList()');
+      resetSongForm();
+    }
+
+    function editSong(id) {
+      document.getElementById('works-list-view').classList.add('hidden');
+      document.getElementById('works-form-view').classList.remove('hidden');
+      document.getElementById('fabCreate').classList.add('hidden');
+      updateNavbar('编辑作品', true, 'showWorksList()');
+      // 填充表单数据(示例)
+      document.getElementById('songName').value = '春天的故事';
+      document.getElementById('albumName').value = '专辑A';
+      document.getElementById('artistInput').value = '合作艺人A, 合作艺人B';
+      updateArtistPreview();
+    }
+
+    function showWorksList() {
+      document.getElementById('works-list-view').classList.remove('hidden');
+      document.getElementById('works-form-view').classList.add('hidden');
+      document.getElementById('fabCreate').classList.remove('hidden');
+      updateNavbar('作品管理', false);
+    }
+
+    function resetSongForm() {
+      document.getElementById('songForm').reset();
+      document.getElementById('fileInfo').textContent = '';
+      document.getElementById('uploadProgress').classList.add('hidden');
+      document.getElementById('newAlbumInput').classList.add('hidden');
+      document.getElementById('artistPreview').textContent = '';
+    }
+
+    // 专辑选择处理
+    function handleAlbumChange(select) {
+      const newAlbumInput = document.getElementById('newAlbumInput');
+      if (select.value === '新建') {
+        newAlbumInput.classList.remove('hidden');
+        document.getElementById('newAlbumName').focus();
+      } else {
+        newAlbumInput.classList.add('hidden');
+      }
+    }
+
+    // 合作艺人输入处理(逗号分隔)
+    function updateArtistPreview() {
+      const input = document.getElementById('artistInput').value;
+      const preview = document.getElementById('artistPreview');
+      if (input.trim()) {
+        const artists = input.split(/[,、]/).map(a => a.trim()).filter(a => a);
+        if (artists.length > 0) {
+          preview.textContent = `已识别 ${artists.length} 位艺人: ${artists.join(', ')}`;
+        } else {
+          preview.textContent = '';
+        }
+      } else {
+        preview.textContent = '';
+      }
+    }
+
+    // 监听艺人输入实时更新
+    document.addEventListener('DOMContentLoaded', () => {
+      const artistInput = document.getElementById('artistInput');
+      if (artistInput) {
+        artistInput.addEventListener('input', updateArtistPreview);
+      }
+    });
+
+    // 文件上传处理
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const fileInfo = document.getElementById('fileInfo');
+      const uploadProgress = document.getElementById('uploadProgress');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      const maxSize = 100 * 1024 * 1024; // 100MB
+      const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3'];
+
+      if (!allowedTypes.includes(file.type) && !file.name.match(/\.(mp3|wav)$/i)) {
+        fileInfo.innerHTML = '<span class="text-red-500">❌ 文件格式不支持,仅支持 MP3、WAV</span>';
+        uploadProgress.classList.add('hidden');
+        event.target.value = '';
+        return;
+      }
+
+      if (file.size > maxSize) {
+        fileInfo.innerHTML = '<span class="text-red-500">❌ 文件大小超过100MB限制</span>';
+        uploadProgress.classList.add('hidden');
+        event.target.value = '';
+        return;
+      }
+
+      // 显示文件信息
+      fileInfo.innerHTML = `<span class="text-red-500">📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)</span>`;
+
+      // 模拟上传进度
+      uploadProgress.classList.remove('hidden');
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          progressText.textContent = '上传完成 100%';
+          fileInfo.innerHTML = `<span class="text-green-500">✅ ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB) - 已就绪</span>`;
+        } else {
+          progressText.textContent = `上传中... ${Math.floor(progress)}%`;
+        }
+        progressFill.style.width = progress + '%';
+      }, 200);
+    }
+
+    // 提交作品表单
+    function submitSongForm() {
+      const songName = document.getElementById('songName').value;
+      const songFile = document.getElementById('songFile').files[0];
+
+      if (!songName) {
+        showToast('请输入歌曲名称');
+        return;
+      }
+
+      if (!songFile) {
+        showToast('请上传歌曲文件');
+        return;
+      }
+
+      // 模拟提交
+      showToast('作品提交成功!等待审核...');
+      showWorksList();
+    }
+
+    // 消息相关
+    function showMessages() {
+      document.getElementById('page-profile').classList.add('hidden');
+      document.getElementById('page-messages').classList.remove('hidden');
+      const markAllBtn = `
+        <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200" onclick="markAllRead()" title="全部已读">
+          <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7m-7 6l4 4 8-8"/>
+          </svg>
+        </button>
+        <div class="mp-capsule">
+          <span style="font-size: 16px;">···</span>
+          <span style="font-size: 16px;">⭕</span>
+        </div>
+      `;
+      updateNavbar('消息通知', true, 'backToProfile()', markAllBtn);
+    }
+
+    function backToProfile() {
+      document.getElementById('page-profile').classList.remove('hidden');
+      document.getElementById('page-messages').classList.add('hidden');
+      document.getElementById('page-contracts').classList.add('hidden');
+      updateNavbar('个人中心', false);
+    }
+
+    function markAllRead() {
+      const messages = document.querySelectorAll('.message-item[data-read="false"]');
+      messages.forEach(msg => {
+        msg.setAttribute('data-read', 'true');
+        msg.classList.add('opacity-60');
+        const dot = msg.querySelector('.bg-red-500');
+        if (dot) dot.classList.remove('bg-red-500');
+      });
+      unreadMessageCount = 0;
+      updateBadges();
+    }
+
+    function showMessageDetail(id) {
+      document.getElementById('page-messages').classList.add('hidden');
+      document.getElementById('page-message-detail').classList.remove('hidden');
+      updateNavbar('消息详情', true, 'backToMessages()');
+      // 标记为已读
+      const msgItem = event.currentTarget;
+      if (msgItem.getAttribute('data-read') === 'false') {
+        msgItem.setAttribute('data-read', 'true');
+        msgItem.classList.add('opacity-60');
+        const dot = msgItem.querySelector('.bg-red-500');
+        if (dot) dot.classList.remove('bg-red-500');
+        unreadMessageCount = Math.max(0, unreadMessageCount - 1);
+        updateBadges();
+      }
+    }
+
+    function backToMessages() {
+      document.getElementById('page-messages').classList.remove('hidden');
+      document.getElementById('page-message-detail').classList.add('hidden');
+
+      const markAllBtn = `
+        <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200" onclick="markAllRead()" title="全部已读">
+          <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7m-7 6l4 4 8-8"/>
+          </svg>
+        </button>
+        <div class="mp-capsule">
+          <span style="font-size: 16px;">···</span>
+          <span style="font-size: 16px;">⭕</span>
+        </div>
+      `;
+      updateNavbar('消息通知', true, 'backToProfile()', markAllBtn);
+    }
+
+    function updateBadges() {
+      const badges = document.querySelectorAll('.badge');
+      badges.forEach(badge => {
+        if (unreadMessageCount > 0) {
+          badge.textContent = unreadMessageCount;
+          badge.style.display = 'block';
+        } else {
+          badge.style.display = 'none';
+        }
+      });
+    }
+
+    // 合同查看
+    function showContracts() {
+      document.getElementById('page-profile').classList.add('hidden');
+      document.getElementById('page-contracts').classList.remove('hidden');
+      updateNavbar('我的签约', true, 'backToProfile()');
+    }
+
+    // 个人资料编辑
+    function editProfile() {
+      document.getElementById('page-profile').classList.add('hidden');
+      document.getElementById('page-profile-edit').classList.remove('hidden');
+      updateNavbar('个人资料', true, 'backToProfileFromEdit()');
+    }
+
+    // 返回个人中心
+    function backToProfileFromEdit() {
+      document.getElementById('page-profile-edit').classList.add('hidden');
+      document.getElementById('page-profile').classList.remove('hidden');
+      updateNavbar('个人中心', false);
+    }
+
+    // 上传头像
+    function uploadAvatar() {
+      // 模拟选择照片/拍照
+      const options = ['拍照', '从相册选择', '取消'];
+      const choice = prompt('选择上传方式：\n1. 拍照\n2. 从相册选择\n3. 取消\n\n请输入数字选择：');
+      if (choice === '1') {
+        showToast('调用相机拍照(微信API: wx.chooseMedia)');
+      } else if (choice === '2') {
+        showToast('打开相册选择(微信API: wx.chooseMedia)');
+      }
+    }
+
+    // 性别选择相关
+    let selectedGender = '男';
+
+    function showGenderPicker() {
+      document.getElementById('gender-picker-modal').classList.remove('hidden');
+      // 初始化选中状态
+      const currentGender = document.getElementById('gender-display').textContent;
+      selectGender(currentGender);
+    }
+
+    function hideGenderPicker() {
+      document.getElementById('gender-picker-modal').classList.add('hidden');
+    }
+
+    function selectGender(gender) {
+      selectedGender = gender;
+      // 清除所有勾选标记
+      document.getElementById('check-male').classList.add('hidden');
+      document.getElementById('check-female').classList.add('hidden');
+      document.getElementById('check-other').classList.add('hidden');
+
+      // 显示当前选中的勾选标记
+      if (gender === '男') {
+        document.getElementById('check-male').classList.remove('hidden');
+      } else if (gender === '女') {
+        document.getElementById('check-female').classList.remove('hidden');
+      } else {
+        document.getElementById('check-other').classList.remove('hidden');
+      }
+    }
+
+    function confirmGender() {
+      document.getElementById('gender-display').textContent = selectedGender;
+      hideGenderPicker();
+      showSaveSuccessTip();
+    }
+
+    // 时间段选择器相关变量和函数
+    let pickerState = {
+      startYear: 2024,
+      startMonth: 1,
+      startDay: 1,
+      endYear: 2024,
+      endMonth: 4,
+      endDay: 30,
+      currentMode: 'start', // 'start' 或 'end'
+      target: 'platform', // 'overview', 'revenue', 'content', 'platform'
+      granularity: 'month' // 'month' 或 'date'
+    };
+
+    // 不同指标的粒度映射
+    const metricGranularityMap = {
+      'plays': 'month',
+      'downloads': 'month',
+      'sales': 'month',
+      'revenue-cny': 'month',
+      'revenue-eur': 'month',
+      'artists': 'date',
+      'works': 'date',
+      'fans': 'date'
+    };
+
+    function showPeriodPicker(target) {
+      // 设置目标
+      pickerState.target = target || 'platform';
+
+      // 根据target确定粒度
+      if (target === 'overview') {
+        // overview根据当前选中的指标确定粒度
+        pickerState.granularity = metricGranularityMap[currentOverviewMetric] || 'month';
+      } else {
+        // 其他target默认月粒度
+        pickerState.granularity = 'month';
+      }
+
+      // 更新标题
+      const titleEl = document.getElementById('picker-title');
+      if (pickerState.granularity === 'date') {
+        titleEl.textContent = '选择日期';
+      } else {
+        titleEl.textContent = '选择月份';
+      }
+
+      // 切换picker容器显示
+      const monthContainer = document.getElementById('month-picker-container');
+      const dateContainer = document.getElementById('date-picker-container');
+      if (pickerState.granularity === 'date') {
+        monthContainer.classList.add('hidden');
+        dateContainer.classList.remove('hidden');
+      } else {
+        monthContainer.classList.remove('hidden');
+        dateContainer.classList.add('hidden');
+      }
+
+      // 显示浮层
+      document.getElementById('period-picker-modal').classList.remove('hidden');
+
+      // 默认选择开始时间模式
+      pickerState.currentMode = 'start';
+      updateTimeModeUI();
+
+      // 初始化滚动选择器
+      if (pickerState.granularity === 'date') {
+        const yearScroller = document.getElementById('date-year-scroller');
+        const monthScroller = document.getElementById('date-month-scroller');
+        const dayScroller = document.getElementById('date-day-scroller');
+        initScrollPicker(yearScroller, pickerState.startYear);
+        initScrollPicker(monthScroller, String(pickerState.startMonth).padStart(2, '0'));
+        initScrollPicker(dayScroller, String(pickerState.startDay).padStart(2, '0'));
+      } else {
+        const yearScroller = document.getElementById('year-scroller');
+        const monthScroller = document.getElementById('month-scroller');
+        initScrollPicker(yearScroller, pickerState.startYear);
+        initScrollPicker(monthScroller, String(pickerState.startMonth).padStart(2, '0'));
+      }
+    }
+
+    // 快捷选项选择
+    function selectQuickOption(months) {
+      // 更新快捷选项按钮状态
+      const buttons = document.querySelectorAll('#quick-options button');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (months === 0) {
+        // 自定义模式，不做任何处理
+        return;
+      }
+
+      // 计算日期范围
+      const now = new Date();
+      const endYear = now.getFullYear();
+      const endMonth = now.getMonth() + 1;
+      const endDay = now.getDate();
+
+      let startDate = new Date(now);
+      startDate.setMonth(startDate.getMonth() - months);
+      const startYear = startDate.getFullYear();
+      const startMonth = startDate.getMonth() + 1;
+      const startDay = startDate.getDate();
+
+      // 更新pickerState
+      pickerState.startYear = startYear;
+      pickerState.startMonth = startMonth;
+      pickerState.startDay = startDay;
+      pickerState.endYear = endYear;
+      pickerState.endMonth = endMonth;
+      pickerState.endDay = endDay;
+
+      // 更新显示
+      updateTimeModeUI();
+    }
+
+    function hidePeriodPicker() {
+      document.getElementById('period-picker-modal').classList.add('hidden');
+    }
+
+    function initScrollPicker(scroller, selectedValue) {
+      const items = scroller.querySelectorAll('.picker-item');
+      const itemHeight = 40;
+
+      // 找到选中项的索引
+      let selectedIndex = 0;
+      items.forEach((item, index) => {
+        if (item.dataset.value == selectedValue) {
+          selectedIndex = index;
+          item.classList.add('selected');
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+
+      // 滚动到选中位置
+      scroller.scrollTop = selectedIndex * itemHeight;
+
+      // 移除旧的监听器(如果有)
+      scroller.onscroll = null;
+
+      // 监听滚动事件
+      let scrollTimer;
+      scroller.addEventListener('scroll', function() {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+          updatePickerSelection(scroller);
+        }, 150);
+      });
+    }
+
+    function updatePickerSelection(scroller) {
+      const items = scroller.querySelectorAll('.picker-item');
+      const itemHeight = 40;
+      const scrollTop = scroller.scrollTop;
+
+      // 计算当前居中的item
+      const centerIndex = Math.round(scrollTop / itemHeight);
+
+      // 更新选中样式
+      items.forEach((item, index) => {
+        item.classList.remove('selected');
+        if (index === centerIndex) {
+          item.classList.add('selected');
+
+          // 更新状态
+          const value = item.dataset.value;
+          const scrollerId = scroller.id;
+
+          // 月粒度选择器
+          if (scrollerId === 'year-scroller') {
+            if (pickerState.currentMode === 'start') {
+              pickerState.startYear = parseInt(value);
+            } else {
+              pickerState.endYear = parseInt(value);
+            }
+          } else if (scrollerId === 'month-scroller') {
+            if (pickerState.currentMode === 'start') {
+              pickerState.startMonth = parseInt(value);
+            } else {
+              pickerState.endMonth = parseInt(value);
+            }
+          }
+          // 日粒度选择器
+          else if (scrollerId === 'date-year-scroller') {
+            if (pickerState.currentMode === 'start') {
+              pickerState.startYear = parseInt(value);
+            } else {
+              pickerState.endYear = parseInt(value);
+            }
+          } else if (scrollerId === 'date-month-scroller') {
+            if (pickerState.currentMode === 'start') {
+              pickerState.startMonth = parseInt(value);
+            } else {
+              pickerState.endMonth = parseInt(value);
+            }
+          } else if (scrollerId === 'date-day-scroller') {
+            if (pickerState.currentMode === 'start') {
+              pickerState.startDay = parseInt(value);
+            } else {
+              pickerState.endDay = parseInt(value);
+            }
+          }
+
+          // 更新显示
+          updateCurrentDisplay();
+        }
+      });
+
+      // 平滑滚动到准确位置
+      scroller.scrollTo({
+        top: centerIndex * itemHeight,
+        behavior: 'smooth'
+      });
+    }
+
+    function updateCurrentDisplay() {
+      const mode = pickerState.currentMode;
+      const year = mode === 'start' ? pickerState.startYear : pickerState.endYear;
+      const month = mode === 'start' ? pickerState.startMonth : pickerState.endMonth;
+      const day = mode === 'start' ? pickerState.startDay : pickerState.endDay;
+
+      const displayId = mode === 'start' ? 'start-display' : 'end-display';
+
+      if (pickerState.granularity === 'date') {
+        document.getElementById(displayId).textContent = `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')}`;
+      } else {
+        document.getElementById(displayId).textContent = `${year}.${String(month).padStart(2, '0')}`;
+      }
+    }
+
+    function switchTimeMode(mode) {
+      pickerState.currentMode = mode;
+      updateTimeModeUI();
+
+      // 根据粒度选择不同的scroller
+      if (pickerState.granularity === 'date') {
+        const yearScroller = document.getElementById('date-year-scroller');
+        const monthScroller = document.getElementById('date-month-scroller');
+        const dayScroller = document.getElementById('date-day-scroller');
+
+        const year = mode === 'start' ? pickerState.startYear : pickerState.endYear;
+        const month = mode === 'start' ? pickerState.startMonth : pickerState.endMonth;
+        const day = mode === 'start' ? pickerState.startDay : pickerState.endDay;
+
+        initScrollPicker(yearScroller, year);
+        initScrollPicker(monthScroller, String(month).padStart(2, '0'));
+        initScrollPicker(dayScroller, String(day).padStart(2, '0'));
+      } else {
+        const yearScroller = document.getElementById('year-scroller');
+        const monthScroller = document.getElementById('month-scroller');
+
+        const year = mode === 'start' ? pickerState.startYear : pickerState.endYear;
+        const month = mode === 'start' ? pickerState.startMonth : pickerState.endMonth;
+
+        initScrollPicker(yearScroller, year);
+        initScrollPicker(monthScroller, String(month).padStart(2, '0'));
+      }
+    }
+
+    function updateTimeModeUI() {
+      const startTab = document.getElementById('start-time-tab');
+      const endTab = document.getElementById('end-time-tab');
+      const startDisplay = document.getElementById('start-display');
+      const endDisplay = document.getElementById('end-display');
+
+      // 移除两个标签的active类
+      startTab.classList.remove('active');
+      endTab.classList.remove('active');
+
+      // 根据当前模式添加active类
+      if (pickerState.currentMode === 'start') {
+        startTab.classList.add('active');
+      } else {
+        endTab.classList.add('active');
+      }
+
+      // 更新显示的日期
+      if (pickerState.granularity === 'date') {
+        startDisplay.textContent = `${pickerState.startYear}.${String(pickerState.startMonth).padStart(2, '0')}.${String(pickerState.startDay).padStart(2, '0')}`;
+        endDisplay.textContent = `${pickerState.endYear}.${String(pickerState.endMonth).padStart(2, '0')}.${String(pickerState.endDay).padStart(2, '0')}`;
+      } else {
+        startDisplay.textContent = `${pickerState.startYear}.${String(pickerState.startMonth).padStart(2, '0')}`;
+        endDisplay.textContent = `${pickerState.endYear}.${String(pickerState.endMonth).padStart(2, '0')}`;
+      }
+    }
+
+    function confirmPeriod() {
+      let startDate, endDate, displayText;
+
+      // 根据粒度构造日期字符串
+      if (pickerState.granularity === 'date') {
+        startDate = `${pickerState.startYear}-${String(pickerState.startMonth).padStart(2, '0')}-${String(pickerState.startDay).padStart(2, '0')}`;
+        endDate = `${pickerState.endYear}-${String(pickerState.endMonth).padStart(2, '0')}-${String(pickerState.endDay).padStart(2, '0')}`;
+        displayText = `${pickerState.startYear}.${String(pickerState.startMonth).padStart(2, '0')}.${String(pickerState.startDay).padStart(2, '0')} - ${pickerState.endYear}.${String(pickerState.endMonth).padStart(2, '0')}.${String(pickerState.endDay).padStart(2, '0')}`;
+      } else {
+        startDate = `${pickerState.startYear}-${String(pickerState.startMonth).padStart(2, '0')}`;
+        endDate = `${pickerState.endYear}-${String(pickerState.endMonth).padStart(2, '0')}`;
+        displayText = `${pickerState.startYear}.${String(pickerState.startMonth).padStart(2, '0')} - ${pickerState.endYear}.${String(pickerState.endMonth).padStart(2, '0')}`;
+      }
+
+      // 验证:结束时间不能早于开始时间
+      if (endDate < startDate) {
+        alert('结束时间不能早于开始时间');
+        return;
+      }
+
+      // 根据target更新对应的显示和图表
+      switch (pickerState.target) {
+        case 'overview':
+          document.getElementById('overview-period-display').textContent = displayText;
+          updateOverviewChart();
+          break;
+        case 'revenue':
+          // 经营情况使用统一的revenue
+          updateTimeRange('revenue', 0, null, displayText);
+          break;
+        case 'content':
+          document.getElementById('content-period-display').textContent = displayText;
+          // 更新内容经营图表
+          if (charts.content) {
+            updateContentChart();
+          }
+          break;
+        case 'platform':
+        default:
+          document.getElementById('period-display').textContent = `${startDate} 至 ${endDate}`;
+          updatePlatformChart(startDate, endDate);
+          break;
+      }
+
+      // 关闭浮层
+      hidePeriodPicker();
+    }
+
+    function updatePlatformChart(startDate, endDate) {
+      // 根据选择的时间段更新平台分布图表
+      if (!charts.platform) return;
+
+      // 计算月份跨度(用于模拟不同时间段的数据)
+      const monthDiff = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24 * 30);
+      const factor = 1 + (monthDiff / 12); // 时间段越长,数据越大
+
+      // 更新饼图数据
+      const optionPlatform = {
+        tooltip: {
+          trigger: 'item',
+          formatter: '{b}: {c} ({d}%)'
+        },
+        legend: {
+          orient: 'horizontal',
+          bottom: 0,
+          data: ['Spotify', 'Apple Music', 'QQ音乐', '网易云音乐', 'YouTube Music']
+        },
+        series: [
+          {
+            name: '播放量占比',
+            type: 'pie',
+            radius: ['0%', '40%'],
+            center: ['50%', '45%'],
+            label: {
+              position: 'inner',
+              formatter: '{d}%'
+            },
+            data: [
+              { value: Math.round(335000 * factor), name: 'Spotify' },
+              { value: Math.round(234000 * factor), name: 'Apple Music' },
+              { value: Math.round(154000 * factor), name: 'QQ音乐' },
+              { value: Math.round(135000 * factor), name: '网易云音乐' },
+              { value: Math.round(128000 * factor), name: 'YouTube Music' }
+            ]
+          },
+          {
+            name: '收入占比',
+            type: 'pie',
+            radius: ['55%', '70%'],
+            center: ['50%', '45%'],
+            label: {
+              formatter: '{b}\n{d}%'
+            },
+            data: [
+              { value: Math.round(28500 * factor), name: 'Spotify' },
+              { value: Math.round(23400 * factor), name: 'Apple Music' },
+              { value: Math.round(18500 * factor), name: 'QQ音乐' },
+              { value: Math.round(15400 * factor), name: '网易云音乐' },
+              { value: Math.round(12800 * factor), name: 'YouTube Music' }
+            ]
+          }
+        ]
+      };
+
+      charts.platform.setOption(optionPlatform, true);
+    }
+
+    // 单个字段保存提示
+    function saveField(fieldName) {
+      showSaveSuccessTip();
+    }
+
+    // 显示保存成功提示（淡入淡出）
+    function showSaveSuccessTip() {
+      const tip = document.getElementById('save-success-tip');
+      tip.style.opacity = '1';
+
+      setTimeout(() => {
+        tip.style.opacity = '0';
+      }, 1500);
+    }
+
+    // 复制UID
+    function copyUID() {
+      const uid = document.getElementById('uid-text').textContent;
+
+      // 创建临时textarea用于复制
+      const textarea = document.createElement('textarea');
+      textarea.value = uid;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+
+      try {
+        document.execCommand('copy');
+        showToast('UID已复制到剪贴板');
+      } catch (err) {
+        // 如果execCommand不支持，使用新的Clipboard API
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(uid).then(() => {
+            showToast('UID已复制到剪贴板');
+          }).catch(() => {
+            showToast('复制失败，请手动复制');
+          });
+        } else {
+          showToast('复制失败，请手动复制');
+        }
+      }
+
+      document.body.removeChild(textarea);
+    }
+
+    // 手机绑定相关
+    let verifyCodeCountdown = 0;
+
+    function showPhoneBinding() {
+      document.getElementById('phone-binding-modal').classList.remove('hidden');
+    }
+
+    function hidePhoneBinding() {
+      document.getElementById('phone-binding-modal').classList.add('hidden');
+    }
+
+    function sendVerifyCode() {
+      const phone = document.getElementById('new-phone-input').value;
+      if (!phone || phone.length !== 11) {
+        showToast('请输入正确的手机号');
+        return;
+      }
+
+      // 模拟发送验证码
+      showToast(`验证码已发送到 ${phone}`);
+
+      // 倒计时60秒
+      verifyCodeCountdown = 60;
+      const btn = document.getElementById('send-code-btn');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      const timer = setInterval(() => {
+        verifyCodeCountdown--;
+        btn.textContent = `${verifyCodeCountdown}秒后重发`;
+
+        if (verifyCodeCountdown <= 0) {
+          clearInterval(timer);
+          btn.disabled = false;
+          btn.classList.remove('opacity-50');
+          btn.textContent = '发送验证码';
+        }
+      }, 1000);
+    }
+
+    function confirmPhoneBinding() {
+      const phone = document.getElementById('new-phone-input').value;
+      const code = document.getElementById('verify-code-input').value;
+
+      if (!phone || phone.length !== 11) {
+        showToast('请输入正确的手机号');
+        return;
+      }
+
+      if (!code || code.length !== 6) {
+        showToast('请输入6位验证码');
+        return;
+      }
+
+      // 模拟验证（去掉alert，改用淡出提示）
+      // 更新显示
+      document.getElementById('phone-display').textContent = phone.substring(0, 3) + '****' + phone.substring(7);
+      hidePhoneBinding();
+
+      // 清空输入
+      document.getElementById('new-phone-input').value = '';
+      document.getElementById('verify-code-input').value = '';
+
+      // 显示保存成功提示
+      showSaveSuccessTip();
+    }
+
+    // 保存个人资料
+    function saveProfile() {
+      const nickname = document.getElementById('nickname-input').value;
+      const birthday = document.getElementById('birthday-input').value;
+      const gender = document.getElementById('gender-display').textContent;
+
+      showToast('个人资料已保存');
+
+      // 更新个人中心页面的显示
+      const profileCard = document.querySelector('[data-component="profile-header"] .font-medium');
+      if (profileCard) {
+        profileCard.textContent = nickname;
+      }
+
+      backToProfileFromEdit();
+    }
+
+    // Toast提示
+    function showToast(message, duration = 2000) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      toastMessage.textContent = message;
+      toast.classList.remove('hidden');
+
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, duration);
+    }
+
+    // 个人信息收集和权限清单
+    function showPrivacyInfo(type) {
+      const title = type === 'collect' ? '个人信息收集清单' : '权限清单';
+      showToast(`查看${title}`);
+    }
+
+    // 用户协议和隐私政策
+    function showAgreement(type) {
+      const title = type === 'user' ? '用户协议' : '隐私政策';
+      showToast(`跳转到${title}页面`);
+    }
+
+    // 退出登录
+    function confirmLogout() {
+      if (confirm('确定要退出登录吗？')) {
+        showToast('已退出登录');
+        setTimeout(() => {
+          showToast('跳转到登录页面');
+        }, 2000);
+      }
+    }
+
+    // 账号注销相关
+    let deletionCodeVerified = false;
+    let deletionCountdown = 0;
+
+    function showAccountDeletion() {
+      document.getElementById('page-profile-edit').classList.add('hidden');
+      document.getElementById('page-account-deletion').classList.remove('hidden');
+      updateNavbar('账号注销', true, 'backToProfileEdit()');
+    }
+
+    function backToProfileEdit() {
+      document.getElementById('page-account-deletion').classList.add('hidden');
+      document.getElementById('page-profile-edit').classList.remove('hidden');
+      updateNavbar('个人资料', true, 'backToProfileFromEdit()');
+
+      // 重置注销页面状态
+      deletionCodeVerified = false;
+      document.getElementById('deletion-verify-code').value = '';
+      document.getElementById('deletion-agree-checkbox').checked = false;
+      checkDeletionEnable();
+    }
+
+    function sendDeletionCode() {
+      // 模拟发送验证码
+      showToast('验证码已发送到 138****5678');
+
+      // 倒计时60秒
+      deletionCountdown = 60;
+      const btn = document.getElementById('deletion-send-btn');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      const timer = setInterval(() => {
+        deletionCountdown--;
+        btn.textContent = `${deletionCountdown}秒后重发`;
+
+        if (deletionCountdown <= 0) {
+          clearInterval(timer);
+          btn.disabled = false;
+          btn.classList.remove('opacity-50');
+          btn.textContent = '发送验证码';
+        }
+      }, 1000);
+    }
+
+    function checkDeletionEnable() {
+      const code = document.getElementById('deletion-verify-code').value;
+      const agreed = document.getElementById('deletion-agree-checkbox').checked;
+      const btn = document.getElementById('confirm-deletion-btn');
+
+      // 验证码长度为6位且已勾选协议
+      if (code.length === 6 && agreed) {
+        deletionCodeVerified = true;
+        btn.disabled = false;
+        btn.classList.remove('bg-gray-300', 'text-gray-500');
+        btn.classList.add('bg-red-500', 'text-white');
+      } else {
+        deletionCodeVerified = false;
+        btn.disabled = true;
+        btn.classList.remove('bg-red-500', 'text-white');
+        btn.classList.add('bg-gray-300', 'text-gray-500');
+      }
+    }
+
+    // 监听验证码输入
+    document.addEventListener('DOMContentLoaded', () => {
+      const deletionCodeInput = document.getElementById('deletion-verify-code');
+      if (deletionCodeInput) {
+        deletionCodeInput.addEventListener('input', checkDeletionEnable);
+      }
+    });
+
+    function showDeletionTerms() {
+      showToast('查看《注销服务须知》');
+    }
+
+    function confirmAccountDeletion() {
+      if (!deletionCodeVerified) {
+        showToast('请先完成验证');
+        return;
+      }
+
+      if (confirm('最后确认：确定要注销账号吗？\n\n此操作不可撤销！')) {
+        // 模拟注销过程
+        showToast('正在注销账号...', 3000);
+
+        setTimeout(() => {
+          showToast('账号注销成功', 2000);
+          setTimeout(() => {
+            showToast('账号已注销，即将退出登录');
+            // 这里应该跳转到登录页面
+          }, 2000);
+        }, 3000);
+      }
+    }
+
+    // 筛选器层级关系数据（平台 → 专辑 → 歌曲）
+    const filterHierarchy = {
+      platforms: {
+        'netease': {
+          name: '网易',
+          albums: ['albumA', 'albumB', 'albumC'],
+          songs: ['song1', 'song2', 'song3', 'song4']
+        },
+        'tme': {
+          name: 'TME',
+          albums: ['albumD', 'albumE'],
+          songs: ['song5', 'song6', 'song7']
+        },
+        'kugou': {
+          name: '酷狗',
+          albums: ['albumF', 'albumG'],
+          songs: ['song1', 'song5']  // 可能有重复歌曲
+        },
+        'aiting': {
+          name: '爱听',
+          albums: ['albumA', 'albumF'],  // 可能有重复专辑
+          songs: ['song2', 'song6']
+        }
+      },
+      albums: {
+        'albumA': { name: '专辑A', songs: ['song1', 'song2'] },
+        'albumB': { name: '专辑B', songs: ['song3'] },
+        'albumC': { name: '专辑C', songs: ['song4'] },
+        'albumD': { name: '专辑D', songs: ['song5'] },
+        'albumE': { name: '专辑E', songs: ['song6', 'song7'] },
+        'albumF': { name: '专辑F', songs: ['song1', 'song6'] },
+        'albumG': { name: '专辑G', songs: ['song5'] }
+      }
+    };
+
+    // 筛选器状态管理（级联筛选）
+    const filterState = {
+      revenue: { currency: 'cny', artist: 'all', platform: 'all', album: 'all', song: 'all' },
+      'platform-dist': { currency: 'cny', artist: 'all' },
+      overview: { artist: 'all' },
+      content: { album: 'all', song: 'all' }
+    };
+
+    // 临时筛选状态（确定前不生效）
+    const tempFilterState = {
+      revenue: { currency: 'cny', artist: 'all', platform: 'all', album: 'all', song: 'all' },
+      'platform-dist': { currency: 'cny', artist: 'all' },
+      overview: { artist: 'all' },
+      content: { album: 'all', song: 'all' }
+    };
+
+    // 筛选器相关函数
+
+    // 平台名称映射（中文 → data-value）
+    function getPlatformValue(chineseName) {
+      const mapping = {
+        '网易': 'netease',
+        'TME': 'tme',
+        '酷狗': 'kugou',
+        '爱听': 'aiting'
+      };
+      return mapping[chineseName] || 'all';
+    }
+
+    // 显示筛选面板
+    function showFilterPanel(currency) {
+      const panel = document.getElementById(`filter-panel-${currency}`);
+      const drilldown = chartDrilldownState[currency];
+
+      // 复制当前筛选状态到临时状态
+      tempFilterState[currency] = { ...filterState[currency] };
+
+      // 如果有图表下钻，同步下钻状态到筛选器（仅CNY/EUR有下钻状态）
+      // 新的3层下钻: time -> artist -> album，不再锁定平台维度
+      if (drilldown && drilldown.level === 'album' && drilldown.selectedArtist) {
+        // 下钻到专辑层级时，可以根据需要锁定艺人维度
+        const artistValue = drilldown.selectedArtist;
+        tempFilterState[currency].artist = artistValue;
+      }
+
+      // 更新面板显示状态
+      updateFilterPanelState(currency);
+      // 检查并初始化展开/收起状态
+      checkAndInitExpand(currency, 'artist');
+      checkAndInitExpand(currency, 'platform');
+      checkAndInitExpand(currency, 'album');
+      checkAndInitExpand(currency, 'song');
+      // 显示面板
+      panel.classList.remove('hidden');
+    }
+
+    // 隐藏筛选面板
+    function hideFilterPanel(currency) {
+      const panel = document.getElementById(`filter-panel-${currency}`);
+      panel.classList.add('hidden');
+    }
+
+    // 检查并初始化展开/收起状态
+    function checkAndInitExpand(currency, type) {
+      const container = document.getElementById(`${type}-options-${currency}`);
+      if (!container) return;  // 如果元素不存在则直接返回
+      const tagsContainer = container.querySelector('.flex.flex-wrap');
+      const tags = tagsContainer.querySelectorAll('.filter-tag');
+
+      // 计算标签是否超过一行
+      if (tags.length > 5) {  // 假设超过5个标签就会超过一行
+        // 添加展开/收起按钮（如果还没有）
+        let toggleBtn = container.querySelector('.toggle-expand-btn');
+        if (!toggleBtn) {
+          toggleBtn = document.createElement('button');
+          toggleBtn.className = 'toggle-expand-btn text-sm text-red-500 mt-2';
+          toggleBtn.textContent = '展开';
+          toggleBtn.onclick = () => toggleExpand(currency, type);
+          container.appendChild(toggleBtn);
+        }
+
+        // 默认收起
+        if (container.dataset.expanded !== 'false') {
+          container.dataset.expanded = 'false';
+          tagsContainer.style.maxHeight = '32px';
+          tagsContainer.style.overflow = 'hidden';
+          toggleBtn.textContent = '展开';
+        }
+      }
+    }
+
+    // 切换展开/收起
+    function toggleExpand(currency, type) {
+      const container = document.getElementById(`${type}-options-${currency}`);
+      const tagsContainer = container.querySelector('.flex.flex-wrap');
+      const toggleBtn = container.querySelector('.toggle-expand-btn');
+
+      if (container.dataset.expanded === 'true') {
+        container.dataset.expanded = 'false';
+        tagsContainer.style.maxHeight = '32px';
+        tagsContainer.style.overflow = 'hidden';
+        toggleBtn.textContent = '展开';
+      } else {
+        container.dataset.expanded = 'true';
+        tagsContainer.style.maxHeight = 'none';
+        tagsContainer.style.overflow = 'visible';
+        toggleBtn.textContent = '收起';
+      }
+    }
+
+    // 选择筛选项
+    function selectFilter(currency, type, value, button) {
+      // 如果标签被禁用，则不允许点击
+      if (button.disabled) {
+        return;
+      }
+
+      // 更新临时状态
+      tempFilterState[currency][type] = value;
+
+      // 级联逻辑：选择上级时重置下级
+      if (type === 'artist') {
+        if (tempFilterState[currency].platform) tempFilterState[currency].platform = 'all';
+        if (tempFilterState[currency].album) tempFilterState[currency].album = 'all';
+        if (tempFilterState[currency].song) tempFilterState[currency].song = 'all';
+      } else if (type === 'platform') {
+        if (tempFilterState[currency].album) tempFilterState[currency].album = 'all';
+        if (tempFilterState[currency].song) tempFilterState[currency].song = 'all';
+      } else if (type === 'album') {
+        if (tempFilterState[currency].song) tempFilterState[currency].song = 'all';
+      }
+
+      // 更新按钮样式
+      const container = document.getElementById(`${type}-options-${currency}`);
+      container.querySelectorAll('.filter-tag').forEach(tag => {
+        tag.classList.remove('active');
+      });
+      button.classList.add('active');
+
+      // 更新级联选项的可选状态
+      updateCascadeOptions(currency, type);
+    }
+
+    // 更新级联选项（禁用/启用下级选项）
+    function updateCascadeOptions(currency, changedType) {
+      const state = tempFilterState[currency];
+
+      if (changedType === 'platform') {
+        const albumContainer = document.getElementById(`album-options-${currency}`);
+        const songContainer = document.getElementById(`song-options-${currency}`);
+
+        if (state.platform === 'all') {
+          // 启用所有专辑和歌曲
+          enableAllTags(albumContainer);
+          enableAllTags(songContainer);
+        } else {
+          // 只启用当前平台下的专辑和歌曲
+          const platformData = filterHierarchy.platforms[state.platform];
+          if (platformData) {
+            enableOnlyTags(albumContainer, platformData.albums);
+            enableOnlyTags(songContainer, platformData.songs);
+          }
+        }
+
+        // 重置下级选中状态
+        resetTagSelection(albumContainer, 'all');
+        resetTagSelection(songContainer, 'all');
+
+      } else if (changedType === 'album') {
+        const songContainer = document.getElementById(`song-options-${currency}`);
+
+        if (state.album === 'all') {
+          // 如果专辑是"全部"，根据平台筛选歌曲
+          if (state.platform === 'all') {
+            enableAllTags(songContainer);
+          } else {
+            const platformData = filterHierarchy.platforms[state.platform];
+            if (platformData) {
+              enableOnlyTags(songContainer, platformData.songs);
+            }
+          }
+        } else {
+          // 只启用当前专辑下的歌曲
+          const albumData = filterHierarchy.albums[state.album];
+          if (albumData) {
+            enableOnlyTags(songContainer, albumData.songs);
+          }
+        }
+
+        // 重置歌曲选中状态
+        resetTagSelection(songContainer, 'all');
+      }
+    }
+
+    // 启用所有标签
+    function enableAllTags(container) {
+      container.querySelectorAll('.filter-tag').forEach(tag => {
+        tag.disabled = false;
+        tag.classList.remove('opacity-50', 'cursor-not-allowed');
+      });
+    }
+
+    // 只启用指定的标签
+    function enableOnlyTags(container, enabledValues) {
+      container.querySelectorAll('.filter-tag').forEach(tag => {
+        const value = tag.dataset.value;
+        if (value === 'all' || enabledValues.includes(value)) {
+          tag.disabled = false;
+          tag.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+          tag.disabled = true;
+          tag.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+      });
+    }
+
+    // 重置标签选中状态
+    function resetTagSelection(container, defaultValue) {
+      container.querySelectorAll('.filter-tag').forEach(tag => {
+        tag.classList.remove('active');
+        if (tag.dataset.value === defaultValue) {
+          tag.classList.add('active');
+        }
+      });
+    }
+
+    // 更新筛选面板状态
+    function updateFilterPanelState(currency) {
+      const drilldown = chartDrilldownState[currency];
+      let types;
+      if (currency === 'overview') {
+        types = ['artist'];
+      } else if (currency === 'platform-dist') {
+        types = ['currency', 'artist'];
+      } else if (currency === 'revenue') {
+        types = ['currency', 'artist', 'platform', 'album', 'song'];
+      } else {
+        types = ['artist', 'platform', 'album', 'song'];
+      }
+
+      types.forEach(type => {
+        const container = document.getElementById(`${type}-options-${currency}`);
+        if (!container) return;
+
+        const currentValue = tempFilterState[currency][type];
+
+        // 检查是否需要锁定该维度（简化为3层下钻后，锁定艺人维度）
+        let shouldLock = false;
+
+        if (type === 'artist' && drilldown && drilldown.level === 'album' && drilldown.selectedArtist) {
+          // 下钻到专辑层级时，锁定艺人选择
+          shouldLock = true;
+        }
+
+        container.querySelectorAll('.filter-tag').forEach(tag => {
+          // 移除所有状态
+          tag.classList.remove('active', 'opacity-50', 'cursor-not-allowed');
+          tag.disabled = false;
+
+          if (shouldLock) {
+            // 锁定状态：禁用所有标签
+            tag.disabled = true;
+            tag.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // 选中当前值
+            if (tag.dataset.value === currentValue) {
+              tag.classList.add('active');
+              tag.classList.remove('opacity-50'); // 选中的标签不透明
+            }
+          } else {
+            // 正常状态：只高亮选中项
+            if (tag.dataset.value === currentValue) {
+              tag.classList.add('active');
+            }
+          }
+        });
+      });
+    }
+
+    // 应用筛选
+    function applyFilters(currency) {
+      // 将临时状态应用到正式状态
+      filterState[currency] = { ...tempFilterState[currency] };
+
+      // 如果是revenue，更新标题显示币种
+      if (currency === 'revenue') {
+        const selectedCurrency = filterState[currency].currency;
+        const currencyLabel = selectedCurrency.toUpperCase();
+        document.getElementById('revenue-title').textContent = `经营情况 - ${currencyLabel}`;
+
+        // 重置下钻状态并刷新图表
+        resetChartDrilldown('revenue');
+      }
+
+      // 如果是platform-dist，更新标题显示币种
+      if (currency === 'platform-dist') {
+        const selectedCurrency = filterState[currency].currency;
+        const currencyLabel = selectedCurrency.toUpperCase();
+        document.getElementById('platform-dist-title').textContent = `平台分布 - ${currencyLabel}`;
+      }
+
+      // 更新筛选按钮状态
+      updateFilterButtonState(currency);
+
+      // 刷新图表
+      refreshChart(currency);
+
+      // 隐藏面板
+      hideFilterPanel(currency);
+    }
+
+    // 更新筛选按钮状态
+    function updateFilterButtonState(currency) {
+      const btn = document.getElementById(`filter-btn-${currency}`);
+      if (!btn) return;  // 如果按钮不存在则直接返回
+
+      const state = filterState[currency];
+
+      // 检查是否有任何筛选（排除'all'和'currency'）
+      const hasFilter = (state.platform && state.platform !== 'all') ||
+                        (state.album && state.album !== 'all') ||
+                        (state.song && state.song !== 'all');
+
+      if (hasFilter) {
+        btn.textContent = '已筛选';
+        btn.classList.add('text-red-500', 'border-red-500');
+        btn.classList.remove('text-gray-600', 'border-gray-300');
+      } else {
+        btn.textContent = '筛选';
+        btn.classList.remove('text-red-500', 'border-red-500');
+        btn.classList.add('text-gray-600', 'border-gray-300');
+      }
+    }
+
+    // 重置筛选
+    function resetFilters(currency) {
+      // 重置临时状态
+      if (currency === 'overview') {
+        tempFilterState[currency] = { artist: 'all' };
+      } else if (currency === 'platform-dist') {
+        // 保留当前币种，重置艺人
+        tempFilterState[currency] = {
+          currency: tempFilterState[currency].currency,
+          artist: 'all'
+        };
+      } else if (currency === 'revenue') {
+        // 保留当前币种，重置其他筛选
+        tempFilterState[currency] = {
+          currency: tempFilterState[currency].currency,
+          artist: 'all',
+          platform: 'all',
+          album: 'all',
+          song: 'all'
+        };
+      } else {
+        tempFilterState[currency] = { artist: 'all', platform: 'all', album: 'all', song: 'all' };
+      }
+
+      // 更新面板显示
+      updateFilterPanelState(currency);
+    }
+
+    // 图表下钻函数
+
+    // 图表 Tooltip 显示/隐藏函数
+
+    // 显示图表 Tooltip（已废弃，保留供参考）
+    function showChartTooltip(currency, params, chartInstance) {
+      const tooltip = document.getElementById(`chart-tooltip-${currency}`);
+      const content = document.getElementById(`tooltip-content-${currency}`);
+      if (!tooltip || !content) return;
+
+      // 构建内容（仅显示数据，不提供下钻链接）
+      content.innerHTML = `
+        <div class="font-medium text-gray-800">${params.name}</div>
+        <div class="text-sm text-gray-600 mt-1">${params.seriesName}: ${params.value.toLocaleString()}</div>
+      `;
+
+      // 定位到点击位置
+      const clickX = params.event.offsetX;
+      const clickY = params.event.offsetY;
+
+      tooltip.style.left = `${clickX + 10}px`;
+      tooltip.style.top = `${clickY + 10}px`;
+
+      // 显示 tooltip
+      tooltip.classList.remove('hidden');
+    }
+
+    // 隐藏图表 Tooltip
+    function hideChartTooltip(currency) {
+      const tooltip = document.getElementById(`chart-tooltip-${currency}`);
+      if (tooltip) {
+        tooltip.classList.add('hidden');
+      }
+    }
+
+    // 图表数据点下钻状态管理
+    const chartDrilldownState = {
+      revenue: {
+        level: 'time',           // 'time' | 'artist' | 'album' | 'song'
+        metric: null,            // 'plays' | 'downloads' | 'sales' | 'revenue'
+        selectedMonth: null,     // '3月'
+        selectedArtist: null,    // '张三'
+        selectedAlbum: null,     // '专辑A'
+        selectedSong: null,      // '歌曲1'
+        timeRange: 3             // 当前时间范围（月数）
+      }
+    };
+
+    // 时间范围更新
+    function updateTimeRange(currency, months, button, displayText) {
+      // 如果有displayText，说明是从period picker调用的
+      if (displayText) {
+        // 更新显示
+        const displayEl = document.getElementById(`${currency}-period-display`);
+        if (displayEl) {
+          displayEl.textContent = displayText;
+        }
+        // 使用自定义时间范围
+        chartDrilldownState[currency].timeRange = 0;
+      } else if (button) {
+        // 从chip按钮调用（旧逻辑，现已不使用）
+        const container = document.getElementById(`${currency}-time-filter`);
+        container.querySelectorAll('.chip').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        button.classList.add('active');
+        chartDrilldownState[currency].timeRange = months;
+      }
+
+      // 重置图表下钻状态并更新
+      resetChartDrilldown(currency);
+    }
+
+    // 生成模拟数据
+    function generateMonthData(months) {
+      const monthNames = [];
+      const revenue = [];
+      const plays = [];
+      const sales = [];
+      const downloads = [];
+
+      for (let i = months; i > 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i + 1);
+        const year = date.getFullYear() % 100;  // 获取年份后两位
+        monthNames.push(`${year}年${date.getMonth() + 1}月`);
+        revenue.push(Math.floor(10000 + Math.random() * 10000));
+        plays.push(Math.floor(100000 + Math.random() * 100000));
+        sales.push(Math.floor(2000 + Math.random() * 4000));
+        downloads.push(Math.floor(1500 + Math.random() * 2500));
+      }
+
+      return { months: monthNames, revenue, plays, sales, downloads };
+    }
+
+    // 生成艺人维度数据（某月的各艺人分布）
+    function generateArtistData(month, metric, currency) {
+      const artists = ['张三', '李四', '王五', '赵六', '钱七'];
+      const artistData = [];
+
+      // 根据指标类型生成不同范围的数据
+      const ranges = {
+        revenue: currency === 'cny' ? [3000, 8000] : [300, 800],
+        plays: currency === 'cny' ? [30000, 80000] : [2000, 5000],
+        sales: currency === 'cny' ? [800, 2500] : [100, 250],
+        downloads: currency === 'cny' ? [500, 1500] : [80, 200]
+      };
+
+      const [min, max] = ranges[metric];
+      for (let i = 0; i < artists.length; i++) {
+        artistData.push(Math.floor(min + Math.random() * (max - min)));
+      }
+
+      return { artists, data: artistData };
+    }
+
+    // 生成专辑维度数据（某艺人某平台的各专辑分布）
+    function generateAlbumData(month, artist, platform, metric, currency) {
+      const albums = ['专辑A', '专辑B', '专辑C', '精选集', 'EP作品'];
+      const albumData = [];
+
+      // 根据指标类型生成不同范围的数据
+      const ranges = {
+        revenue: currency === 'cny' ? [600, 1800] : [60, 180],
+        plays: currency === 'cny' ? [6000, 18000] : [400, 1200],
+        sales: currency === 'cny' ? [150, 600] : [20, 80],
+        downloads: currency === 'cny' ? [100, 400] : [15, 50]
+      };
+
+      const [min, max] = ranges[metric];
+      for (let i = 0; i < albums.length; i++) {
+        albumData.push(Math.floor(min + Math.random() * (max - min)));
+      }
+
+      return { albums, data: albumData };
+    }
+
+    // 生成歌曲维度数据（某专辑的各歌曲分布）
+    function generateSongData(month, artist, album, metric, currency) {
+      const songs = ['春天的故事', '夏日回忆', '秋天的童话', '冬日暖阳', '星空下的约定', '月光小夜曲'];
+      const songData = [];
+
+      // 根据指标类型生成不同范围的数据
+      const ranges = {
+        revenue: currency === 'cny' ? [100, 400] : [10, 40],
+        plays: currency === 'cny' ? [1000, 4000] : [80, 250],
+        sales: currency === 'cny' ? [30, 120] : [4, 16],
+        downloads: currency === 'cny' ? [20, 80] : [3, 10]
+      };
+
+      const [min, max] = ranges[metric];
+      for (let i = 0; i < songs.length; i++) {
+        songData.push(Math.floor(min + Math.random() * (max - min)));
+      }
+
+      return { songs, data: songData };
+    }
+
+    // 图表点击事件处理
+    function handleChartClick(currency, params) {
+      const state = chartDrilldownState[currency];
+
+      // 获取指标名称映射
+      const metricMap = {
+        '播放量': 'plays',
+        '下载量': 'downloads',
+        '销售量': 'sales',
+        '收入': 'revenue'
+      };
+
+      const metric = metricMap[params.seriesName];
+      if (!metric) return;  // 只处理四个主要指标
+
+      // 根据当前层级处理点击（4层下钻：time -> artist -> album -> song）
+      if (state.level === 'time') {
+        // 第一层：时间维度 -> 下钻到艺人维度
+        state.level = 'artist';
+        state.metric = metric;
+        state.selectedMonth = params.name;  // 例如 '3月'
+        refreshChartDrilldown(currency);
+      } else if (state.level === 'artist') {
+        // 第二层：艺人维度 -> 下钻到专辑维度
+        state.level = 'album';
+        state.selectedArtist = params.name;  // 例如 '张三'
+        refreshChartDrilldown(currency);
+      } else if (state.level === 'album') {
+        // 第三层：专辑维度 -> 下钻到歌曲维度
+        state.level = 'song';
+        state.selectedAlbum = params.name;  // 例如 '专辑A'
+        refreshChartDrilldown(currency);
+      }
+      // 第四层：歌曲维度，点击不再下钻
+    }
+
+    // 刷新图表（根据下钻层级）
+    function refreshChartDrilldown(currency) {
+      const state = chartDrilldownState[currency];
+      const chart = charts[currency];
+      if (!chart) return;
+
+      const metricNames = {
+        plays: '播放量',
+        downloads: '下载量',
+        sales: '销售量',
+        revenue: '收入'
+      };
+
+      // 从filterState获取当前选择的币种
+      const selectedCurrency = currency === 'revenue' ? filterState.revenue.currency : currency;
+      const currencySymbol = selectedCurrency === 'cny' ? '¥' : '€';
+      let option;
+
+      if (state.level === 'time') {
+        // 第一层：时间维度（默认视图）
+        const monthData = generateMonthData(state.timeRange);
+        option = {
+          tooltip: { show: false },
+          legend: { data: ['收入', '播放量', '销售量', '下载量'], bottom: 0 },
+          grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+          xAxis: {
+            type: 'category',
+            data: monthData.months,
+            axisLabel: {
+              interval: 0,  // 显示所有刻度
+              rotate: monthData.months.length > 6 ? 30 : 0  // 超过6个月时倾斜30度
+            }
+          },
+          yAxis: [
+            { type: 'value', name: `收入(${currencySymbol})`, position: 'left' },
+            { type: 'value', name: '数量', position: 'right' }
+          ],
+          series: [
+            {
+              name: '收入',
+              type: 'line',
+              data: monthData.revenue,
+              yAxisIndex: 0,
+              cursor: 'pointer',
+              emphasis: { focus: 'series', blurScope: 'coordinateSystem' },
+              lineStyle: { width: 3 },
+              smooth: true
+            },
+            {
+              name: '播放量',
+              type: 'bar',
+              data: monthData.plays,
+              yAxisIndex: 1,
+              cursor: 'pointer',
+              emphasis: {
+                focus: 'series',
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowOffsetY: 0,
+                  shadowColor: 'rgba(249, 59, 61, 0.5)'
+                }
+              }
+            },
+            {
+              name: '销售量',
+              type: 'bar',
+              data: monthData.sales,
+              yAxisIndex: 1,
+              cursor: 'pointer',
+              emphasis: {
+                focus: 'series',
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowOffsetY: 0,
+                  shadowColor: 'rgba(16, 185, 129, 0.5)'
+                }
+              }
+            },
+            {
+              name: '下载量',
+              type: 'bar',
+              data: monthData.downloads,
+              yAxisIndex: 1,
+              cursor: 'pointer',
+              emphasis: {
+                focus: 'series',
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowOffsetY: 0,
+                  shadowColor: 'rgba(139, 92, 246, 0.5)'
+                }
+              }
+            }
+          ],
+          animation: true,
+          animationDuration: 800,
+          animationEasing: 'cubicOut'
+        };
+      } else if (state.level === 'artist') {
+        // 第二层：艺人维度
+        const artistData = generateArtistData(state.selectedMonth, state.metric, selectedCurrency);
+        const metricName = metricNames[state.metric];
+        const isRevenue = state.metric === 'revenue';
+
+        option = {
+          title: {
+            text: `${state.selectedMonth}${metricName}的艺人分布`,
+            left: 'center',
+            textStyle: { fontSize: 14, fontWeight: 'normal', color: '#6b7280' }
+          },
+          tooltip: { show: false },
+          grid: { left: '3%', right: '4%', bottom: '10%', top: '15%', containLabel: true },
+          xAxis: {
+            type: 'category',
+            data: artistData.artists,
+            axisLabel: {
+              interval: 0,  // 显示所有刻度
+              rotate: 0
+            }
+          },
+          yAxis: {
+            type: 'value',
+            name: metricName + (isRevenue ? `(${currencySymbol})` : '')
+          },
+          series: [{
+            name: metricName,
+            type: 'bar',
+            data: artistData.data,
+            itemStyle: {
+              color: isRevenue ? '#F93B3D' : '#3b82f6'
+            },
+            cursor: 'pointer',
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 15,
+                shadowOffsetX: 0,
+                shadowOffsetY: 5,
+                shadowColor: isRevenue ? 'rgba(249, 59, 61, 0.6)' : 'rgba(59, 130, 246, 0.6)'
+              }
+            },
+            label: {
+              show: true,
+              position: 'top',
+              formatter: function(params) {
+                return params.value.toLocaleString();
+              }
+            }
+          }],
+          animation: true,
+          animationDuration: 600,
+          animationEasing: 'elasticOut'
+        };
+      } else if (state.level === 'album') {
+        // 第三层：专辑维度
+        const albumData = generateAlbumData(state.selectedMonth, state.selectedArtist, null, state.metric, selectedCurrency);
+        const metricName = metricNames[state.metric];
+        const isRevenue = state.metric === 'revenue';
+
+        option = {
+          title: {
+            text: `${state.selectedArtist}的专辑${metricName}分布`,
+            left: 'center',
+            textStyle: { fontSize: 14, fontWeight: 'normal', color: '#6b7280' }
+          },
+          tooltip: { show: false },
+          grid: { left: '3%', right: '4%', bottom: '12%', top: '15%', containLabel: true },
+          xAxis: {
+            type: 'category',
+            data: albumData.albums,
+            axisLabel: {
+              interval: 0,  // 显示所有刻度
+              rotate: 20,  // 专辑名称较长，倾斜20度
+              fontSize: 11
+            }
+          },
+          yAxis: {
+            type: 'value',
+            name: metricName + (isRevenue ? `(${currencySymbol})` : '')
+          },
+          series: [{
+            name: metricName,
+            type: 'bar',
+            data: albumData.data,
+            itemStyle: {
+              color: isRevenue ? '#F93B3D' : '#f59e0b'
+            },
+            cursor: 'pointer',
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 15,
+                shadowOffsetX: 0,
+                shadowOffsetY: 5,
+                shadowColor: isRevenue ? 'rgba(249, 59, 61, 0.6)' : 'rgba(245, 158, 11, 0.6)'
+              }
+            },
+            label: {
+              show: true,
+              position: 'top',
+              formatter: function(params) {
+                return params.value.toLocaleString();
+              },
+              fontSize: 11
+            }
+          }],
+          animation: true,
+          animationDuration: 600,
+          animationEasing: 'elasticOut'
+        };
+      } else if (state.level === 'song') {
+        // 第四层：歌曲维度（终点）
+        const songData = generateSongData(state.selectedMonth, state.selectedArtist, state.selectedAlbum, state.metric, selectedCurrency);
+        const metricName = metricNames[state.metric];
+        const isRevenue = state.metric === 'revenue';
+
+        option = {
+          title: {
+            text: `${state.selectedAlbum}的歌曲${metricName}分布`,
+            left: 'center',
+            textStyle: { fontSize: 14, fontWeight: 'normal', color: '#6b7280' }
+          },
+          tooltip: { show: false },
+          grid: { left: '3%', right: '4%', bottom: '15%', top: '15%', containLabel: true },
+          xAxis: {
+            type: 'category',
+            data: songData.songs,
+            axisLabel: {
+              interval: 0,  // 显示所有刻度
+              rotate: 30,  // 歌曲名称较长，倾斜30度
+              fontSize: 10
+            }
+          },
+          yAxis: {
+            type: 'value',
+            name: metricName + (isRevenue ? `(${currencySymbol})` : '')
+          },
+          series: [{
+            name: metricName,
+            type: 'bar',
+            data: songData.data,
+            itemStyle: {
+              color: isRevenue ? '#F93B3D' : '#8b5cf6'
+            },
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 15,
+                shadowOffsetX: 0,
+                shadowOffsetY: 5,
+                shadowColor: isRevenue ? 'rgba(249, 59, 61, 0.6)' : 'rgba(139, 92, 246, 0.6)'
+              }
+            },
+            label: {
+              show: true,
+              position: 'top',
+              formatter: function(params) {
+                return params.value.toLocaleString();
+              },
+              fontSize: 10
+            }
+          }],
+          animation: true,
+          animationDuration: 600,
+          animationEasing: 'elasticOut'
+        };
+      }
+
+      chart.setOption(option, true);  // 使用 notMerge=true 完全替换配置
+      updateChartBreadcrumb(currency);  // 更新面包屑
+    }
+
+    // 重置图表下钻状态
+    function resetChartDrilldown(currency) {
+      chartDrilldownState[currency] = {
+        level: 'time',
+        metric: null,
+        selectedMonth: null,
+        selectedArtist: null,
+        selectedAlbum: null,
+        selectedSong: null,
+        timeRange: chartDrilldownState[currency].timeRange
+      };
+      refreshChartDrilldown(currency);
+      hideChartTooltip(currency);
+    }
+
+    // 重置下钻（仅处理图表点击下钻，不影响筛选器）
+    function resetDrilldown(currency, level) {
+      // 只重置图表下钻状态，不影响筛选器
+      resetChartDrilldown(currency);
+    }
+
+    // 更新图表下钻面包屑
+    function updateChartBreadcrumb(currency) {
+      const breadcrumb = document.getElementById(`${currency}-breadcrumb`);
+      const state = chartDrilldownState[currency];
+
+      const metricNames = {
+        plays: '播放量',
+        downloads: '下载量',
+        sales: '销售量',
+        revenue: '收入'
+      };
+
+      let html = `<span class="breadcrumb-item" onclick="resetChartDrilldown('${currency}')">全部数据</span>`;
+
+      // 第二层：显示月份和指标（artist, album, song层级都显示）
+      if (state.level === 'artist' || state.level === 'album' || state.level === 'song') {
+        html += `<span class="breadcrumb-separator">></span>`;
+        html += `<span class="breadcrumb-item">${state.selectedMonth}${metricNames[state.metric]}</span>`;
+      }
+
+      // 第三层：显示艺人（album, song层级显示）
+      if (state.level === 'album' || state.level === 'song') {
+        html += `<span class="breadcrumb-separator">></span>`;
+        html += `<span class="breadcrumb-item">${state.selectedArtist}</span>`;
+      }
+
+      // 第四层：显示专辑（song层级显示）
+      if (state.level === 'song') {
+        html += `<span class="breadcrumb-separator">></span>`;
+        html += `<span class="breadcrumb-item">${state.selectedAlbum}</span>`;
+      }
+
+      breadcrumb.innerHTML = html;
+    }
+
+    // 刷新图表数据
+    function refreshChart(currency) {
+      const chart = charts[currency];
+      if (!chart) return;
+
+      const filter = filterState[currency];
+      const drilldown = chartDrilldownState[currency];
+
+      // 根据图表下钻层级，重新生成对应的数据
+      if (drilldown.level === 'time') {
+        // 时间维度：显示月度趋势
+        const data = generateMonthData(drilldown.timeRange);
+        const option = chart.getOption();
+
+        // 根据筛选器调整数据倍数（模拟筛选效果）
+        let multiplier = 1;
+        if (filter.artist !== 'all') multiplier *= 0.8;
+        if (filter.platform !== 'all') multiplier *= 0.7;
+        if (filter.album !== 'all') multiplier *= 0.6;
+        if (filter.song !== 'all') multiplier *= 0.5;
+
+        option.xAxis[0].data = data.months;
+        option.series[0].data = data.revenue.map(v => Math.floor(v * multiplier));
+        option.series[1].data = data.plays.map(v => Math.floor(v * multiplier));
+        option.series[2].data = data.sales.map(v => Math.floor(v * multiplier));
+        option.series[3].data = data.downloads.map(v => Math.floor(v * multiplier));
+
+        chart.setOption(option, true);
+      } else if (drilldown.level === 'artist' || drilldown.level === 'album' || drilldown.level === 'song') {
+        // 艺人/专辑/歌曲维度由 refreshChartDrilldown 处理
+        refreshChartDrilldown(currency);
+      }
+    }
+
+    // 滚动到指定区域
+    function scrollToSection(id) {
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 返回顶部
+    function scrollToTop() {
+      const mainContent = document.getElementById('mainContent');
+      mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 监听数据中心页面滚动,控制返回顶部按钮显示
+    document.getElementById('mainContent').addEventListener('scroll', function() {
+      const backToTopBtn = document.getElementById('backToTop');
+      const dataPage = document.getElementById('page-data');
+
+      // 只在数据中心页面显示返回顶部按钮 (降低阈值到150px)
+      if (!dataPage.classList.contains('hidden') && this.scrollTop > 150) {
+        backToTopBtn.classList.add('show');
+      } else {
+        backToTopBtn.classList.remove('show');
+      }
+    });
+
+    // 窗口调整时重绘图表
+    window.addEventListener('resize', () => {
+      Object.values(charts).forEach(chart => chart.resize());
+    });
+
+    // ============ 总览 Tab 函数 ============
+    let currentOverviewMetric = 'artists';
+    let currentOverviewTimeRange = 3;
+
+    // 选择总览指标
+    function selectOverviewMetric(metric) {
+      currentOverviewMetric = metric;
+      // 更新单选按钮
+      document.querySelectorAll('input[name="overview-metric"]').forEach(radio => {
+        radio.checked = (radio.value === metric);
+      });
+
+      // 根据粒度更新时间显示格式
+      const granularity = metricGranularityMap[metric] || 'month';
+      const displayEl = document.getElementById('overview-period-display');
+      if (displayEl) {
+        if (granularity === 'date') {
+          // 日粒度格式
+          displayEl.textContent = `${pickerState.startYear}.${String(pickerState.startMonth).padStart(2, '0')}.${String(pickerState.startDay).padStart(2, '0')} - ${pickerState.endYear}.${String(pickerState.endMonth).padStart(2, '0')}.${String(pickerState.endDay).padStart(2, '0')}`;
+        } else {
+          // 月粒度格式
+          displayEl.textContent = `${pickerState.startYear}.${String(pickerState.startMonth).padStart(2, '0')} - ${pickerState.endYear}.${String(pickerState.endMonth).padStart(2, '0')}`;
+        }
+      }
+
+      // 更新图表
+      updateOverviewChart();
+    }
+
+    // 更新总览时间范围
+    function updateOverviewTimeRange(months, button) {
+      currentOverviewTimeRange = months;
+      // 更新按钮样式
+      const container = button.parentElement;
+      container.querySelectorAll('.chip').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      button.classList.add('active');
+      // 更新图表
+      updateOverviewChart();
+    }
+
+    // 初始化总览图表
+    function initOverviewChart() {
+      if (!charts.overviewTrend) {
+        const chartOverview = echarts.init(document.getElementById('chart-overview-trend'));
+        charts.overviewTrend = chartOverview;
+      }
+      updateOverviewChart();
+    }
+
+    // 更新总览图表
+    function updateOverviewChart() {
+      if (!charts.overviewTrend) return;
+
+      // 生成模拟数据
+      const months = currentOverviewTimeRange;
+      const monthNames = [];
+      const data = [];
+
+      // 根据不同指标生成不同范围的数据
+      let baseValue = 1000;
+      let range = 5000;
+
+      if (currentOverviewMetric === 'revenue-cny') {
+        baseValue = 10000;
+        range = 20000;
+      } else if (currentOverviewMetric === 'revenue-eur') {
+        baseValue = 1000;
+        range = 2000;
+      } else if (currentOverviewMetric === 'plays') {
+        baseValue = 50000;
+        range = 100000;
+      } else if (currentOverviewMetric === 'downloads') {
+        baseValue = 5000;
+        range = 10000;
+      } else if (currentOverviewMetric === 'sales') {
+        baseValue = 2000;
+        range = 5000;
+      } else if (currentOverviewMetric === 'fans') {
+        baseValue = 20000;
+        range = 30000;
+      }
+
+      for (let i = months; i >= 1; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i + 1);
+        monthNames.push(`${date.getMonth() + 1}月`);
+        data.push(Math.floor(baseValue + Math.random() * range));
+      }
+
+      const metricNames = {
+        artists: '艺人人数',
+        works: '作品数',
+        plays: '播放量',
+        downloads: '下载量',
+        sales: '销售量',
+        fans: '粉丝量',
+        'revenue-cny': '收入(CNY)',
+        'revenue-eur': '收入(EUR)'
+      };
+
+      const option = {
+        tooltip: {
+          trigger: 'axis',
+          formatter: function(params) {
+            let value = params[0].value;
+            if (currentOverviewMetric === 'revenue-cny') {
+              value = '¥' + value.toLocaleString();
+            } else if (currentOverviewMetric === 'revenue-eur') {
+              value = '€' + value.toLocaleString();
+            } else {
+              value = value.toLocaleString();
+            }
+            return `${params[0].name}<br/>${metricNames[currentOverviewMetric]}: ${value}`;
+          }
+        },
+        grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+        xAxis: {
+          type: 'category',
+          data: monthNames,
+          boundaryGap: false
+        },
+        yAxis: { type: 'value' },
+        series: [{
+          name: metricNames[currentOverviewMetric],
+          type: 'line',
+          smooth: true,
+          data: data,
+          itemStyle: { color: '#F93B3D' },
+          areaStyle: {
+            color: {
+              type: 'linear',
+              x: 0, y: 0, x2: 0, y2: 1,
+              colorStops: [
+                { offset: 0, color: 'rgba(249, 59, 61, 0.3)' },
+                { offset: 1, color: 'rgba(249, 59, 61, 0.05)' }
+              ]
+            }
+          }
+        }]
+      };
+
+      charts.overviewTrend.setOption(option);
+    }
+
+    // 初始化
+    updateBadges();
+    // 初始化总览图表
+    setTimeout(() => {
+      initOverviewChart();
+    }, 300);
+  </script>
+</body>
+</html>
