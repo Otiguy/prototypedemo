@@ -3544,80 +3544,8 @@
                         { id: 4, name: 'Wallet', icon: '💼', version: 'v0.1.0', battery: 60, scenario: 'write-interrupted', isUpdated: false }
                     ];
 
-                    // Sort tags: 可更新的 > 已更新的 > 按名字排序
-                    otaTagsData.sort((a, b) => {
-                        // 第一优先级：可更新的（未更新的）排前面
-                        if (!a.isUpdated && b.isUpdated) return -1;
-                        if (a.isUpdated && !b.isUpdated) return 1;
-                        // 第二优先级：同级别内按名字排序
-                        return a.name.localeCompare(b.name);
-                    });
-
-                    const otaTagsList = document.getElementById('ota-tags-list');
-                    otaTagsList.innerHTML = otaTagsData.map(tag => `
-                        <div class="ota-tag-item" data-tag-id="${tag.id}" style="background: rgba(26, 31, 43, 0.6); border: 1px solid rgba(58, 139, 255, 0.2); border-radius: 16px; padding: 12px; margin-bottom: 12px;">
-                            <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-                                    <span style="font-size: 24px;">${tag.icon}</span>
-                                    <div style="flex: 1;">
-                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                            <div style="color: #FFFFFF; font-weight: 600; font-size: 15px;">${tag.name}</div>
-                                            <!-- 电量图标紧跟在名字后面 -->
-                                            <div style="width: 32px; height: 16px; border: 2px solid ${tag.battery > 30 ? '#3A8BFF' : '#EF4444'}; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                                                <span style="font-size: 10px; color: ${tag.battery > 30 ? '#3A8BFF' : '#EF4444'}; font-weight: 600;">${tag.battery}%</span>
-                                            </div>
-                                        </div>
-                                        <div style="color: #8B94A4; font-size: 12px;">${tag.version} → v1.1.0</div>
-                                    </div>
-                                </div>
-                                <!-- Update 按钮（下载完成后显示） -->
-                                <button class="icon-btn ota-update-btn" data-tag-id="${tag.id}" data-scenario="${tag.scenario}" style="display: none; width: 36px; height: 36px;">
-                                    <i data-lucide="hard-drive-download"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `).join('');
-
-                    // Back button
-                    document.getElementById('firmware-back')?.addEventListener('click', () => {
-                        goBack('tag-info');
-                    });
-
-                    // Pre-download button
-                    document.getElementById('pre-download-btn')?.addEventListener('click', () => {
-                        const downloadBtn = document.getElementById('pre-download-btn');
-                        const downloadProgress = document.getElementById('download-progress');
-                        const downloadFill = document.getElementById('download-fill');
-                        const downloadPercent = document.getElementById('download-percent');
-                        const downloadStatus = document.getElementById('download-status');
-
-                        downloadBtn.style.display = 'none';
-                        downloadProgress.style.display = 'block';
-
-                        // Simulate download progress
-                        let progress = 0;
-                        const downloadInterval = setInterval(() => {
-                            progress += 5;
-                            downloadFill.style.width = progress + '%';
-                            downloadPercent.textContent = progress + '%';
-
-                            if (progress >= 100) {
-                                clearInterval(downloadInterval);
-                                isDownloaded = true;
-                                downloadStatus.textContent = 'Download completed';
-                                setTimeout(() => {
-                                    showInteractiveToast('✅ Firmware downloaded successfully');
-                                    // Show all update buttons
-                                    document.querySelectorAll('.ota-update-btn').forEach(btn => {
-                                        btn.style.display = 'flex';
-                                    });
-                                }, 300);
-                            }
-                        }, 100);
-                    });
-
-                    // OTA Update button handlers - will be added after download
-                    setTimeout(() => {
+                    // Function to attach event listeners to OTA update buttons
+                    const attachOtaUpdateListeners = () => {
                         document.querySelectorAll('.ota-update-btn').forEach(btn => {
                             btn.addEventListener('click', function() {
                                 if (!isDownloaded) {
@@ -3627,7 +3555,6 @@
 
                                 const tagId = parseInt(this.dataset.tagId);
                                 const scenario = this.dataset.scenario;
-                                const tagItem = document.querySelector(`.ota-tag-item[data-tag-id="${tagId}"]`);
 
                                 // Disable button during update
                                 this.disabled = true;
@@ -3644,9 +3571,13 @@
                                                     showInteractiveToast('📝 Writing firmware...');
                                                     setTimeout(() => {
                                                         showInteractiveToast('✅ Update successful!');
-                                                        // Update version display
-                                                        tagItem.querySelector('div[style*="color: #8B94A4"]').textContent = 'v1.1.0 (Up to date)';
-                                                        this.style.display = 'none';
+
+                                                        // Mark tag as updated and re-render list
+                                                        const tagData = otaTagsData.find(t => t.id === tagId);
+                                                        if (tagData) {
+                                                            tagData.isUpdated = true;
+                                                            renderOtaTagsList();
+                                                        }
                                                     }, 2000);
                                                 }, 1000);
                                             }, 1000);
@@ -3691,7 +3622,89 @@
                                 }, 500);
                             });
                         });
-                    }, 100);
+                    };
+
+                    // Function to render OTA tags list
+                    const renderOtaTagsList = () => {
+                        // Sort tags: 可更新的 > 已更新的 > 按名字排序
+                        otaTagsData.sort((a, b) => {
+                            // 第一优先级：可更新的（未更新的）排前面
+                            if (!a.isUpdated && b.isUpdated) return -1;
+                            if (a.isUpdated && !b.isUpdated) return 1;
+                            // 第二优先级：同级别内按名字排序
+                            return a.name.localeCompare(b.name);
+                        });
+
+                        const otaTagsList = document.getElementById('ota-tags-list');
+                        otaTagsList.innerHTML = otaTagsData.map(tag => `
+                            <div class="ota-tag-item" data-tag-id="${tag.id}" style="background: rgba(26, 31, 43, 0.6); border: 1px solid rgba(58, 139, 255, 0.2); border-radius: 16px; padding: 12px; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                                        <span style="font-size: 24px;">${tag.icon}</span>
+                                        <div style="flex: 1;">
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                                <div style="color: #FFFFFF; font-weight: 600; font-size: 15px;">${tag.name}</div>
+                                                <!-- 电量图标紧跟在名字后面 -->
+                                                <div style="width: 32px; height: 16px; border: 2px solid ${tag.battery > 30 ? '#3A8BFF' : '#EF4444'}; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                                    <span style="font-size: 10px; color: ${tag.battery > 30 ? '#3A8BFF' : '#EF4444'}; font-weight: 600;">${tag.battery}%</span>
+                                                </div>
+                                            </div>
+                                            <div style="color: #8B94A4; font-size: 12px;">${tag.isUpdated ? 'v1.1.0 (Up to date)' : tag.version + ' → v1.1.0'}</div>
+                                        </div>
+                                    </div>
+                                    <!-- Update 按钮（下载完成后显示，已更新的不显示） -->
+                                    <button class="icon-btn ota-update-btn" data-tag-id="${tag.id}" data-scenario="${tag.scenario}" style="display: ${tag.isUpdated ? 'none' : (isDownloaded ? 'flex' : 'none')}; width: 36px; height: 36px;">
+                                        <i data-lucide="hard-drive-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+
+                        // Re-attach event listeners
+                        attachOtaUpdateListeners();
+                        lucide.createIcons();
+                    };
+
+                    // Initial render
+                    renderOtaTagsList();
+
+                    // Back button
+                    document.getElementById('firmware-back')?.addEventListener('click', () => {
+                        goBack('tag-info');
+                    });
+
+                    // Pre-download button
+                    document.getElementById('pre-download-btn')?.addEventListener('click', () => {
+                        const downloadBtn = document.getElementById('pre-download-btn');
+                        const downloadProgress = document.getElementById('download-progress');
+                        const downloadFill = document.getElementById('download-fill');
+                        const downloadPercent = document.getElementById('download-percent');
+                        const downloadStatus = document.getElementById('download-status');
+
+                        downloadBtn.style.display = 'none';
+                        downloadProgress.style.display = 'block';
+
+                        // Simulate download progress
+                        let progress = 0;
+                        const downloadInterval = setInterval(() => {
+                            progress += 5;
+                            downloadFill.style.width = progress + '%';
+                            downloadPercent.textContent = progress + '%';
+
+                            if (progress >= 100) {
+                                clearInterval(downloadInterval);
+                                isDownloaded = true;
+                                downloadStatus.textContent = 'Download completed';
+                                setTimeout(() => {
+                                    showInteractiveToast('✅ Firmware downloaded successfully');
+                                    // Show all update buttons
+                                    document.querySelectorAll('.ota-update-btn').forEach(btn => {
+                                        btn.style.display = 'flex';
+                                    });
+                                }, 300);
+                            }
+                        }, 100);
+                    });
 
                     lucide.createIcons();
                     break;
