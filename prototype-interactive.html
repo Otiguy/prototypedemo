@@ -2666,7 +2666,7 @@
                             </div>
 
                             <!-- Delete Button -->
-                            <button class="btn-secondary" id="demo-delete-account-btn" style="width: 100%; margin-top: 24px; border-color: #FF4D4F; color: #FF4D4F;" disabled>删除账号</button>
+                            <button class="btn-secondary" id="demo-delete-account-btn" style="width: 100%; margin-top: 24px; border-color: #FF4D4F; color: #FF4D4F;" disabled>Verify</button>
                         </div>
                     </div>
                 `,
@@ -2822,9 +2822,22 @@
                         </div>
 
                         <!-- 底部按钮 -->
-                        <div style="display: flex; gap: 12px; margin-top: 20px;">
-                            <button class="btn-secondary" style="flex: 1;" id="tag-info-unbind">Unbind</button>
-                            <button class="btn-primary" style="flex: 1;" id="tag-info-save">Save</button>
+                        <div style="margin-top: 20px;">
+                            <button class="btn-secondary" style="width: 100%;" id="tag-info-unbind">Unbind Tag</button>
+                        </div>
+
+                        <!-- Unbind Confirmation Modal -->
+                        <div class="modal-overlay" id="unbind-modal">
+                            <div class="modal-content">
+                                <div class="title-secondary" style="text-align: center; font-size: 20px; margin-bottom: 12px;">Unbind Tag?</div>
+                                <div class="text-body" style="text-align: center; font-size: 14px; margin-bottom: 24px;">
+                                    Are you sure you want to unbind this tag? This action cannot be undone and you'll need to pair it again to use it.
+                                </div>
+                                <div style="display: flex; gap: 12px;">
+                                    <button class="btn-secondary" style="flex: 1;" id="unbind-cancel">Cancel</button>
+                                    <button class="btn-primary" style="flex: 1; background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);" id="unbind-confirm">Unbind</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `,
@@ -3435,11 +3448,28 @@
 
                     // Populate tag info fields
                     document.getElementById('tag-info-icon-display').textContent = currentTag.icon;
-                    document.getElementById('tag-info-name-input').value = currentTag.name;
+                    const nameInput = document.getElementById('tag-info-name-input');
+                    nameInput.value = currentTag.name;
                     document.getElementById('tag-info-mac').textContent = currentTag.mac;
                     document.getElementById('tag-info-location').textContent = `${currentTag.lat.toFixed(4)}° N, ${Math.abs(currentTag.lng).toFixed(4)}° W`;
                     document.getElementById('tag-info-last-update').textContent = currentTag.lastUpdate;
                     document.getElementById('tag-info-firmware').textContent = currentTag.firmwareVersion;
+
+                    // Auto-save name on blur (when user finishes editing)
+                    nameInput.addEventListener('blur', () => {
+                        const newName = nameInput.value.trim();
+
+                        if (!newName) {
+                            showInteractiveToast('❌ Device name cannot be empty', 'error');
+                            nameInput.value = currentTag.name; // Restore previous value
+                            return;
+                        }
+
+                        if (newName !== currentTag.name) {
+                            currentTag.name = newName;
+                            showInteractiveToast('✅ Name saved', 'success');
+                        }
+                    });
 
                     // Show firmware update badge if available
                     if (currentTag.hasUpdate) {
@@ -3465,7 +3495,7 @@
                         iconSelector.style.display = iconSelector.style.display === 'none' ? 'block' : 'none';
                     });
 
-                    // Icon selection
+                    // Icon selection with auto-save
                     document.querySelectorAll('.tag-info-icon-option').forEach(btn => {
                         btn.addEventListener('click', () => {
                             selectedIcon = btn.dataset.icon;
@@ -3478,6 +3508,15 @@
                             });
                             btn.style.background = 'rgba(58, 139, 255, 0.3)';
                             btn.style.borderColor = 'rgba(58, 139, 255, 0.6)';
+
+                            // Auto-save icon change
+                            currentTag.icon = selectedIcon;
+                            showInteractiveToast('✅ Icon saved', 'success');
+
+                            // Auto-hide icon selector after selection
+                            setTimeout(() => {
+                                document.getElementById('tag-info-icon-selector').style.display = 'none';
+                            }, 500);
                         });
 
                         // Hover effect
@@ -3503,28 +3542,20 @@
                         }
                     });
 
-                    // Save button
-                    document.getElementById('tag-info-save')?.addEventListener('click', () => {
-                        const newName = document.getElementById('tag-info-name-input').value.trim();
-
-                        if (!newName) {
-                            showInteractiveToast('❌ Device name cannot be empty', 'error');
-                            return;
-                        }
-
-                        // Update tag data
-                        currentTag.name = newName;
-                        currentTag.icon = selectedIcon;
-
-                        showInteractiveToast('✅ Tag information updated successfully', 'success');
-                        setTimeout(() => {
-                            showTagDetailView(currentTag);
-                        }, 1000);
+                    // Unbind button with confirmation modal
+                    document.getElementById('tag-info-unbind')?.addEventListener('click', () => {
+                        document.getElementById('unbind-modal').classList.add('active');
                     });
 
-                    // Unbind button
-                    document.getElementById('tag-info-unbind')?.addEventListener('click', () => {
-                        showInteractiveToast('Tag unbound successfully', 'success');
+                    // Modal cancel button
+                    document.getElementById('unbind-cancel')?.addEventListener('click', () => {
+                        document.getElementById('unbind-modal').classList.remove('active');
+                    });
+
+                    // Modal confirm button
+                    document.getElementById('unbind-confirm')?.addEventListener('click', () => {
+                        document.getElementById('unbind-modal').classList.remove('active');
+                        showInteractiveToast('✅ Tag unbound successfully', 'success');
                         setTimeout(() => {
                             showInteractiveScreen('home');
                         }, 1000);
