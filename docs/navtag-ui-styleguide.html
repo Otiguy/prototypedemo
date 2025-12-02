@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NavTag UI Styleguide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.js" onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js'"></script>
+  <link rel="stylesheet" href="../styles/navtag-ui.css">
+</head>
+<body>
+  <div style="max-width: 1200px; margin: 0 auto; width: 100%;">
+    <div class="section-header">NavTag 样式规范 Styleguide</div>
+
+    <div class="glass-card" style="margin-bottom: 20px;">
+      <div class="title-secondary" style="margin-bottom: 12px;">设计令牌（颜色）</div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+        <div class="glass-card" style="padding: 12px;">
+          <div style="height: 60px; border-radius: 12px; background: var(--color-primary);"></div>
+          <div class="text-body" style="margin-top: 8px;">Primary<br><span style="color:#fff">var(--color-primary)</span><br>#3A8BFF</div>
+        </div>
+        <div class="glass-card" style="padding: 12px;">
+          <div style="height: 60px; border-radius: 12px; background: var(--color-primary-strong);"></div>
+          <div class="text-body" style="margin-top: 8px;">Primary Strong<br><span style="color:#fff">var(--color-primary-strong)</span><br>#2563EB</div>
+        </div>
+        <div class="glass-card" style="padding: 12px;">
+          <div style="height: 60px; border-radius: 12px; background: var(--color-primary-light);"></div>
+          <div class="text-body" style="margin-top: 8px;">Primary Light<br><span style="color:#fff">var(--color-primary-light)</span><br>#60A5FA</div>
+        </div>
+        <div class="glass-card" style="padding: 12px;">
+          <div style="height: 60px; border-radius: 12px; background: var(--color-accent);"></div>
+          <div class="text-body" style="margin-top: 8px;">Accent<br><span style="color:#fff">var(--color-accent)</span><br>#FF9E4A</div>
+        </div>
+
+        <div class="glass-card" style="padding: 12px;">
+          <div style="height: 60px; border-radius: 12px; background: var(--color-success);"></div>
+          <div class="text-body" style="margin-top: 8px;">Success<br><span style="color:#fff">var(--color-success)</span><br>#22C55E</div>
+        </div>
+        <div class="glass-card" style="padding: 12px;">
+          <div style="height: 60px; border-radius: 12px; background: var(--color-error);"></div>
+          <div class="text-body" style="margin-top: 8px;">Error<br><span style="color:#fff">var(--color-error)</span><br>#EF4444</div>
+        </div>
+        <div class="glass-card" style="padding: 12px;">
+          <div style="height: 60px; border-radius: 12px; background: var(--color-text);"></div>
+          <div class="text-body" style="margin-top: 8px;">Text<br><span style="color:#fff">var(--color-text)</span><br>#FFFFFF</div>
+        </div>
+        <div class="glass-card" style="padding: 12px;">
+          <div style="height: 60px; border-radius: 12px; background: var(--color-text-muted);"></div>
+          <div class="text-body" style="margin-top: 8px;">Text Muted<br><span style="color:#fff">var(--color-text-muted)</span><br>#8B94A4</div>
+        </div>
+
+        <div class="glass-card" style="padding: 12px;">
+          <div style="height: 60px; border-radius: 12px; background: var(--color-bg-0);"></div>
+          <div class="text-body" style="margin-top: 8px;">BG 0<br><span style="color:#fff">var(--color-bg-0)</span><br>#0A0E17</div>
+        </div>
+        <div class="glass-card" style="padding: 12px;">
+          <div style="height: 60px; border-radius: 12px; background: var(--color-bg-1);"></div>
+          <div class="text-body" style="margin-top: 8px;">BG 1<br><span style="color:#fff">var(--color-bg-1)</span><br>#0D111A</div>
+        </div>
+        <div class="glass-card" style="padding: 12px;">
+          <div style="height: 60px; border-radius: 12px; background: var(--color-bg-2);"></div>
+          <div class="text-body" style="margin-top: 8px;">BG 2<br><span style="color:#fff">var(--color-bg-2)</span><br>#1A1F2B</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="margin-bottom: 20px;">
+      <div class="title-secondary" style="margin-bottom: 12px;">透明度与玻璃态</div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+        <div class="glass-card" style="padding: 12px; background: rgba(26,31,43,0.4);">
+          <div class="text-body" style="color:#fff;">Glass BG 0.4<br>rgba(26,31,43,0.4)</div>
+        </div>
+        <div class="glass-card" style="padding: 12px; background: rgba(26,31,43,0.6);">
+          <div class="text-body" style="color:#fff;">Glass BG 0.6<br>rgba(26,31,43,0.6)</div>
+        </div>
+        <div class="glass-card" style="padding: 12px; background: rgba(26,31,43,0.8);">
+          <div class="text-body" style="color:#fff;">Glass BG 0.8<br>rgba(26,31,43,0.8)</div>
+        </div>
+        <div class="glass-card" style="padding: 12px; background: rgba(13,17,26,0.85);">
+          <div class="text-body" style="color:#fff;">Overlay 0.85<br>rgba(13,17,26,0.85)</div>
+        </div>
+
+        <div class="glass-card" style="padding: 12px; background: var(--color-bg-1); border: 1px solid rgba(58,139,255,0.2);">
+          <div class="text-body" style="color:#fff;">Border α 0.2<br>rgba(58,139,255,0.2)</div>
+        </div>
+        <div class="glass-card" style="padding: 12px; background: var(--color-bg-1); border: 1px solid rgba(58,139,255,0.5);">
+          <div class="text-body" style="color:#fff;">Border α 0.5<br>rgba(58,139,255,0.5)</div>
+        </div>
+        <div class="glass-card" style="padding: 12px; background: var(--color-bg-1); box-shadow: 0 0 20px rgba(58,139,255,0.4);">
+          <div class="text-body" style="color:#fff;">Glow α 0.4<br>rgba(58,139,255,0.4)</div>
+        </div>
+        <div class="glass-card" style="padding: 12px; background: var(--color-bg-1); box-shadow: 0 0 30px rgba(58,139,255,0.7);">
+          <div class="text-body" style="color:#fff;">Glow α 0.7<br>rgba(58,139,255,0.7)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="margin-bottom: 20px;">
+      <div class="title-secondary" style="margin-bottom: 12px;">排版与文本</div>
+      <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 16px; align-items:start;">
+        <div>
+          <div class="title-primary orbitron" style="margin-bottom: 8px;">WELCOME</div>
+          <div class="title-secondary orbitron" style="margin-bottom: 8px;">Secondary Title</div>
+          <div class="overline orbitron" style="margin-bottom: 8px;">Section Overline</div>
+          <div class="text-body poppins" style="margin-bottom: 8px;">This is body text. 正文示例。</div>
+          <div class="text-small poppins" style="margin-bottom: 8px;">Small text 小字示例</div>
+          <div class="text-caption poppins">Caption 说明文字 11px</div>
+        </div>
+        <div>
+          <div class="text-code" style="margin-bottom: 8px;">CODE: 8F:42:A1:D3:7E:C9</div>
+          <div class="text-muted" style="margin-bottom: 8px;">Muted 次要信息</div>
+          <a href="#" class="link-text" style="display:inline-block; margin-bottom:8px;">Link 链接示例</a>
+          <div class="text-body" style="letter-spacing: 1.5px; text-transform: uppercase;">Letter spacing & uppercase</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="margin-bottom: 20px;">
+      <div class="title-secondary" style="margin-bottom: 12px;">按钮与交互状态（移动端重点：:active）</div>
+
+      <!-- 基础按钮展示 -->
+      <div style="margin-bottom: 20px;">
+        <div class="text-body" style="color:#B0B8C4; margin-bottom:12px; font-weight:500;">基础按钮类型</div>
+        <div style="display:flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn-primary">Primary Button</button>
+          <button class="btn-primary btn-breathing">Primary Breathing</button>
+          <button class="btn-secondary">Secondary Button</button>
+          <button class="btn-secondary" style="opacity:0.5; cursor:not-allowed;">Secondary Disabled</button>
+        </div>
+      </div>
+
+      <!-- Primary Button States -->
+      <div style="margin-bottom: 16px;">
+        <div class="text-body" style="color:#fff; margin-bottom:8px; font-weight:600;">Primary Button 三态展示</div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+          <div class="glass-card" style="padding:12px;">
+            <div class="text-body" style="color:#8B94A4; margin-bottom:8px; font-size:11px;">默认</div>
+            <button class="btn-primary" style="font-size:14px; padding:12px;">Primary</button>
+          </div>
+          <div class="glass-card" style="padding:12px;">
+            <div class="text-body" style="color:#8B94A4; margin-bottom:8px; font-size:11px;">Hover (桌面端)</div>
+            <button class="btn-primary" style="transform: translateY(-2px); box-shadow: 0 0 30px rgba(58,139,255, var(--alpha-glow-hover)), 0 12px 24px rgba(0,0,0,0.5); font-size:14px; padding:12px;">Primary</button>
+          </div>
+          <div class="glass-card" style="padding:12px;">
+            <div class="text-body" style="color:#8B94A4; margin-bottom:8px; font-size:11px;">Active (移动端按压)</div>
+            <button class="btn-primary" style="transform: translateY(0); font-size:14px; padding:12px;">Primary</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Secondary Button States -->
+      <div style="margin-bottom: 16px;">
+        <div class="text-body" style="color:#fff; margin-bottom:8px; font-weight:600;">Secondary Button 三态展示</div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+          <div class="glass-card" style="padding:12px;">
+            <div class="text-body" style="color:#8B94A4; margin-bottom:8px; font-size:11px;">默认</div>
+            <button class="btn-secondary" style="font-size:14px; padding:12px;">Secondary</button>
+          </div>
+          <div class="glass-card" style="padding:12px;">
+            <div class="text-body" style="color:#8B94A4; margin-bottom:8px; font-size:11px;">Hover (桌面端)</div>
+            <button class="btn-secondary" style="background: rgba(58, 139, 255, 0.2); border-color: rgba(58, 139, 255, 0.5); font-size:14px; padding:12px;">Secondary</button>
+          </div>
+          <div class="glass-card" style="padding:12px;">
+            <div class="text-body" style="color:#8B94A4; margin-bottom:8px; font-size:11px;">Active (移动端按压)</div>
+            <button class="btn-secondary" style="transform: scale(0.98); background: rgba(58, 139, 255, 0.15); font-size:14px; padding:12px;">Secondary</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Icon Button States -->
+      <div style="margin-bottom: 16px;">
+        <div class="text-body" style="color:#fff; margin-bottom:8px; font-weight:600;">Icon Button 三态展示</div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+          <div class="glass-card" style="padding:12px; display:flex; justify-content:center;">
+            <div style="text-align:center;">
+              <div class="text-body" style="color:#8B94A4; margin-bottom:8px; font-size:11px;">默认</div>
+              <button class="icon-btn"><i data-lucide="bluetooth"></i></button>
+            </div>
+          </div>
+          <div class="glass-card" style="padding:12px; display:flex; justify-content:center;">
+            <div style="text-align:center;">
+              <div class="text-body" style="color:#8B94A4; margin-bottom:8px; font-size:11px;">Hover (桌面端)</div>
+              <button class="icon-btn" style="background: rgba(58, 139, 255, 0.2); box-shadow: 0 0 15px rgba(58, 139, 255, 0.3);"><i data-lucide="bluetooth"></i></button>
+            </div>
+          </div>
+          <div class="glass-card" style="padding:12px; display:flex; justify-content:center;">
+            <div style="text-align:center;">
+              <div class="text-body" style="color:#8B94A4; margin-bottom:8px; font-size:11px;">Active (移动端按压)</div>
+              <button class="icon-btn" style="transform: scale(0.95); background: rgba(58, 139, 255, 0.25);"><i data-lucide="bluetooth"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 移动端交互要点 -->
+      <div class="text-body" style="margin-top: 12px; padding: 12px; background: rgba(58,139,255,0.1); border: 1px solid rgba(58,139,255,0.3); border-radius: 12px; font-size: 12px; line-height: 1.6;">
+        <strong style="color:#3A8BFF;">📱 移动端交互要点:</strong><br>
+        • 移动端无 hover 状态，<strong>:active 是唯一的按压反馈</strong><br>
+        • btn-primary: translateY(0) - 从 hover 的上浮状态回到原位<br>
+        • btn-secondary: scale(0.98) - 按压缩小效果<br>
+        • icon-btn: scale(0.95) - 更明显的缩小效果<br>
+        • 所有按钮都有 transition: all 0.3s ease 保证动效流畅
+      </div>
+    </div>
+
+    <div class="glass-card" style="margin-bottom: 20px;">
+      <div class="title-secondary" style="margin-bottom: 12px;">输入与卡片</div>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+        <div>
+          <label class="text-body" style="display:block; margin-bottom:8px; font-size:13px;">Email Address</label>
+          <input type="email" class="input-field" placeholder="your.email@example.com">
+        </div>
+        <div class="glass-card">
+          <div class="text-body" style="color:#fff;">Glass Card 内容示例</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="margin-bottom: 20px;">
+      <div class="title-secondary" style="margin-bottom: 12px;">图标与控件</div>
+      <div style="display:flex; gap: 12px; flex-wrap: wrap; align-items:center;">
+        <button class="icon-btn"><i data-lucide="bluetooth"></i></button>
+        <button class="icon-btn"><i data-lucide="pencil"></i></button>
+        <div class="map-controls" style="position: relative; inset: auto; static: auto;">
+          <button class="control-btn"><i data-lucide="plus"></i></button>
+          <button class="control-btn"><i data-lucide="minus"></i></button>
+          <button class="control-btn"><i data-lucide="crosshair"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="margin-bottom: 20px;">
+      <div class="title-secondary" style="margin-bottom: 12px;">列表项与动作</div>
+      <div class="tag-item-wrapper">
+        <div class="tag-item-actions">
+          <button class="action-btn"><i data-lucide="info"></i></button>
+        </div>
+        <div class="tag-item-content" style="padding: 16px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="font-size:28px;">🔑</div>
+            <div style="flex:1;">
+              <div style="color:#fff; font-weight:600; margin-bottom:4px;">My Keys</div>
+              <div class="text-body" style="font-size:12px;">123 Main St, Downtown</div>
+              <div class="text-body" style="font-size:11px; margin-top:2px;">Updated 2 min ago</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="color: var(--color-primary); font-weight:600; font-size:14px;">Around You</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="margin-bottom: 20px;">
+      <div class="title-secondary" style="margin-bottom: 12px;">QR 扫描示例</div>
+      <div class="qr-scanner" style="height: 300px;">
+        <div class="scanner-frame">
+          <div class="scanner-corner top-left"></div>
+          <div class="scanner-corner top-right"></div>
+          <div class="scanner-corner bottom-left"></div>
+          <div class="scanner-corner bottom-right"></div>
+          <div class="scanner-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="margin-bottom: 20px; position: relative;">
+      <div class="title-secondary" style="margin-bottom: 12px;">Toast 与 Modal 预览</div>
+      <div style="position: relative; height: 240px;">
+        <div class="toast show">操作成功的提示信息</div>
+        <div class="modal-overlay active" style="position:absolute;">
+          <div class="modal-content">
+            <div class="title-secondary" style="text-align:center; font-size:20px; margin-bottom:12px;">示例弹窗</div>
+            <div class="text-body" style="text-align:center; font-size:14px;">这是用于规范预览的弹窗内容</div>
+            <div style="display:flex; gap:12px; margin-top:16px;">
+              <button class="btn-secondary" style="flex:1;">取消</button>
+              <button class="btn-primary" style="flex:1;">确定</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="margin-bottom: 20px;">
+      <div class="title-secondary" style="margin-bottom: 12px;">链接与徽章</div>
+      <div style="display:flex; gap: 16px; align-items:center;">
+        <a href="#" class="about-link">User Policy</a>
+        <a href="#" class="about-link">Privacy Agreement</a>
+        <span class="info-badge"><i data-lucide="info"></i>Info Badge</span>
+        <span class="link-text">可点击链接</span>
+      </div>
+    </div>
+
+    <div class="glass-card" style="margin-bottom: 20px;">
+      <div class="title-secondary" style="margin-bottom: 12px;">Banner Notification 横幅通知</div>
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+
+        <!-- Warning/Alert Variant -->
+        <div style="position: relative; height: 90px; background: var(--color-bg-0); border-radius: 8px; padding: 8px;">
+          <div style="position: absolute; top: 8px; left: 8px; right: 8px; background: #1A1F2B; border: 1px solid rgba(255, 158, 74, 0.4); border-radius: 12px; padding: 12px 14px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 158, 74, 0.15); display: flex; align-items: center; gap: 10px;">
+            <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: #FF9E4A; flex-shrink: 0;"></i>
+            <div style="flex: 1;">
+              <div style="font-size: 14px; font-weight: 600; color: #FFFFFF; margin-bottom: 2px; line-height: 1.2;">警告提示 Warning</div>
+              <div style="font-size: 12px; color: #B0B8C4; line-height: 1.3;">橙色边框 rgba(255,158,74,0.4) · 外发光 0.15 · 圆角 12px</div>
+            </div>
+            <button style="width: 24px; height: 24px; background: transparent; border: none; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #8B94A4; font-size: 18px; cursor: pointer; flex-shrink: 0;">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Success Variant -->
+        <div style="position: relative; height: 90px; background: var(--color-bg-0); border-radius: 8px; padding: 8px;">
+          <div style="position: absolute; top: 8px; left: 8px; right: 8px; background: #1A1F2B; border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 12px; padding: 12px 14px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(34, 197, 94, 0.15); display: flex; align-items: center; gap: 10px;">
+            <i data-lucide="check-circle" style="width: 20px; height: 20px; color: #22C55E; flex-shrink: 0;"></i>
+            <div style="flex: 1;">
+              <div style="font-size: 14px; font-weight: 600; color: #FFFFFF; margin-bottom: 2px; line-height: 1.2;">成功提示 Success</div>
+              <div style="font-size: 12px; color: #B0B8C4; line-height: 1.3;">绿色边框 rgba(34,197,94,0.4) · 外发光 0.15 · 圆角 12px</div>
+            </div>
+            <button style="width: 24px; height: 24px; background: transparent; border: none; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #8B94A4; font-size: 18px; cursor: pointer; flex-shrink: 0;">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Error Variant -->
+        <div style="position: relative; height: 90px; background: var(--color-bg-0); border-radius: 8px; padding: 8px;">
+          <div style="position: absolute; top: 8px; left: 8px; right: 8px; background: #1A1F2B; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 12px 14px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(239, 68, 68, 0.15); display: flex; align-items: center; gap: 10px;">
+            <i data-lucide="alert-circle" style="width: 20px; height: 20px; color: #EF4444; flex-shrink: 0;"></i>
+            <div style="flex: 1;">
+              <div style="font-size: 14px; font-weight: 600; color: #FFFFFF; margin-bottom: 2px; line-height: 1.2;">错误提示 Error</div>
+              <div style="font-size: 12px; color: #B0B8C4; line-height: 1.3;">红色边框 rgba(239,68,68,0.4) · 外发光 0.15 · 圆角 12px</div>
+            </div>
+            <button style="width: 24px; height: 24px; background: transparent; border: none; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #8B94A4; font-size: 18px; cursor: pointer; flex-shrink: 0;">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Info Variant (Optional) -->
+        <div style="position: relative; height: 90px; background: var(--color-bg-0); border-radius: 8px; padding: 8px;">
+          <div style="position: absolute; top: 8px; left: 8px; right: 8px; background: #1A1F2B; border: 1px solid rgba(58, 139, 255, 0.4); border-radius: 12px; padding: 12px 14px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(58, 139, 255, 0.15); display: flex; align-items: center; gap: 10px;">
+            <i data-lucide="info" style="width: 20px; height: 20px; color: #3A8BFF; flex-shrink: 0;"></i>
+            <div style="flex: 1;">
+              <div style="font-size: 14px; font-weight: 600; color: #FFFFFF; margin-bottom: 2px; line-height: 1.2;">信息提示 Info</div>
+              <div style="font-size: 12px; color: #B0B8C4; line-height: 1.3;">蓝色边框 rgba(58,139,255,0.4) · 外发光 0.15 · 圆角 12px</div>
+            </div>
+            <button style="width: 24px; height: 24px; background: transparent; border: none; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #8B94A4; font-size: 18px; cursor: pointer; flex-shrink: 0;">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="text-body" style="margin-top: 16px; padding: 12px; background: rgba(26,31,43,0.4); border-radius: 8px;">
+        <div style="font-weight: 600; margin-bottom: 8px;">设计规范:</div>
+        <div style="font-size: 12px; line-height: 1.6;">
+          • 圆角: 主容器 12px, 关闭按钮 6px<br>
+          • 边框透明度: 40% (0.4)<br>
+          • 外发光透明度: 15% (0.15)<br>
+          • 图标尺寸: 20×20px<br>
+          • 关闭按钮: 24×24px<br>
+          • 阴影: 0 4px 12px rgba(0,0,0,0.4) + 彩色外发光
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Wait for script to load, with error handling
+    function initIcons() {
+      if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
+      } else {
+        console.warn('Lucide icons failed to load from CDN');
+      }
+    }
+
+    // Try to initialize after a short delay
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => setTimeout(initIcons, 100));
+    } else {
+      setTimeout(initIcons, 100);
+    }
+  </script>
+</body>
+</html>
