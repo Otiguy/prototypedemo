@@ -53,9 +53,9 @@
                 id: 1,
                 name: 'My Keys',
                 icon: '🔑',
-                address: '123 Main St, Downtown',
-                lat: 37.7749,
-                lng: -122.4194,
+                address: '深圳市福田区福田街道',
+                lat: 22.5480,
+                lng: 114.0579,
                 distance: 'Around You',
                 lastUpdate: '2025-11-27 17:24:21',
                 mac: '8F:42:A1:D3:7E:C9',
@@ -67,9 +67,9 @@
                 id: 2,
                 name: 'Backpack',
                 icon: '🎒',
-                address: '456 Oak Ave, Midtown',
-                lat: 37.7829,
-                lng: -122.4114,
+                address: '深圳市南山区南山街道',
+                lat: 22.5380,
+                lng: 114.0579,
                 distance: '1.2km',
                 lastUpdate: '2025-11-27 17:19:21',
                 mac: '3A:91:B2:E4:8F:D1',
@@ -81,9 +81,9 @@
                 id: 3,
                 name: 'Car',
                 icon: '🚗',
-                address: '789 Park Rd, Parking Lot B',
-                lat: 37.7679,
-                lng: -122.4274,
+                address: '深圳市罗湖区罗湖街道',
+                lat: 22.5431,
+                lng: 114.0479,
                 distance: '2.8km',
                 lastUpdate: '2025-11-27 17:09:21',
                 mac: 'D7:C2:F3:A5:9E:B8',
@@ -1787,14 +1787,15 @@
                     setTimeout(() => {
                         // Initialize map
                         trustedLocationMap = L.map('demo-trusted-location-map', {
-                            center: [37.7749, -122.4194],
+                            center: [22.5431, 114.0579],
                             zoom: 15,
                             zoomControl: false,
                             attributionControl: false
                         });
 
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            subdomains: ['a', 'b', 'c'],
+                        L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}', {
+                            subdomains: ['1', '2', '3', '4'],
+                            attribution: '&copy; 高德地图',
                             maxZoom: 19
                         }).addTo(trustedLocationMap);
 
@@ -1975,15 +1976,16 @@
             }
 
             interactiveMap = L.map('demo-map', {
-                center: [37.7749, -122.4194],
+                center: [22.5431, 114.0579],
                 zoom: 15,
                 zoomControl: false,
                 attributionControl: false
             });
 
-            // Use OpenStreetMap tiles
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                subdomains: ['a', 'b', 'c'],
+            // Use AMap tiles
+            L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}', {
+                subdomains: ['1', '2', '3', '4'],
+                attribution: '&copy; 高德地图',
                 maxZoom: 19
             }).addTo(interactiveMap);
 
@@ -1999,7 +2001,7 @@
                 className: 'user-marker-icon',
                 iconSize: [20, 20]
             });
-            userMarker = L.marker([37.7749, -122.4194], { icon: userIcon }).addTo(interactiveMap);
+            userMarker = L.marker([22.5431, 114.0579], { icon: userIcon }).addTo(interactiveMap);
 
             // Add tag markers
             tagMarkers = mockTags.map(tag => {
@@ -2056,7 +2058,7 @@
             });
             document.getElementById('demo-center')?.addEventListener('click', () => {
                 if (interactiveMap) {
-                    interactiveMap.setView([37.7749, -122.4194], 15);
+                    interactiveMap.setView([22.5431, 114.0579], 15);
                     showInteractiveToast('Centering on your location...');
                 }
             });
@@ -2270,8 +2272,9 @@
                     attributionControl: false
                 });
 
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    subdomains: ['a', 'b', 'c'],
+                L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}', {
+                    subdomains: ['1', '2', '3', '4'],
+                    attribution: '&copy; 高德地图',
                     maxZoom: 19
                 }).addTo(detailMap);
 
