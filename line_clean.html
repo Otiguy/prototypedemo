@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备定位轨迹可视化</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 10px;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            height: calc(100vh - 20px);
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 22px;
+        }
+
+        .info {
+            text-align: center;
+            color: #666;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        #map {
+            width: 100%;
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            position: relative;
+            min-height: 0;
+        }
+
+        .leaflet-popup-content {
+            margin: 10px;
+            font-size: 13px;
+        }
+
+        .leaflet-popup-content strong {
+            display: inline-block;
+            min-width: 70px;
+        }
+
+        .accuracy-label {
+            background: white;
+            border: 2px solid #333;
+            border-radius: 3px;
+            padding: 2px 5px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .filters {
+            padding: 10px 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: nowrap;
+            align-items: center;
+            flex-shrink: 0;
+            margin-bottom: 8px;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .filter-group input {
+            padding: 5px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .filter-group button {
+            padding: 5px 12px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .filter-group button:hover {
+            background: #3367d6;
+        }
+
+        .filter-group button:active {
+            background: #2851a3;
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .time-inputs span {
+            font-size: 12px;
+        }
+
+        .accuracy-inputs {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .accuracy-inputs span {
+            font-size: 12px;
+        }
+
+        .accuracy-inputs input {
+            width: 70px;
+        }
+
+        .legend {
+            padding: 8px 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: nowrap;
+            flex-shrink: 0;
+            margin-bottom: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-item span {
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        /* 主内容区域 - 两列布局 */
+        .main-content {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* 左侧边栏 - 数据层控制 */
+        .sidebar {
+            width: 320px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .sidebar .filters {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 12px;
+            margin-bottom: 0;
+        }
+
+        .sidebar .filter-group {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+
+        .sidebar .filter-group label {
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .sidebar .filter-group button {
+            width: 100%;
+            padding: 8px;
+            font-size: 13px;
+        }
+
+        /* 数据层选择区域 */
+        .data-layer-section {
+            background: #e8f0fe;
+            border: 1px solid #4285f4;
+        }
+
+        .data-layer-section .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .data-layer-section .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .data-layer-section .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .data-layer-section .checkbox-item label {
+            font-size: 13px;
+            font-weight: normal;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        /* 右侧地图区域 */
+        .map-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .map-container #map {
+            flex: 1;
+            min-height: 600px;
+            margin-bottom: 0;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>设备定位轨迹可视化</h1>
+
+        <div class="filters" id="fileSelector">
+            <div class="filter-group">
+                <label>选择数据文件:</label>
+                <input type="file" id="fileInput" accept=".json" style="padding: 4px;">
+            </div>
+            <div class="filter-group">
+                <button id="loadFile">加载数据</button>
+            </div>
+            <div class="filter-group">
+                <label>底图选择</label>
+                <select id="baseMapProvider" style="padding: 4px;">
+                    <option value="amap_vec">高德矢量</option>
+                    <option value="amap_sat">高德卫星(含注记)</option>
+                    <option value="google_roadmap">Google普通地图</option>
+                    <option value="osm">OpenStreetMap</option>
+                </select>
+                <button id="applyBaseMap">应用底图</button>
+            </div>
+        </div>
+
+        <div class="info" id="infoBar" style="display: none;">
+            设备ID: <span id="deviceId"></span> |
+            数据点数量: <span id="pointCount"></span> |
+            时间范围: <span id="timeRange"></span>
+        </div>
+
+        <div class="info" id="cleaningStats" style="display: none; background: #fff3cd; border: 1px solid #ffc107; padding: 8px; margin-bottom: 8px; border-radius: 4px;">
+            <strong>清洗统计:</strong> <span id="statsContent"></span>
+        </div>
+
+        <!-- 主内容区域：左侧边栏 + 右侧地图 -->
+        <div class="main-content" id="mainContent" style="display: none;">
+            <!-- 左侧边栏：数据层控制 -->
+            <div class="sidebar">
+                <!-- 数据层选择 -->
+                <div class="filters data-layer-section">
+                    <div class="filter-group">
+                        <label style="font-weight: bold; font-size: 14px;">数据层选择</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="showOriginal" checked>
+                                <label for="showOriginal">原始数据</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="showCleaned">
+                                <label for="showCleaned">清洗数据</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-group" id="ruleSelectionGroup" style="display: none;">
+                        <label style="font-weight: bold; font-size: 14px;">清洗规则</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="rule1">
+                                <label for="rule1">规则1: 隐藏重复点(DUPLICATE)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="rule2">
+                                <label for="rule2">规则2: 隐藏毛刺点(SPIKE)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="rule3">
+                                <label for="rule3">规则3: 显示停留点(STAY)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-group" id="stayCircleGroup" style="display: none;">
+                        <label style="font-weight: bold; font-size: 14px;">STAY 圆圈半径</label>
+                        <input type="number" id="stayRadius" value="20" min="1" max="500" step="1"
+                               style="width: 100%; padding: 6px; font-size: 13px;">
+                        <small style="color: #666; font-size: 11px;">单位：米 (m)</small>
+                    </div>
+
+                    <div class="filter-group">
+                        <button id="applyDataLayer">应用数据层</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧地图区域 -->
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+        </div>
+
+        <div class="filters" id="filterControls" style="display: none;">
+            <div class="filter-group">
+                <label>时间筛选</label>
+                <div class="time-inputs">
+                    <input type="datetime-local" id="startTime" step="1">
+                    <span>至</span>
+                    <input type="datetime-local" id="endTime" step="1">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>精度筛选</label>
+                <div class="accuracy-inputs">
+                    <input type="number" id="minAccuracy" placeholder="最小值" min="0">
+                    <span>至</span>
+                    <input type="number" id="maxAccuracy" placeholder="最大值" min="0">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>停留段ID筛选</label>
+                <input type="text" id="staySegmentIdFilter" placeholder="输入停留段ID"
+                       style="padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
+            </div>
+
+            <div class="filter-group">
+                <button id="applyFilter">应用筛选</button>
+            </div>
+
+            <div class="filter-group">
+                <button id="resetFilter" style="background: #666;">重置</button>
+            </div>
+        </div>
+
+        <div class="legend" id="legendSection" style="display: none;">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #34a853;"></div>
+                <span>起点</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ea4335;"></div>
+                <span>终点</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4285f4;"></div>
+                <span>轨迹点</span>
+            </div>
+            <div class="legend-item">
+                <div style="width: 40px; height: 2px; background: #4285f4; opacity: 0.6;"></div>
+                <span>移动路径</span>
+            </div>
+        </div>
+    </div>
+
+        <script>
+            // 全局变量存储地图和数据
+            let map = null;
+            let data = null;
+            let originalData = null;
+            let fullData = null; // 保存完整数据（包含STAY和ERROR）
+            let cleanedData = null;
+            let allMarkers = [];
+            let allAccuracyLabels = [];
+            let allPolylines = [];
+            let allStayCircles = []; // 存储 STAY 点的圆圈
+            let baseMapLayer = null;
+            let currentProvider = 'amap_vec';
+
+        // 加载文件按钮事件
+        document.getElementById('loadFile').addEventListener('click', () => {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('请选择一个JSON文件');
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const result = JSON.parse(e.target.result);
+
+                    // 验证JSON结构 - 适配新的数据格式
+                    if (!result.data || !result.data.list || !Array.isArray(result.data.list)) {
+                        alert('文件格式错误:缺少data.list数组');
+                        return;
+                    }
+
+                    if (result.data.list.length === 0) {
+                        alert('文件中没有数据');
+                        return;
+                    }
+
+                    // 加载数据成功 - 从list数组中读取
+                    const allData = result.data.list;
+
+                    // 保留完整数据用于规则3查找STAY点
+                    fullData = allData;
+
+                    // 过滤原始数据：隐藏status为STAY和ERROR的数据
+                    originalData = allData.filter(item => {
+                        const status = item.status ? item.status.toUpperCase() : '';
+                        return status !== 'STAY' && status !== 'ERROR';
+                    });
+
+                    data = originalData;
+
+                    // 显示主内容区域（包含侧边栏和地图）、信息栏、筛选控件和图例
+                    document.getElementById('mainContent').style.display = 'flex';
+                    document.getElementById('infoBar').style.display = 'block';
+                    document.getElementById('filterControls').style.display = 'flex';
+                    document.getElementById('legendSection').style.display = 'flex';
+
+                    // 初始化地图和渲染
+                    initializeMap();
+
+                } catch (error) {
+                    alert('文件解析失败:' + error.message);
+                }
+            };
+
+            reader.onerror = function() {
+                alert('文件读取失败');
+            };
+
+            reader.readAsText(file);
+        });
+
+        // 转换时间戳为日期字符串
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        // Haversine 公式计算两点间的距离（米）
+        function haversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // 地球半径（米）
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            return R * c; // 返回距离（米）
+        }
+
+        // 格式化距离显示
+        function formatDistance(meters) {
+            if (meters < 1) {
+                return (meters * 100).toFixed(2) + ' cm';
+            } else if (meters < 1000) {
+                return meters.toFixed(2) + ' m';
+            } else {
+                return (meters / 1000).toFixed(3) + ' km';
+            }
+        }
+
+        // 初始化地图
+        function initializeMap() {
+            // 按timestamp时间排序
+            data.sort((a, b) => {
+                return a.timestamp - b.timestamp;
+            });
+
+            // 更新信息
+            if (data.length > 0) {
+                document.getElementById('deviceId').textContent = data[0].deviceId;
+                document.getElementById('pointCount').textContent = data.length;
+                document.getElementById('timeRange').textContent =
+                    `${formatTimestamp(data[0].timestamp)} 至 ${formatTimestamp(data[data.length - 1].timestamp)}`;
+            }
+
+            // 计算中心点
+            const lats = data.map(d => parseFloat(d.latitude));
+            const lngs = data.map(d => parseFloat(d.longitude));
+            const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+            const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
+
+            // 如果地图已存在,先移除
+            if (map) {
+                map.remove();
+            }
+
+            // 创建地图
+            map = L.map('map').setView([centerLat, centerLng], 13);
+
+            const providerSelect = document.getElementById('baseMapProvider');
+            const provider = providerSelect ? providerSelect.value : 'amap_vec';
+            setBaseMap(provider);
+
+            // 添加比例尺控件
+            L.control.scale({
+                position: 'bottomleft',
+                imperial: false,       // 不显示英制单位
+                metric: true,          // 显示公制单位(米/千米)
+                maxWidth: 200,         // 比例尺最大宽度
+                updateWhenIdle: false  // 实时更新比例尺
+            }).addTo(map);
+
+            // 初始化筛选器
+            initializeFilters();
+
+            // 初始渲染 - 使用新的数据层系统
+            applyDataLayers();
+        }
+
+        function createBaseMap(provider) {
+            if (provider === 'osm') {
+                const tl = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    maxZoom: 19
+                });
+                return { layer: tl, monitors: [tl] };
+            }
+            if (provider === 'amap_vec') {
+                const tl = L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}', {
+                    subdomains: ['1','2','3','4'],
+                    attribution: '&copy; 高德地图',
+                    maxZoom: 19
+                });
+                return { layer: tl, monitors: [tl] };
+            }
+            if (provider === 'amap_sat') {
+                const sat = L.tileLayer('https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}', {
+                    subdomains: ['1','2','3','4'],
+                    attribution: '&copy; 高德地图',
+                    maxZoom: 19
+                });
+                const labels = L.tileLayer('https://webst0{s}.is.autonavi.com/appmaptile?style=8&x={x}&y={y}&z={z}', {
+                    subdomains: ['1','2','3','4'],
+                    attribution: '&copy; 高德地图',
+                    maxZoom: 19
+                });
+                const group = L.layerGroup([sat, labels]);
+                return { layer: group, monitors: [sat, labels] };
+            }
+            if (provider === 'google_roadmap') {
+                const tl = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                    attribution: '&copy; Google',
+                    maxZoom: 20
+                });
+                return { layer: tl, monitors: [tl] };
+            }
+            const tl = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            });
+            return { layer: tl, monitors: [tl] };
+        }
+
+        function setBaseMap(provider) {
+            currentProvider = provider;
+            if (baseMapLayer) {
+                map.removeLayer(baseMapLayer);
+            }
+            const res = createBaseMap(provider);
+            baseMapLayer = res.layer;
+            baseMapLayer.addTo(map);
+            res.monitors.forEach(m => {
+                if (m && m.on) {
+                    m.on('tileerror', () => {
+                        if (currentProvider !== 'osm') {
+                            setBaseMap('osm');
+                            alert('地图底图不可用，已回退到 OpenStreetMap');
+                        }
+                    });
+                }
+            });
+        }
+
+        // 初始化时间筛选输入框
+        function initializeFilters() {
+            const startTimeInput = document.getElementById('startTime');
+            const endTimeInput = document.getElementById('endTime');
+
+            // 设置默认时间范围为数据的起止时间（使用timestamp）
+            if (data.length > 0) {
+                const firstDate = new Date(data[0].timestamp);
+                const lastDate = new Date(data[data.length - 1].timestamp);
+
+                startTimeInput.value = formatDateTimeLocal(firstDate);
+                endTimeInput.value = formatDateTimeLocal(lastDate);
+            }
+        }
+
+        // 格式化日期为 datetime-local 格式
+        function formatDateTimeLocal(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+        }
+
+        // 筛选数据
+        function filterData() {
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const minAccuracy = document.getElementById('minAccuracy').value;
+            const maxAccuracy = document.getElementById('maxAccuracy').value;
+            const staySegmentId = document.getElementById('staySegmentIdFilter').value.trim();
+
+            // 从 fullData 筛选，这样才能包含 status="STAY" 的点
+            let filtered = [...fullData];
+
+            console.log('筛选条件:', { startTime, endTime, minAccuracy, maxAccuracy, staySegmentId });
+
+            // 时间筛选（使用timestamp字段）
+            if (startTime) {
+                const startDate = new Date(startTime).getTime();
+                filtered = filtered.filter(d => {
+                    return d.timestamp >= startDate;
+                });
+                console.log('开始时间筛选后:', filtered.length, '条数据');
+            }
+            if (endTime) {
+                const endDate = new Date(endTime).getTime();
+                filtered = filtered.filter(d => {
+                    return d.timestamp <= endDate;
+                });
+                console.log('结束时间筛选后:', filtered.length, '条数据');
+            }
+
+            // 精度筛选
+            if (minAccuracy !== '') {
+                const minAcc = parseFloat(minAccuracy);
+                filtered = filtered.filter(d => {
+                    const acc = parseFloat(d.accuracy);
+                    return !isNaN(acc) && acc >= minAcc;
+                });
+                console.log('最小精度筛选后:', filtered.length, '条数据');
+            }
+            if (maxAccuracy !== '') {
+                const maxAcc = parseFloat(maxAccuracy);
+                filtered = filtered.filter(d => {
+                    const acc = parseFloat(d.accuracy);
+                    return !isNaN(acc) && acc <= maxAcc;
+                });
+                console.log('最大精度筛选后:', filtered.length, '条数据');
+            }
+
+            // staySegmentId 筛选
+            if (staySegmentId !== '') {
+                // 调试：显示前5个点的 staySegmentId
+                console.log('输入的停留段ID:', staySegmentId);
+                console.log('前5个点的staySegmentId样例:', filtered.slice(0, 5).map(d => ({
+                    id: d.id,
+                    staySegmentId: d.staySegmentId,
+                    type: typeof d.staySegmentId
+                })));
+
+                filtered = filtered.filter(d => {
+                    if (!d.staySegmentId) return false;
+                    // 转换为字符串，去除前后空格，转小写进行比较（大小写不敏感）
+                    const dataId = d.staySegmentId.toString().trim().toLowerCase();
+                    const searchId = staySegmentId.toLowerCase();
+                    return dataId === searchId;
+                });
+                console.log('停留段ID筛选后:', filtered.length, '条数据');
+                if (filtered.length > 0) {
+                    console.log('匹配的停留段ID样例:', filtered.slice(0, 3).map(d => d.staySegmentId));
+                }
+            }
+
+            console.log('最终筛选结果:', filtered.length, '条数据');
+            return filtered;
+        }
+
+        // 检查是否有有效的筛选条件
+        function checkActiveFilters() {
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const minAccuracy = document.getElementById('minAccuracy').value;
+            const maxAccuracy = document.getElementById('maxAccuracy').value;
+            const staySegmentId = document.getElementById('staySegmentIdFilter').value.trim();
+
+            return startTime !== '' || endTime !== '' ||
+                   minAccuracy !== '' || maxAccuracy !== '' ||
+                   staySegmentId !== '';
+        }
+
+        // 渲染地图（保留用于时间/精度筛选）
+        function renderMap(filteredData) {
+            // 暂时将筛选后的数据作为原始数据
+            const tempOriginal = originalData;
+            originalData = filteredData;
+
+            // 应用数据层 - 不自动调整视图，保持当前缩放和焦点
+            applyDataLayers(false);
+
+            // 恢复原始数据
+            originalData = tempOriginal;
+
+            // 更新数据点数量显示
+            document.getElementById('pointCount').textContent =
+                `${filteredData.length} (共 ${tempOriginal.length})`;
+        }
+
+        // 应用筛选按钮
+        document.getElementById('applyFilter').addEventListener('click', () => {
+            if (!data) {
+                alert('请先加载数据文件');
+                return;
+            }
+            const filtered = filterData();
+            renderMap(filtered);
+        });
+
+        // 重置筛选按钮
+        document.getElementById('resetFilter').addEventListener('click', () => {
+            if (!data) {
+                alert('请先加载数据文件');
+                return;
+            }
+            // 重置输入框
+            initializeFilters();
+            document.getElementById('minAccuracy').value = '';
+            document.getElementById('maxAccuracy').value = '';
+            document.getElementById('staySegmentIdFilter').value = '';
+
+            // 重新渲染所有数据
+            applyDataLayers();
+        });
+
+        // ==================== 数据清洗功能 ====================
+
+        // 应用数据层
+        function applyDataLayers(autoFit = true) {
+            const showOriginal = document.getElementById('showOriginal').checked;
+            const showCleaned = document.getElementById('showCleaned').checked;
+            const rule1Checked = document.getElementById('rule1').checked;
+            const rule2Checked = document.getElementById('rule2').checked;
+            const rule3Checked = document.getElementById('rule3').checked;
+
+            // 清除现有图层
+            allMarkers.forEach(m => map.removeLayer(m.marker));
+            allAccuracyLabels.forEach(l => map.removeLayer(l));
+            allPolylines.forEach(p => map.removeLayer(p));
+            allStayCircles.forEach(c => map.removeLayer(c));
+            allMarkers = [];
+            allAccuracyLabels = [];
+            allPolylines = [];
+            allStayCircles = [];
+
+            // 统计信息
+            const stats = [];
+            stats.push(`原始数据: ${originalData.length}点`);
+
+            // 如果勾选了清洗数据，计算清洗后的数据
+            if (showCleaned) {
+                let cleaned = [...originalData];
+                let afterRule1 = cleaned.length;
+                let afterRule2 = cleaned.length;
+                let afterRule3 = cleaned.length;
+
+                // 规则1：隐藏status为DUPLICATE的点
+                if (rule1Checked) {
+                    cleaned = cleaned.filter(item => {
+                        const status = item.status ? item.status.toUpperCase() : '';
+                        return status !== 'DUPLICATE';
+                    });
+                    afterRule1 = cleaned.length;
+                    stats.push(`规则1后: ${afterRule1}点 (隐藏${originalData.length - afterRule1}个DUPLICATE点)`);
+                }
+
+                // 规则2：在规则1基础上隐藏status为SPIKE的点
+                if (rule2Checked) {
+                    const beforeRule2 = cleaned.length;
+                    cleaned = cleaned.filter(item => {
+                        const status = item.status ? item.status.toUpperCase() : '';
+                        return status !== 'SPIKE';
+                    });
+                    afterRule2 = cleaned.length;
+                    stats.push(`规则2后: ${afterRule2}点 (隐藏${beforeRule2 - afterRule2}个SPIKE点)`);
+                }
+
+                // 规则3：在规则2基础上隐藏status为STAY_INVISIBLE的点，恢复显示STAY的点
+                if (rule3Checked) {
+                    const beforeRule3 = cleaned.length;
+                    // 先从完整数据中找出所有STAY的点
+                    let stayPoints = fullData.filter(item => {
+                        const status = item.status ? item.status.toUpperCase() : '';
+                        return status === 'STAY';
+                    });
+
+                    // 但只保留那些在筛选后数据中的STAY点（通过ID匹配）
+                    const originalIds = new Set(originalData.map(d => d.id));
+                    stayPoints = stayPoints.filter(item => originalIds.has(item.id));
+
+                    // 从cleaned中移除STAY_INVISIBLE的点
+                    cleaned = cleaned.filter(item => {
+                        const status = item.status ? item.status.toUpperCase() : '';
+                        return status !== 'STAY_INVISIBLE';
+                    });
+
+                    // 添加STAY的点
+                    cleaned = [...cleaned, ...stayPoints];
+
+                    // 按时间戳重新排序
+                    cleaned.sort((a, b) => a.timestamp - b.timestamp);
+
+                    afterRule3 = cleaned.length;
+                    const hiddenCount = beforeRule3 - (afterRule3 - stayPoints.length);
+                    stats.push(`规则3后: ${afterRule3}点 (隐藏${hiddenCount}个STAY_INVISIBLE点, 显示${stayPoints.length}个STAY点)`);
+                }
+
+                cleanedData = cleaned;
+
+                // 显示统计信息
+                const statsDiv = document.getElementById('cleaningStats');
+                const statsContent = document.getElementById('statsContent');
+                statsContent.textContent = stats.join(' → ');
+                statsDiv.style.display = 'block';
+            } else {
+                // 隐藏统计信息
+                document.getElementById('cleaningStats').style.display = 'none';
+            }
+
+            // 绘制原始数据
+            if (showOriginal) {
+                renderDataLayer(originalData, '#4285f4', '原始');
+            }
+
+            // 绘制清洗数据
+            if (showCleaned && cleanedData) {
+                renderDataLayer(cleanedData, '#ff6b6b', '清洗');
+
+                // 绘制 STAY 点圆圈
+                const stayRadius = parseFloat(document.getElementById('stayRadius').value) || 20;
+                cleanedData.forEach(point => {
+                    const status = point.status ? point.status.toUpperCase() : '';
+                    if (status === 'STAY') {
+                        const lat = parseFloat(point.latitude);
+                        const lng = parseFloat(point.longitude);
+                        const circle = L.circle([lat, lng], {
+                            radius: stayRadius,
+                            color: '#ff6b6b',
+                            fillColor: '#ff6b6b',
+                            fillOpacity: 0.2,
+                            weight: 2,
+                            opacity: 0.6
+                        }).addTo(map);
+                        allStayCircles.push(circle);
+                    }
+                });
+            }
+
+            // 自动调整视图（根据参数决定是否执行）
+            if (autoFit && allPolylines.length > 0) {
+                const bounds = L.latLngBounds([]);
+                allPolylines.forEach(p => bounds.extend(p.getBounds()));
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+
+        // 渲染单个数据层
+        function renderDataLayer(layerData, color, layerName) {
+            const pathCoords = [];
+
+            layerData.forEach((point, index) => {
+                const lat = parseFloat(point.latitude);
+                const lng = parseFloat(point.longitude);
+                pathCoords.push([lat, lng]);
+
+                // 计算与前一个点的距离、时间间隔和速度
+                let distanceInfo = '';
+                if (index > 0) {
+                    const prevPoint = layerData[index - 1];
+                    const prevLat = parseFloat(prevPoint.latitude);
+                    const prevLng = parseFloat(prevPoint.longitude);
+
+                    // 计算距离（Haversine）
+                    const distance = haversineDistance(prevLat, prevLng, lat, lng);
+
+                    // 计算时间间隔（秒）
+                    const timeDiff = (point.timestamp - prevPoint.timestamp) / 1000;
+
+                    // 计算速度（米/秒 和 公里/小时）
+                    const speedMS = timeDiff > 0 ? distance / timeDiff : 0;
+                    const speedKMH = speedMS * 3.6;
+
+                    distanceInfo = `
+                        <strong>━━━━━━━━━━━━━━━━</strong><br>
+                        <strong>与前一点距离:</strong> ${formatDistance(distance)}<br>
+                        <strong>原始距离值:</strong> ${distance} m<br>
+                        <strong>时间间隔:</strong> ${timeDiff.toFixed(2)} 秒<br>
+                        <strong>移动速度:</strong> ${speedKMH.toFixed(2)} km/h (${speedMS.toFixed(2)} m/s)<br>
+                    `;
+                }
+
+                // 确定标记颜色
+                let markerColor = color;
+                if (index === 0) {
+                    markerColor = '#34a853'; // 起点绿色
+                } else if (index === layerData.length - 1) {
+                    markerColor = '#ea4335'; // 终点红色
+                }
+
+                // 创建自定义图标
+                const customIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="background-color: ${markerColor}; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
+                    iconSize: [10, 10],
+                    iconAnchor: [5, 5]
+                });
+
+                // 创建标记
+                const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+
+                // 判断是否为首尾点
+                const isFirst = index === 0;
+                const isLast = index === layerData.length - 1;
+
+                // 创建导航按钮HTML
+                const navButtons = `
+                    <div style="text-align: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
+                        <button
+                            onclick="navigateToPoint('${layerName}', ${index - 1})"
+                            ${isFirst ? 'disabled' : ''}
+                            style="padding: 5px 15px; margin: 0 5px; cursor: ${isFirst ? 'not-allowed' : 'pointer'}; background: ${isFirst ? '#ccc' : '#4285f4'}; color: white; border: none; border-radius: 3px;">
+                            &lt; 上一个
+                        </button>
+                        <button
+                            onclick="navigateToPoint('${layerName}', ${index + 1})"
+                            ${isLast ? 'disabled' : ''}
+                            style="padding: 5px 15px; margin: 0 5px; cursor: ${isLast ? 'not-allowed' : 'pointer'}; background: ${isLast ? '#ccc' : '#4285f4'}; color: white; border: none; border-radius: 3px;">
+                            下一个 &gt;
+                        </button>
+                    </div>
+                `;
+
+                // 添加弹出信息
+                marker.bindPopup(`
+                    <strong>ID:</strong> ${point.id}<br>
+                    <strong>数据层:</strong> ${layerName}<br>
+                    <strong>序号:</strong> ${index + 1}<br>
+                    <strong>位置:</strong> ${lat}, ${lng}<br>
+                    <strong>精度:</strong> ${point.accuracy}<br>
+                    <strong>时间戳:</strong> ${formatTimestamp(point.timestamp)} (${point.timestamp})<br>
+                    <strong>上报时间:</strong> ${formatTimestamp(point.datePublished)} (${point.datePublished})<br>
+                    <strong>状态:</strong> ${point.status || 'N/A'}<br>
+                    <strong>停留段id:</strong> ${point.staySegmentId || 'N/A'}
+                    ${distanceInfo}
+                    ${navButtons}
+                `);
+
+                // 添加序号标签
+                const accuracyLabel = L.divIcon({
+                    className: 'accuracy-label',
+                    html: index + 1,
+                    iconSize: [30, 20],
+                    iconAnchor: [15, 30]
+                });
+
+                const labelMarker = L.marker([lat, lng], {
+                    icon: accuracyLabel,
+                    interactive: false
+                }).addTo(map);
+
+                allMarkers.push({
+                    marker: marker,
+                    layerName: layerName,
+                    index: index,
+                    data: point,
+                    layerData: layerData
+                });
+                allAccuracyLabels.push(labelMarker);
+            });
+
+            // 绘制轨迹线
+            const polyline = L.polyline(pathCoords, {
+                color: color,
+                weight: 3,
+                opacity: 0.6
+            }).addTo(map);
+
+            allPolylines.push(polyline);
+        }
+
+        // 导航到指定数据层的指定索引点
+        function navigateToPoint(layerName, targetIndex) {
+            // 查找目标点的 marker
+            const targetMarkerObj = allMarkers.find(m =>
+                m.layerName === layerName && m.index === targetIndex
+            );
+
+            if (targetMarkerObj) {
+                // 打开目标点的弹出窗口
+                targetMarkerObj.marker.openPopup();
+
+                // 将地图中心移动到目标点
+                map.setView(targetMarkerObj.marker.getLatLng(), map.getZoom());
+            }
+        }
+
+        // 将函数暴露到全局作用域，以便 onclick 可以调用
+        window.navigateToPoint = navigateToPoint;
+
+        // 数据层控制事件
+        document.getElementById('showCleaned').addEventListener('change', (e) => {
+            const ruleGroup = document.getElementById('ruleSelectionGroup');
+            const stayCircleGroup = document.getElementById('stayCircleGroup');
+            if (e.target.checked) {
+                ruleGroup.style.display = 'flex';
+                stayCircleGroup.style.display = 'flex';
+                // 默认勾选规则1
+                document.getElementById('rule1').checked = true;
+            } else {
+                ruleGroup.style.display = 'none';
+                stayCircleGroup.style.display = 'none';
+            }
+        });
+
+        document.getElementById('rule2').addEventListener('change', (e) => {
+            const rule1Checkbox = document.getElementById('rule1');
+            if (e.target.checked) {
+                // 勾选规则2时自动勾选规则1
+                rule1Checkbox.checked = true;
+            }
+        });
+
+        document.getElementById('rule3').addEventListener('change', (e) => {
+            const rule1Checkbox = document.getElementById('rule1');
+            const rule2Checkbox = document.getElementById('rule2');
+            if (e.target.checked) {
+                // 勾选规则3时自动勾选规则1和规则2
+                rule1Checkbox.checked = true;
+                rule2Checkbox.checked = true;
+            }
+        });
+
+        document.getElementById('applyDataLayer').addEventListener('click', () => {
+            if (!originalData) {
+                alert('请先加载数据文件');
+                return;
+            }
+
+            // 检查是否有有效的筛选条件
+            const hasActiveFilters = checkActiveFilters();
+
+            if (hasActiveFilters) {
+                // 如果有筛选条件，重新筛选并渲染
+                const filtered = filterData();
+                renderMap(filtered);
+            } else {
+                // 如果没有筛选条件，直接应用数据层
+                applyDataLayers(false); // 不自动调整视图，保持当前缩放和焦点
+            }
+        });
+
+        const applyBaseMapBtn = document.getElementById('applyBaseMap');
+        if (applyBaseMapBtn) {
+            applyBaseMapBtn.addEventListener('click', () => {
+                const sel = document.getElementById('baseMapProvider');
+                if (sel) {
+                    setBaseMap(sel.value);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
