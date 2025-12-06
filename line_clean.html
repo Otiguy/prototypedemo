@@ -279,6 +279,10 @@
 
         <div class="filters" id="fileSelector">
             <div class="filter-group">
+                <label>粘贴JSON数据:</label>
+                <textarea id="jsonInput" placeholder="在此粘贴 JSON" rows="2" style="width: 360px; padding: 4px;"></textarea>
+            </div>
+            <div class="filter-group">
                 <label>选择数据文件:</label>
                 <input type="file" id="fileInput" accept=".json" style="padding: 4px;">
             </div>
@@ -288,10 +292,10 @@
             <div class="filter-group">
                 <label>底图选择</label>
                 <select id="baseMapProvider" style="padding: 4px;">
+                    <option value="osm">OpenStreetMap</option>
                     <option value="amap_vec">高德矢量</option>
                     <option value="amap_sat">高德卫星(含注记)</option>
                     <option value="google_roadmap">Google普通地图</option>
-                    <option value="osm">OpenStreetMap</option>
                 </select>
                 <button id="applyBaseMap">应用底图</button>
             </div>
@@ -434,65 +438,63 @@
 
         // 加载文件按钮事件
         document.getElementById('loadFile').addEventListener('click', () => {
+            const pasted = (document.getElementById('jsonInput')?.value || '').trim();
+            if (pasted) {
+                try {
+                    const result = JSON.parse(pasted);
+                    const ok = handleParsedResult(result);
+                    if (ok) return;
+                } catch (error) {
+                    alert('JSON解析失败:' + error.message);
+                    return;
+                }
+            }
+
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
-
             if (!file) {
-                alert('请选择一个JSON文件');
+                alert('请选择一个JSON文件或粘贴JSON数据');
                 return;
             }
 
             const reader = new FileReader();
-
             reader.onload = function(e) {
                 try {
                     const result = JSON.parse(e.target.result);
-
-                    // 验证JSON结构 - 适配新的数据格式
-                    if (!result.data || !result.data.list || !Array.isArray(result.data.list)) {
-                        alert('文件格式错误:缺少data.list数组');
-                        return;
-                    }
-
-                    if (result.data.list.length === 0) {
-                        alert('文件中没有数据');
-                        return;
-                    }
-
-                    // 加载数据成功 - 从list数组中读取
-                    const allData = result.data.list;
-
-                    // 保留完整数据用于规则3查找STAY点
-                    fullData = allData;
-
-                    // 过滤原始数据：隐藏status为STAY和ERROR的数据
-                    originalData = allData.filter(item => {
-                        const status = item.status ? item.status.toUpperCase() : '';
-                        return status !== 'STAY' && status !== 'ERROR';
-                    });
-
-                    data = originalData;
-
-                    // 显示主内容区域（包含侧边栏和地图）、信息栏、筛选控件和图例
-                    document.getElementById('mainContent').style.display = 'flex';
-                    document.getElementById('infoBar').style.display = 'block';
-                    document.getElementById('filterControls').style.display = 'flex';
-                    document.getElementById('legendSection').style.display = 'flex';
-
-                    // 初始化地图和渲染
-                    initializeMap();
-
+                    handleParsedResult(result);
                 } catch (error) {
                     alert('文件解析失败:' + error.message);
                 }
             };
-
             reader.onerror = function() {
                 alert('文件读取失败');
             };
-
             reader.readAsText(file);
         });
+
+        function handleParsedResult(result) {
+            if (!result || !result.data || !result.data.list || !Array.isArray(result.data.list)) {
+                alert('文件格式错误:缺少data.list数组');
+                return false;
+            }
+            if (result.data.list.length === 0) {
+                alert('文件中没有数据');
+                return false;
+            }
+            const allData = result.data.list;
+            fullData = allData;
+            originalData = allData.filter(item => {
+                const status = item.status ? item.status.toUpperCase() : '';
+                return status !== 'STAY' && status !== 'ERROR';
+            });
+            data = originalData;
+            document.getElementById('mainContent').style.display = 'flex';
+            document.getElementById('infoBar').style.display = 'block';
+            document.getElementById('filterControls').style.display = 'flex';
+            document.getElementById('legendSection').style.display = 'flex';
+            initializeMap();
+            return true;
+        }
 
         // 转换时间戳为日期字符串
         function formatTimestamp(timestamp) {
@@ -1011,15 +1013,16 @@
 
                 // 添加弹出信息
                 marker.bindPopup(`
-                    <strong>ID:</strong> ${point.id}<br>
-                    <strong>数据层:</strong> ${layerName}<br>
                     <strong>序号:</strong> ${index + 1}<br>
+                    <strong>数据层:</strong> ${layerName}<br>
+                    <strong>ID:</strong> ${point.id}<br>
                     <strong>位置:</strong> ${lat}, ${lng}<br>
-                    <strong>精度:</strong> ${point.accuracy}<br>
-                    <strong>时间戳:</strong> ${formatTimestamp(point.timestamp)} (${point.timestamp})<br>
-                    <strong>上报时间:</strong> ${formatTimestamp(point.datePublished)} (${point.datePublished})<br>
-                    <strong>状态:</strong> ${point.status || 'N/A'}<br>
-                    <strong>停留段id:</strong> ${point.staySegmentId || 'N/A'}
+                    <strong>accuracy:</strong> ${point.accuracy}<br>
+                    <strong>timestamp:</strong> ${formatTimestamp(point.timestamp)} (${point.timestamp})<br>
+                    <strong>createTime:</strong> ${formatTimestamp(point.createTime)} (${point.createTime})<br>
+                    <strong>datePublished:</strong> ${formatTimestamp(point.datePublished)} (${point.datePublished})<br>
+                    <strong>status:</strong> ${point.status || 'N/A'}<br>
+                    <strong>staySegmentId:</strong> ${point.staySegmentId || 'N/A'}
                     ${distanceInfo}
                     ${navButtons}
                 `);
