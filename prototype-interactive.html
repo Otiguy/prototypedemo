@@ -2118,23 +2118,22 @@
                         <div style="position: absolute; bottom: 50px; left: 0; right: 0; z-index: 900; pointer-events: none;">
                             <div style="display: flex; align-items: center; justify-content: center; gap: 12px; pointer-events: auto;">
                                 <!-- Previous Button -->
-                                <button class="icon-btn" id="demo-tag-prev" style="width: 40px; height: 40px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+                                <button class="icon-btn" id="demo-tag-prev" style="width: 44px; height: 44px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); border-radius: var(--radius-xs); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
                                     <i data-lucide="chevron-left"></i>
                                 </button>
 
-                                <!-- Tag Indicators -->
-                                <div style="display: flex; gap: 6px; align-items: center; padding: 10px 16px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(58, 139, 255, 0.3); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
-                                    ${mockTags.map((t, i) => `
-                                        <div class="tag-indicator-dot" data-tag-index="${i}" style="width: ${i === currentIndex ? '24px' : '8px'}; height: 8px; border-radius: 4px; background: ${i === currentIndex ? '#3A8BFF' : 'rgba(255,255,255,0.3)'}; transition: all 0.3s ease; cursor: pointer;"></div>
-                                    `).join('')}
+                                <div id="tag-mac-display" class="text-body poppins" style="height: 44px; display: flex; align-items: center; padding: 0 16px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); border-radius: var(--radius-xs); border: 1px solid rgba(58, 139, 255, 0.3); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); color: var(--color-text); cursor: pointer; letter-spacing: 0.5px;">
+                                    ${tag.mac}
                                 </div>
 
                                 <!-- Next Button -->
-                                <button class="icon-btn" id="demo-tag-next" style="width: 40px; height: 40px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+                                <button class="icon-btn" id="demo-tag-next" style="width: 44px; height: 44px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); border-radius: var(--radius-xs); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
                                     <i data-lucide="chevron-right"></i>
                                 </button>
                             </div>
                         </div>
+
+                        
 
                         <div class="map-controls">
                             <button class="control-btn" id="demo-tag-zoom-in">
@@ -2329,16 +2328,26 @@
                     switchToTag(newIndex);
                 });
 
-                // Indicator dots click listeners
-                document.querySelectorAll('.tag-indicator-dot').forEach(dot => {
-                    dot.addEventListener('click', () => {
-                        const targetIndex = parseInt(dot.dataset.tagIndex);
-                        const currentIndex = mockTags.findIndex(t => t.id === tag.id);
-                        if (targetIndex !== currentIndex) {
-                            switchToTag(targetIndex);
+                const macDisplay = document.getElementById('tag-mac-display');
+                macDisplay?.addEventListener('click', async () => {
+                    const text = tag.mac;
+                    try {
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            await navigator.clipboard.writeText(text);
+                        } else {
+                            const ta = document.createElement('textarea');
+                            ta.value = text;
+                            document.body.appendChild(ta);
+                            ta.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(ta);
                         }
-                    });
+                        showInteractiveToast('已复制 MAC：' + text);
+                    } catch (e) {
+                        showInteractiveToast('复制失败，请稍后重试');
+                    }
                 });
+
 
                 // Swipe gesture support with circular navigation
                 const swipeableArea = document.getElementById('tag-info-swipeable');
