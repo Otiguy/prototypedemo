@@ -53,7 +53,7 @@
                 id: 1,
                 name: 'My Keys',
                 icon: '🔑',
-                address: 'Building 101, No. 100, Futian Street, Futian District, Shenzhen',
+                address: 'Building 101, No. 100, Futian Street, Futian District, Shenzhen, Guangdong, China',
                 lat: 22.5480,
                 lng: 114.0579,
                 distance: 'Around You',
@@ -67,7 +67,7 @@
                 id: 2,
                 name: 'Backpack',
                 icon: '🎒',
-                address: 'Building 101, No. 100, Futian Street, Futian District, Shenzhen',
+                address: 'Building 101, No. 100, Futian Street, Futian District, Shenzhen, Guangdong, China',
                 lat: 22.5380,
                 lng: 114.0579,
                 distance: '1.2km',
@@ -81,7 +81,7 @@
                 id: 3,
                 name: 'Car',
                 icon: '🚗',
-                address: 'Building 101, No. 100, Futian Street, Futian District, Shenzhen',
+                address: 'Building 101, No. 100, Futian Street, Futian District, Shenzhen, Guangdong, China',
                 lat: 22.5431,
                 lng: 114.0479,
                 distance: '2.8km',
@@ -108,6 +108,152 @@
         // Helper function to get random address
         function getRandomAddress() {
             return mockAddresses[Math.floor(Math.random() * mockAddresses.length)];
+        }
+
+        // Mock trajectory data for path tracking
+        const mockTrajectoryData = {
+            1: [ // My Keys
+                {
+                    id: 1,
+                    timestamp: '2025-12-09 14:30:00',
+                    lat: 22.5480,
+                    lng: 114.0579,
+                    address: 'Building 101, Tower A, No. 100 Futian Street, Futian Central Business District, Shenzhen, Guangdong Province, China'
+                },
+                {
+                    id: 2,
+                    timestamp: '2025-12-09 13:15:00',
+                    lat: 22.5475,
+                    lng: 114.0575,
+                    address: 'Futian Metro Station Exit B, Line 1 & Line 11 Interchange, Civic Center Area, Shenzhen'
+                },
+                {
+                    id: 3,
+                    timestamp: '2025-12-09 12:00:00',
+                    lat: 22.5468,
+                    lng: 114.0568,
+                    address: 'Starbucks Coffee Reserve, COCO Park Shopping Mall, 1st Floor, Futian District, Shenzhen'
+                },
+                {
+                    id: 4,
+                    timestamp: '2025-12-09 09:30:00',
+                    lat: 22.5450,
+                    lng: 114.0550,
+                    address: 'Futian Residence Complex Block C, Unit 2, No. 88 Shennan Boulevard, Futian District, Shenzhen'
+                },
+                {
+                    id: 5,
+                    timestamp: '2025-12-08 18:45:00',
+                    lat: 22.5440,
+                    lng: 114.0545,
+                    address: 'MixC Shopping Mall Main Entrance, 3rd Floor Food Court Area, Futian District, Shenzhen City'
+                },
+                {
+                    id: 6,
+                    timestamp: '2025-12-08 15:20:00',
+                    lat: 22.5435,
+                    lng: 114.0540,
+                    address: 'Excellence Fortune Tower B, 27th Floor, Futian Central Business District, Shenzhen, Guangdong'
+                },
+                {
+                    id: 7,
+                    timestamp: '2025-12-08 09:00:00',
+                    lat: 22.5450,
+                    lng: 114.0550,
+                    address: 'Futian Residence Complex Block C, Unit 2, No. 88 Shennan Boulevard, Futian District, Shenzhen'
+                },
+                {
+                    id: 8,
+                    timestamp: '2025-12-07 19:30:00',
+                    lat: 22.5460,
+                    lng: 114.0560,
+                    address: 'Zhenhua Restaurant Street, Building 5, Near Futian Sports Park, Shennan Avenue, Futian, Shenzhen'
+                }
+            ],
+            2: [ // Backpack
+                {
+                    id: 1,
+                    timestamp: '2025-12-09 16:00:00',
+                    lat: 22.5380,
+                    lng: 114.0579,
+                    address: 'Shenzhen University Main Campus, Building 7 Computer Science Department, Nanshan District, Shenzhen'
+                },
+                {
+                    id: 2,
+                    timestamp: '2025-12-09 12:30:00',
+                    lat: 22.5375,
+                    lng: 114.0575,
+                    address: 'Central Library Reading Room 3B, 2nd Floor, Futian District Cultural Center, Shenzhen City'
+                },
+                {
+                    id: 3,
+                    timestamp: '2025-12-09 08:00:00',
+                    lat: 22.5370,
+                    lng: 114.0570,
+                    address: 'Student Apartment Complex Building 12, Room 305, Shenzhen University South Campus Area, Nanshan'
+                }
+            ],
+            3: [ // Car
+                {
+                    id: 1,
+                    timestamp: '2025-12-09 17:00:00',
+                    lat: 22.5431,
+                    lng: 114.0479,
+                    address: 'Underground Parking Level B2, Slot A123, COCO Park Shopping Center, Futian District, Shenzhen'
+                },
+                {
+                    id: 2,
+                    timestamp: '2025-12-09 14:30:00',
+                    lat: 22.5425,
+                    lng: 114.0475,
+                    address: 'Outdoor Parking Area Zone C, High-Tech Industrial Park Phase III, Nanshan District, Shenzhen City'
+                },
+                {
+                    id: 3,
+                    timestamp: '2025-12-09 08:00:00',
+                    lat: 22.5420,
+                    lng: 114.0470,
+                    address: 'Residential Community Parking Garage Level 1, Slot 88, Seaview Garden Complex, Futian, Shenzhen'
+                }
+            ]
+        };
+
+        // Global variable for trajectory filtering
+        window.trajectoryFilter = {
+            tagId: null,
+            startDate: null,
+            endDate: null
+        };
+
+        // Calculate duration between two timestamps
+        function calculateDuration(timestamp1, timestamp2) {
+            const date1 = new Date(timestamp1);
+            const date2 = new Date(timestamp2);
+            const diffMs = Math.abs(date2 - date1);
+            const hours = Math.floor(diffMs / 3600000);
+            const minutes = Math.floor((diffMs % 3600000) / 60000);
+
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            }
+            return `${minutes}m`;
+        }
+
+        // Filter trajectory data by date range
+        function filterTrajectoryByDateRange(tagId, startDate, endDate) {
+            const trajectories = mockTrajectoryData[tagId] || [];
+
+            return trajectories.filter(point => {
+                const pointDate = new Date(point.timestamp);
+                return pointDate >= startDate && pointDate <= endDate;
+            }).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        }
+
+        // Get point label (S for start, E for end, number for middle)
+        function getPointLabel(index, total) {
+            if (index === 0) return 'S';
+            if (index === total - 1) return 'E';
+            return (index + 1).toString();
         }
 
         function initInteractiveDemo() {
@@ -344,7 +490,7 @@
                                 <p class="text-body" style="font-size: 13px;">Scanning for nearby tags...</p>
                             </div>
                             <button class="icon-btn" id="demo-qr-scan">
-                                <i data-lucide="qr-code"></i>
+                                <i data-lucide="scan-line"></i>
                             </button>
                         </div>
 
@@ -477,7 +623,7 @@
                                     <i data-lucide="minus"></i>
                                 </button>
                                 <button class="control-btn" id="demo-center">
-                                    <i data-lucide="crosshair"></i>
+                                    <i data-lucide="locate-fixed"></i>
                                 </button>
                             </div>
                         </div>
@@ -487,7 +633,7 @@
                             <div class="drawer-handle" id="demo-drawer-handle"></div>
 
                             <div style="padding: 0 20px 20px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                     <h3 class="text-body" style="font-weight: 600; color: #FFFFFF; font-size: 16px;">
                                         MY TAGS (3)
                                     </h3>
@@ -503,27 +649,21 @@
 
                                 <div id="demo-tag-list">
                                     ${mockTags.map(tag => `
-                                        <div class="tag-item-wrapper" data-tag-id="${tag.id}" style="cursor: pointer; padding: 16px; position: relative;">
-                                            <div style="display: flex; align-items: center; gap: 12px; position: relative;">
-                                                <div style="font-size: 28px;">${tag.icon}</div>
-                                                <div style="flex: 1;">
-                                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                                        <div style="color: #FFFFFF; font-weight: 600;">${tag.name}</div>
-                                                        <span class="battery-badge ${tag.battery <= 30 ? 'low' : tag.battery <= 60 ? 'medium' : ''}" data-battery="${tag.battery}">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="battery-icon">
-                                                                <path d="M 25 14 L 25 10"></path>
-                                                                <rect x="0" y="6" width="22" height="12" rx="2"></rect>
-                                                            </svg>
-                                                        </span>
-                                                    </div>
-                                                    <div class="text-body" style="font-size: 12px;">${tag.address}</div>
-                                                    <div class="text-body" style="font-size: 11px; margin-top: 2px;">Updated ${tag.lastUpdate}</div>
-                                                </div>
-                                                <div style="text-align: right;">
-                                                    <div style="color: #3A8BFF; font-weight: 600; font-size: 14px;">${tag.distance}</div>
-                                                </div>
+                                        <div class="tag-item-wrapper" data-tag-id="${tag.id}" style="cursor: pointer; position: relative;">
+                                            ${tag.hasUpdate ? '<span class="update-badge"></span>' : ''}
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                                <div style="font-size: 30px;">${tag.icon}</div>
+                                                <div style="color: #FFFFFF; font-weight: 600;">${tag.name}</div>
+                                                <span class="battery-badge ${tag.battery <= 30 ? 'low' : tag.battery <= 60 ? 'medium' : ''}" data-battery="${tag.battery}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="battery-icon">
+                                                        <path d="M 25 14 L 25 10"></path>
+                                                        <rect x="0" y="6" width="22" height="12" rx="2"></rect>
+                                                    </svg>
+                                                </span>
+                                                <div style="color: #3A8BFF; font-weight: 600; font-size: 14px; margin-left: auto;">${tag.distance}</div>
                                             </div>
-                                            ${tag.hasUpdate ? '<span class="update-badge" style="top: 8px; right: 8px;"></span>' : ''}
+                                            <div class="text-body" style="font-size: 12px; width: 100%;">${tag.address}</div>
+                                            <div class="text-body" style="font-size: 11px; margin-top: 2px;">Updated ${tag.lastUpdate}</div>
                                         </div>
                                     `).join('')}
                                 </div>
@@ -986,6 +1126,251 @@
                                     Clear Points
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                `,
+                'path-datepicker': `
+                    <div style="padding: 28px; height: 100%; display: flex; flex-direction: column;">
+                        <!-- Back Button -->
+                        <button class="icon-btn back-btn" id="demo-path-picker-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <!-- Header -->
+                        <div style="margin-top: 40px; margin-bottom: 24px;">
+                            <h2 class="title-secondary" style="margin-bottom: 8px;">Select Time Range</h2>
+                            <p class="text-body" style="font-size: 13px;">Choose dates to view path history</p>
+                        </div>
+
+                        <!-- Date Picker (Calendar View) - Moved to top -->
+                        <div style="flex: 0 1 auto;">
+                            <div style="background: rgba(26, 31, 43, 0.6); border: 1px solid rgba(58, 139, 255, 0.2); border-radius: 16px; padding: 16px;">
+                                <!-- Month/Year Header -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                    <button class="icon-btn" id="prev-month" style="width: 36px; height: 36px;">
+                                        <i data-lucide="chevron-left"></i>
+                                    </button>
+                                    <div style="color: #FFFFFF; font-weight: 600; font-size: 15px; letter-spacing: 1px;" id="calendar-month-year">
+                                        2025-12
+                                    </div>
+                                    <button class="icon-btn" id="next-month" style="width: 36px; height: 36px;">
+                                        <i data-lucide="chevron-right"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Weekday Headers -->
+                                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px;">
+                                    <div style="text-align: center; color: #8B94A4; font-size: 11px; padding: 4px;">Su</div>
+                                    <div style="text-align: center; color: #8B94A4; font-size: 11px; padding: 4px;">Mo</div>
+                                    <div style="text-align: center; color: #8B94A4; font-size: 11px; padding: 4px;">Tu</div>
+                                    <div style="text-align: center; color: #8B94A4; font-size: 11px; padding: 4px;">We</div>
+                                    <div style="text-align: center; color: #8B94A4; font-size: 11px; padding: 4px;">Th</div>
+                                    <div style="text-align: center; color: #8B94A4; font-size: 11px; padding: 4px;">Fr</div>
+                                    <div style="text-align: center; color: #8B94A4; font-size: 11px; padding: 4px;">Sa</div>
+                                </div>
+
+                                <!-- Calendar Grid (will be populated by JS) -->
+<div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px;">
+                                    <!-- Populated by renderCalendar() -->
+                                </div>
+                            </div>
+
+                            <!-- Time Range Selection with Wheel Picker -->
+                            <div style="background: rgba(26, 31, 43, 0.6); border: 1px solid rgba(58, 139, 255, 0.2); border-radius: 16px; padding: 16px; margin-top: 16px;">
+                                <div style="display: flex; gap: 12px; align-items: center;">
+                                    <div class="time-picker-trigger" id="start-time-trigger" style="flex: 1; padding: 12px; background: rgba(58, 139, 255, 0.1); border: 1px solid rgba(58, 139, 255, 0.3); border-radius: 8px; color: #FFFFFF; text-align: center; cursor: pointer; transition: all 0.3s ease;">
+                                        <span id="start-time-display">00:00</span>
+                                    </div>
+                                    <span style="color: #8B94A4;">~</span>
+                                    <div class="time-picker-trigger" id="end-time-trigger" style="flex: 1; padding: 12px; background: rgba(58, 139, 255, 0.1); border: 1px solid rgba(58, 139, 255, 0.3); border-radius: 8px; color: #FFFFFF; text-align: center; cursor: pointer; transition: all 0.3s ease;">
+                                        <span id="end-time-display">23:59</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Selection Buttons - Tag style -->
+                        <div style="margin-bottom: 16px; margin-top: 16px;">
+                            <div style="display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto;">
+                                <button class="tag-btn selected quick-select-btn" data-range="today" style="white-space: nowrap;">Today</button>
+                                <button class="tag-btn quick-select-btn" data-range="yesterday" style="white-space: nowrap;">Yesterday</button>
+                                <button class="tag-btn quick-select-btn" data-range="past3d" style="white-space: nowrap;">Past 3D</button>
+                                <button class="tag-btn quick-select-btn disabled" data-range="past7d" style="position: relative; white-space: nowrap;">
+                                    Past 7D
+                                    <i data-lucide="play-circle" style="position: absolute; top: 2px; right: 2px; width: 12px; height: 12px; color: #FF9E4A;"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- View Path Button -->
+                        <button class="btn-primary btn-breathing" id="view-path-btn">
+                            <i data-lucide="waypoints" style="margin-right: 8px;"></i>
+                            View Path
+                        </button>
+
+                        <!-- Time Wheel Picker Modal -->
+                        <div id="time-wheel-picker-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); z-index: 9999; align-items: flex-end; justify-content: center;">
+                            <div style="width: 100%; max-width: 500px; background: rgba(26, 31, 43, 0.98); backdrop-filter: blur(20px); border-radius: 20px 20px 0 0; padding: 20px; box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);">
+                                <!-- Header -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                    <button class="btn-secondary" id="time-picker-close" style="padding: 6px 12px; font-size: 13px;">
+                                        Cancel
+                                    </button>
+                                    <h3 style="color: #FFFFFF; font-size: 16px; font-weight: 600;">Time range</h3>
+                                    <button class="btn-primary" id="time-picker-confirm" style="padding: 6px 12px; font-size: 13px;">
+                                        Save
+                                    </button>
+                                </div>
+
+                                <!-- Wheel Picker Container -->
+                                <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin-bottom: 24px; position: relative; height: 200px; overflow: hidden;">
+                                    <!-- Start Time -->
+                                    <div style="flex: 1; position: relative;">
+                                        <div id="start-hour-wheel" class="time-wheel" style="height: 200px; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch;">
+                                            <!-- Generated by JS -->
+                                        </div>
+                                    </div>
+                                    <span style="color: #FFFFFF; font-size: 16px; font-weight: 600;">:</span>
+                                    <div style="flex: 1; position: relative;">
+                                        <div id="start-minute-wheel" class="time-wheel" style="height: 200px; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch;">
+                                            <!-- Generated by JS -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Separator -->
+                                    <span style="color: #8B94A4; font-size: 18px; font-weight: 600; padding: 0 4px;">~</span>
+
+                                    <!-- End Time -->
+                                    <div style="flex: 1; position: relative;">
+                                        <div id="end-hour-wheel" class="time-wheel" style="height: 200px; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch;">
+                                            <!-- Generated by JS -->
+                                        </div>
+                                    </div>
+                                    <span style="color: #FFFFFF; font-size: 16px; font-weight: 600;">:</span>
+                                    <div style="flex: 1; position: relative;">
+                                        <div id="end-minute-wheel" class="time-wheel" style="height: 200px; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch;">
+                                            <!-- Generated by JS -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Selection Indicator -->
+                                    <div style="position: absolute; top: 50%; left: 0; right: 0; height: 40px; transform: translateY(-50%); border-top: 1px solid rgba(58, 139, 255, 0.5); border-bottom: 1px solid rgba(58, 139, 255, 0.5); pointer-events: none; background: rgba(58, 139, 255, 0.1);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                'path-view': `
+                    <div style="position: relative; height: 100%; display: flex; flex-direction: column;">
+                        <!-- Back Button -->
+                        <button class="icon-btn back-btn" id="demo-path-view-back" style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <!-- Map Container -->
+                        <div id="demo-path-map" style="flex: 1; width: 100%; position: relative;"></div>
+
+                        <!-- Map Controls -->
+                        <div class="map-controls" style="position: absolute; right: 20px; top: 20px; z-index: 400;">
+                            <button class="control-btn" id="demo-path-zoom-in">
+                                <i data-lucide="plus"></i>
+                            </button>
+                            <button class="control-btn" id="demo-path-zoom-out">
+                                <i data-lucide="minus"></i>
+                            </button>
+                            <button class="control-btn" id="demo-path-center">
+                                <i data-lucide="locate-fixed"></i>
+                            </button>
+                            <button class="control-btn" id="demo-path-list">
+                                <i data-lucide="scroll-text"></i>
+                            </button>
+                        </div>
+
+                        <!-- Point Detail Drawer (hidden by default, slides from bottom) -->
+                        <div id="point-tooltip" style="display: none; position: absolute; left: 0; right: 0; bottom: 0; z-index: 500;">
+                            <div class="drawer" style="background: rgba(26, 31, 43, 0.98); backdrop-filter: blur(20px); border-top: 1px solid rgba(58, 139, 255, 0.3); padding: 12px 12px; box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.6); box-sizing: border-box; overflow: hidden;">
+                                <!-- Header: MAC + sequence + nav buttons -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
+                                        <div id="tooltip-mac-display" class="text-body poppins" style="height: 36px; padding: 0 10px; display: flex; align-items: center; justify-content: center; background: rgba(26, 31, 34, 0.6); backdrop-filter: blur(10px); border-radius: 8px; border: 1px solid rgba(58, 139, 255, 0.3); color: rgba(255, 255, 255, 0.6); letter-spacing: 0.5px; font-size: 13px; flex-shrink: 0;">
+                                            AC:84:C6:2F:1A:3B
+                                        </div>
+                                        <div style="color: #3A8BFF; font-weight: 700; font-size: 14px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="tooltip-sequence">Start</div>
+                                    </div>
+                                    <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                                        <button class="icon-btn" id="tooltip-prev" style="width: 36px !important; height: 36px !important; min-width: 36px;">
+                                            <i data-lucide="chevron-left"></i>
+                                        </button>
+                                        <button class="icon-btn" id="tooltip-next" style="width: 36px !important; height: 36px !important; min-width: 36px;">
+                                            <i data-lucide="chevron-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                    <div style="flex: 1; min-width: 0; max-width: 50%;">
+                                        <div class="text-body" style="font-size: 11px; margin-bottom: 4px;">Timestamp</div>
+                                        <div style="color: #FFFFFF; font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="tooltip-timestamp">2025-12-09 14:30:00</div>
+                                    </div>
+                                    <div style="flex: 1; min-width: 0; max-width: 50%;">
+                                        <div class="text-body" style="font-size: 11px; margin-bottom: 4px;">Duration</div>
+                                        <div style="color: #FFFFFF; font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="tooltip-duration">1h 15m</div>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <div class="text-body" style="font-size: 11px; margin-bottom: 6px;">Address</div>
+                                    <div style="color: #FFFFFF; font-size: 12px; line-height: 1.5; cursor: pointer; display: flex; align-items: start; gap: 6px;" id="tooltip-address-container">
+                                        <span id="tooltip-address" style="flex: 1; min-width: 0; word-break: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">Building 101, No. 100, Futian Street</span>
+                                        <button class="icon-btn" id="tooltip-copy-address" style="width: 36px !important; height: 36px !important; min-width: 28px; flex-shrink: 0;">
+                                            <i data-lucide="copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button class="btn-secondary" id="tooltip-navigate" style="width: 100%; padding: 9px 10px; font-size: 13px;">
+                                    <i data-lucide="navigation" style="margin-right: 6px; width: 14px; height: 14px;"></i>
+                                    Navigate
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Navigation App Modal -->
+                        <div class="modal-overlay" id="demo-nav-modal-overlay">
+                            <div class="modal-content">
+                                <h3 class="title-secondary" style="font-size: 20px; margin-bottom: 20px; text-align: center;">
+                                    Choose Navigation App
+                                </h3>
+                                <button class="btn-secondary" style="margin-bottom: 12px; text-align: left; padding-left: 24px;" id="demo-nav-google">
+                                    <i data-lucide="map"></i>
+                                    Google Maps
+                                </button>
+                                <button class="btn-secondary" style="margin-bottom: 12px; text-align: left; padding-left: 24px;" id="demo-nav-amap">
+                                    <i data-lucide="map-pin"></i>
+                                    高德地图
+                                </button>
+                                <button class="btn-secondary" style="margin-bottom: 20px; text-align: left; padding-left: 24px;" id="demo-nav-baidu">
+                                    <i data-lucide="compass"></i>
+                                    百度地图
+                                </button>
+                                <button class="btn-secondary" id="demo-nav-cancel">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                'history-point': `
+                    <div style="padding: 28px; height: 100%; display: flex; flex-direction: column;">
+                        <!-- Back Button -->
+                        <button class="icon-btn back-btn" id="demo-history-point-back">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+
+                        <!-- Header -->
+                        <div style="margin-top: 40px; margin-bottom: 20px;">
+                            <h2 class="title-secondary" style="margin-bottom: 8px;">History Points</h2>
+                            <p class="text-body" style="font-size: 13px;" id="history-point-count">8 locations found</p>
+                        </div>
+
+                        <!-- Scrollable Point List -->
+                        <div id="history-point-list" style="flex: 1; overflow-y: auto; margin: 0 -28px; padding: 0 28px;">
+                            <!-- Populated by renderHistoryPointsList() -->
                         </div>
                     </div>
                 `
@@ -1973,6 +2358,213 @@
                         setTimeout(() => goBack('lost-mode-settings'), 1000);
                     });
                     break;
+
+                case 'path-datepicker':
+                    // Initialize calendar
+                    const today = new Date();
+                    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                                       'July', 'August', 'September', 'October', 'November', 'December'];
+                    document.getElementById('calendar-month-year').textContent = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+                    renderCalendar(today.getFullYear(), today.getMonth());
+
+                    // Set default to today
+                    setQuickRange('today');
+
+                    // Back button
+                    document.getElementById('demo-path-picker-back')?.addEventListener('click', function() {
+                        goBack('home');
+                        this.blur();
+                    });
+
+                    // Quick select buttons
+                    document.querySelectorAll('.quick-select-btn:not(.disabled)').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            // Remove selected from all
+                            document.querySelectorAll('.quick-select-btn').forEach(b => b.classList.remove('selected'));
+                            // Add selected to clicked
+                            this.classList.add('selected');
+                            // Set range
+                            setQuickRange(this.dataset.range);
+                        });
+                    });
+
+                    // Disabled week button shows toast
+                    document.querySelector('[data-range="past7d"]')?.addEventListener('click', () => {
+                        showInteractiveToast('📺 Watch ad to unlock this week\'s history');
+                    });
+
+                    // Month navigation
+                    let currentMonth = today.getMonth();
+                    let currentYear = today.getFullYear();
+
+                    document.getElementById('prev-month')?.addEventListener('click', () => {
+                        currentMonth--;
+                        if (currentMonth < 0) {
+                            currentMonth = 11;
+                            currentYear--;
+                        }
+                        renderCalendar(currentYear, currentMonth);
+                        document.getElementById('calendar-month-year').textContent =
+                            `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+                    });
+
+                    document.getElementById('next-month')?.addEventListener('click', () => {
+                        currentMonth++;
+                        if (currentMonth > 11) {
+                            currentMonth = 0;
+                            currentYear++;
+                        }
+                        renderCalendar(currentYear, currentMonth);
+                        document.getElementById('calendar-month-year').textContent =
+                            `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+                    });
+
+                    // Time picker trigger (opens modal with both times)
+                    document.getElementById('start-time-trigger')?.addEventListener('click', () => {
+                        initTimeWheelPicker();
+                    });
+
+                    document.getElementById('end-time-trigger')?.addEventListener('click', () => {
+                        initTimeWheelPicker();
+                    });
+
+                    // Time picker modal controls
+                    document.getElementById('time-picker-close')?.addEventListener('click', closeTimeWheelPicker);
+                    document.getElementById('time-picker-confirm')?.addEventListener('click', confirmTimeSelection);
+
+                    // Close modal on background click
+                    document.getElementById('time-wheel-picker-modal')?.addEventListener('click', (e) => {
+                        if (e.target.id === 'time-wheel-picker-modal') {
+                            closeTimeWheelPicker();
+                        }
+                    });
+
+                    // View path button
+                    document.getElementById('view-path-btn')?.addEventListener('click', () => {
+                        if (!selectedStartDate) {
+                            showInteractiveToast('Please select a date range', 'error');
+                            return;
+                        }
+
+                        showInteractiveScreen('path-view');
+                    });
+                    break;
+
+                case 'path-view':
+                    // Initialize map after a short delay to ensure DOM is ready
+                    setTimeout(() => {
+                        initPathViewMap();
+                    }, 100);
+
+                    // Back button
+                    document.getElementById('demo-path-view-back')?.addEventListener('click', function() {
+                        // If we came from history-point, skip back to path-datepicker
+                        if (cameFromHistory) {
+                            cameFromHistory = false; // Reset flag
+                            showInteractiveScreen('path-datepicker', false);
+                        } else {
+                            goBack('path-datepicker');
+                        }
+                        this.blur();
+                    });
+
+                    // Map controls
+                    document.getElementById('demo-path-zoom-in')?.addEventListener('click', function() {
+                        if (pathMap) pathMap.zoomIn();
+                        this.blur();
+                    });
+
+                    document.getElementById('demo-path-zoom-out')?.addEventListener('click', function() {
+                        if (pathMap) pathMap.zoomOut();
+                        this.blur();
+                    });
+
+                    document.getElementById('demo-path-center')?.addEventListener('click', function() {
+                        if (pathMap && userLocation) {
+                            pathMap.setView([userLocation.lat, userLocation.lng], 15, {
+                                animate: true,
+                                duration: 0.5
+                            });
+                        }
+                        this.blur();
+                    });
+
+                    document.getElementById('demo-path-list')?.addEventListener('click', function() {
+                        cameFromHistory = false; // Reset flag when navigating to history normally
+                        showInteractiveScreen('history-point');
+                        this.blur();
+                    });
+
+                    // Tooltip navigation
+                    document.getElementById('tooltip-prev')?.addEventListener('click', function() {
+                        navigatePoints(-1);
+                        this.blur();
+                    });
+
+                    document.getElementById('tooltip-next')?.addEventListener('click', function() {
+                        navigatePoints(1);
+                        this.blur();
+                    });
+
+                    // Copy address
+                    document.getElementById('tooltip-copy-address')?.addEventListener('click', async function() {
+                        const address = document.getElementById('tooltip-address')?.textContent;
+                        if (address) {
+                            try {
+                                await navigator.clipboard.writeText(address);
+                                showInteractiveToast('📋 Address copied');
+                            } catch (e) {
+                                showInteractiveToast('Failed to copy address', 'error');
+                            }
+                        }
+                        this.blur();
+                    });
+
+                    // Navigate button
+                    document.getElementById('tooltip-navigate')?.addEventListener('click', () => {
+                        const modal = document.getElementById('demo-nav-modal-overlay');
+                        if (modal) {
+                            modal.classList.add('active');
+                        }
+                    });
+
+                    // Navigation modal handlers
+                    document.getElementById('demo-nav-google')?.addEventListener('click', () => {
+                        showInteractiveToast('🗺️ Opening Google Maps...');
+                        document.getElementById('demo-nav-modal-overlay')?.classList.remove('active');
+                    });
+
+                    document.getElementById('demo-nav-amap')?.addEventListener('click', () => {
+                        showInteractiveToast('📍 Opening 高德地图...');
+                        document.getElementById('demo-nav-modal-overlay')?.classList.remove('active');
+                    });
+
+                    document.getElementById('demo-nav-baidu')?.addEventListener('click', () => {
+                        showInteractiveToast('🧭 Opening 百度地图...');
+                        document.getElementById('demo-nav-modal-overlay')?.classList.remove('active');
+                    });
+
+                    document.getElementById('demo-nav-cancel')?.addEventListener('click', () => {
+                        document.getElementById('demo-nav-modal-overlay')?.classList.remove('active');
+                    });
+
+                    // Close modal on overlay click
+                    document.getElementById('demo-nav-modal-overlay')?.addEventListener('click', (e) => {
+                        if (e.target.id === 'demo-nav-modal-overlay') {
+                            e.target.classList.remove('active');
+                        }
+                    });
+                    break;
+
+                case 'history-point':
+                    renderHistoryPointsList();
+
+                    // Back button
+                    document.getElementById('demo-history-point-back')?.addEventListener('click', function() {
+                        goBack('path-view');
+                        this.blur();
+                    });
+                    break;
             }
         }
 
@@ -2136,7 +2728,7 @@
                                 <i data-lucide="minus"></i>
                             </button>
                             <button class="control-btn" id="demo-tag-center">
-                                <i data-lucide="crosshair"></i>
+                                <i data-lucide="locate-fixed"></i>
                             </button>
                         </div>
                     </div>
@@ -2145,18 +2737,18 @@
                     <div class="drawer" style="height: auto;">
                         <div style="padding: 20px;">
                             <!-- 1. Top Control Bar: MAC Switching + Action Buttons -->
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                                 <button class="icon-btn" id="demo-tag-prev" style="width: 36px; height: 36px;">
                                     <i data-lucide="chevron-left"></i>
                                 </button>
-                                <div id="tag-mac-display" class="text-body poppins" style="height: 36px; width: 180px; display: flex; align-items: center; justify-content: center; padding: 0 16px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); border-radius: var(--radius-xs); border: 1px solid rgba(58, 139, 255, 0.3); color: var(--color-text-muted); cursor: pointer; letter-spacing: 0.5px; font-size: 13px;">
+                                <div id="tag-mac-display" class="text-body poppins" style="height: 36px; width: 180px; display: flex; align-items: center; justify-content: center; padding: 0 16px; background: rgba(26, 31, 34, var(--alpha-glass-bg)); backdrop-filter: blur(10px); border-radius: var(--radius-xs); border: 1px solid rgba(58, 139, 255, 0.3); color: var(--color-text-muted); cursor: pointer; letter-spacing: 0.5px; font-size: 13px;">
                                     ${tag.mac}
                                 </div>
                                 <button class="icon-btn" id="demo-tag-next" style="width: 36px; height: 36px;">
                                     <i data-lucide="chevron-right"></i>
                                 </button>
                                 <button class="icon-btn" id="demo-tag-share" style="width: 36px; height: 36px;">
-                                    <i data-lucide="share-2"></i>
+                                    <i data-lucide="external-link"></i>
                                 </button>
                                 <button class="icon-btn" id="demo-tag-detail-close" style="width: 36px; height: 36px;">
                                     <i data-lucide="x"></i>
@@ -2164,21 +2756,19 @@
                             </div>
 
                             <!-- 2. Tag Info -->
-                            <div id="tag-info-swipeable" style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; touch-action: pan-y; transition: opacity 0.3s ease;">
-                                <div style="font-size: 28px; flex-shrink: 0;">${tag.icon}</div>
-                                <div style="flex: 1; min-width: 0;">
-                                    <h3 class="title-secondary" style="font-size: 22px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
-                                        ${tag.name}
-                                        <span class="battery-badge ${batteryClass}" data-battery="${tag.battery}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="battery-icon">
-                                                <path d="M 25 14 L 25 10"></path>
-                                                <rect x="0" y="6" width="22" height="12" rx="2"></rect>
-                                            </svg>
-                                        </span>
-                                    </h3>
-                                    <div class="text-body" style="font-size: 13px; margin-bottom: 4px;">${tag.address}</div>
-                                    <div class="text-body" style="font-size: 12px;">• ${tag.lastUpdate}</div>
-                                </div>
+                            <div id="tag-info-swipeable" style="margin-bottom: 16px; touch-action: pan-y; transition: opacity 0.3s ease;">
+                                <h3 class="title-secondary" style="font-size: 22px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                                    <div style="font-size: 30px;">${tag.icon}</div>
+                                    <span>${tag.name}</span>
+                                    <span class="battery-badge ${batteryClass}" data-battery="${tag.battery}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="battery-icon">
+                                            <path d="M 25 14 L 25 10"></path>
+                                            <rect x="0" y="6" width="22" height="12" rx="2"></rect>
+                                        </svg>
+                                    </span>
+                                </h3>
+                                <div class="text-body" style="font-size: 13px; margin-bottom: 4px; width: 100%;">${tag.address}</div>
+                                <div class="text-body" style="font-size: 12px;">• ${tag.lastUpdate}</div>
                             </div>
 
                             <!-- 3. Action Buttons Grid -->
@@ -2197,7 +2787,7 @@
                                 </button>
                                 <button class="tag-action-btn" id="demo-tag-path" data-action="path">
                                     <div class="tag-action-icon" style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);">
-                                        <i data-lucide="route"></i>
+                                        <i data-lucide="waypoints"></i>
                                     </div>
                                     <span>Path</span>
                                 </button>
@@ -2402,7 +2992,8 @@
                 });
 
                 document.getElementById('demo-tag-path')?.addEventListener('click', () => {
-                    showInteractiveToast('📍 Path tracking feature coming soon');
+                    window.currentTag = tag;  // Store tag context
+                    showInteractiveScreen('path-datepicker');
                 });
 
                 document.getElementById('demo-tag-share')?.addEventListener('click', () => {
@@ -2759,6 +3350,777 @@
                 if (e.target === modal) {
                     modal.remove();
                 }
+            });
+        }
+
+        // ========== Calendar Logic Functions ==========
+
+        // Calendar state variables
+        let selectedStartDate = null;
+        let selectedEndDate = null;
+
+        // Render calendar for a specific month/year
+        function renderCalendar(year, month) {
+            const grid = document.getElementById('calendar-grid');
+            if (!grid) return;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const threeDaysAgo = new Date(today);
+            threeDaysAgo.setDate(today.getDate() - 3);
+
+            let html = '';
+
+            // Empty cells for days before month starts
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div></div>';
+            }
+
+            // Day cells
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                date.setHours(0, 0, 0, 0);
+                const isToday = date.getTime() === today.getTime();
+                const isFuture = date > today;
+                const isTooOld = date < threeDaysAgo;
+                const isDisabled = isFuture || isTooOld;
+
+                let classes = 'calendar-day';
+                if (isToday) classes += ' today';
+                if (isDisabled) classes += ' disabled';
+
+                html += `
+                    <div class="${classes}" data-date="${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}"
+                         style="aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+                                border-radius: 8px; font-size: 13px; cursor: ${isDisabled ? 'not-allowed' : 'pointer'};
+                                ${isToday ? 'border: 2px solid #3A8BFF;' : ''}
+                                ${isDisabled ? 'opacity: 0.3;' : ''}
+                                color: #FFFFFF;">
+                        ${day}
+                    </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+
+            // Attach click listeners
+            document.querySelectorAll('.calendar-day:not(.disabled)').forEach(dayEl => {
+                dayEl.addEventListener('click', function() {
+                    const dateStr = this.dataset.date;
+                    if (dateStr) {
+                        handleDateSelection(dateStr);
+                    }
+                });
+            });
+
+            // Highlight selected dates
+            highlightSelectedDates();
+        }
+
+        // Handle date selection
+        function handleDateSelection(dateStr) {
+            const clickedDate = new Date(dateStr);
+            clickedDate.setHours(0, 0, 0, 0);
+
+            // Simple range selection logic
+            if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
+                // Start new selection
+                selectedStartDate = clickedDate;
+                selectedEndDate = null;
+            } else {
+                // Complete range
+                if (clickedDate < selectedStartDate) {
+                    selectedEndDate = selectedStartDate;
+                    selectedStartDate = clickedDate;
+                } else {
+                    selectedEndDate = clickedDate;
+                }
+            }
+
+            highlightSelectedDates();
+        }
+
+        // Time storage variables
+        let selectedStartTime = '00:00';
+        let selectedEndTime = '23:59';
+
+        // Get formatted datetime string for storage (not display)
+        function getFormattedDateTime(date, time) {
+            if (!date) return null;
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${time}:00`;
+        }
+
+        // Highlight selected date range on calendar
+        function highlightSelectedDates() {
+            document.querySelectorAll('.calendar-day').forEach(dayEl => {
+                dayEl.classList.remove('selected', 'range-start', 'range-end', 'in-range');
+            });
+
+            if (!selectedStartDate) return;
+
+            document.querySelectorAll('.calendar-day').forEach(dayEl => {
+                if (!dayEl.dataset.date) return;
+                const dayDate = new Date(dayEl.dataset.date);
+                dayDate.setHours(0, 0, 0, 0);
+
+                const startTime = new Date(selectedStartDate);
+                startTime.setHours(0, 0, 0, 0);
+
+                if (dayDate.getTime() === startTime.getTime()) {
+                    if (!selectedEndDate || selectedStartDate.getTime() === selectedEndDate.getTime()) {
+                        dayEl.classList.add('selected');
+                    } else {
+                        dayEl.classList.add('range-start');
+                    }
+                } else if (selectedEndDate) {
+                    const endTime = new Date(selectedEndDate);
+                    endTime.setHours(0, 0, 0, 0);
+
+                    if (dayDate.getTime() === endTime.getTime()) {
+                        dayEl.classList.add('range-end');
+                    } else if (dayDate > startTime && dayDate < endTime) {
+                        dayEl.classList.add('in-range');
+                    }
+                }
+            });
+        }
+
+        // Quick select handlers
+        function setQuickRange(range) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            switch(range) {
+                case 'today':
+                    selectedStartDate = new Date(today);
+                    selectedEndDate = new Date(today);
+                    break;
+                case 'yesterday':
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    selectedStartDate = new Date(yesterday);
+                    selectedEndDate = new Date(yesterday);
+                    break;
+                case 'past3d':
+                    const threeDaysAgo = new Date(today);
+                    threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
+                    selectedStartDate = new Date(threeDaysAgo);
+                    selectedEndDate = new Date(today);
+                    break;
+            }
+
+            highlightSelectedDates();
+        }
+
+        // ========== Time Wheel Picker Functions ==========
+
+        let currentPickerType = 'start'; // 'start' or 'end'
+
+        // Initialize time wheel picker
+        function initTimeWheelPicker() {
+            const modal = document.getElementById('time-wheel-picker-modal');
+            if (!modal) return;
+
+            const [startHour, startMinute] = selectedStartTime.split(':');
+            const [endHour, endMinute] = selectedEndTime.split(':');
+
+            // Generate start hour wheel
+            const startHourWheel = document.getElementById('start-hour-wheel');
+            if (startHourWheel) {
+                let hourHtml = '<div style="height: 80px;"></div>';
+                for (let i = 0; i <= 23; i++) {
+                    const h = String(i).padStart(2, '0');
+                    hourHtml += `<div class="time-wheel-item" data-value="${h}">${h}</div>`;
+                }
+                hourHtml += '<div style="height: 80px;"></div>';
+                startHourWheel.innerHTML = hourHtml;
+                setTimeout(() => {
+                    const selectedItem = startHourWheel.querySelector(`[data-value="${startHour}"]`);
+                    if (selectedItem) {
+                        startHourWheel.scrollTop = selectedItem.offsetTop - startHourWheel.offsetHeight / 2 + 20;
+                    }
+                }, 50);
+            }
+
+            // Generate start minute wheel
+            const startMinuteWheel = document.getElementById('start-minute-wheel');
+            if (startMinuteWheel) {
+                let minuteHtml = '<div style="height: 80px;"></div>';
+                for (let i = 0; i <= 59; i++) {
+                    const m = String(i).padStart(2, '0');
+                    minuteHtml += `<div class="time-wheel-item" data-value="${m}">${m}</div>`;
+                }
+                minuteHtml += '<div style="height: 80px;"></div>';
+                startMinuteWheel.innerHTML = minuteHtml;
+                setTimeout(() => {
+                    const selectedItem = startMinuteWheel.querySelector(`[data-value="${startMinute}"]`);
+                    if (selectedItem) {
+                        startMinuteWheel.scrollTop = selectedItem.offsetTop - startMinuteWheel.offsetHeight / 2 + 20;
+                    }
+                }, 50);
+            }
+
+            // Generate end hour wheel
+            const endHourWheel = document.getElementById('end-hour-wheel');
+            if (endHourWheel) {
+                let hourHtml = '<div style="height: 80px;"></div>';
+                for (let i = 0; i <= 23; i++) {
+                    const h = String(i).padStart(2, '0');
+                    hourHtml += `<div class="time-wheel-item" data-value="${h}">${h}</div>`;
+                }
+                hourHtml += '<div style="height: 80px;"></div>';
+                endHourWheel.innerHTML = hourHtml;
+                setTimeout(() => {
+                    const selectedItem = endHourWheel.querySelector(`[data-value="${endHour}"]`);
+                    if (selectedItem) {
+                        endHourWheel.scrollTop = selectedItem.offsetTop - endHourWheel.offsetHeight / 2 + 20;
+                    }
+                }, 50);
+            }
+
+            // Generate end minute wheel
+            const endMinuteWheel = document.getElementById('end-minute-wheel');
+            if (endMinuteWheel) {
+                let minuteHtml = '<div style="height: 80px;"></div>';
+                for (let i = 0; i <= 59; i++) {
+                    const m = String(i).padStart(2, '0');
+                    minuteHtml += `<div class="time-wheel-item" data-value="${m}">${m}</div>`;
+                }
+                minuteHtml += '<div style="height: 80px;"></div>';
+                endMinuteWheel.innerHTML = minuteHtml;
+                setTimeout(() => {
+                    const selectedItem = endMinuteWheel.querySelector(`[data-value="${endMinute}"]`);
+                    if (selectedItem) {
+                        endMinuteWheel.scrollTop = selectedItem.offsetTop - endMinuteWheel.offsetHeight / 2 + 20;
+                    }
+                }, 50);
+            }
+
+            // Show modal
+            modal.style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        // Get selected times from wheel picker
+        function getSelectedTimesFromWheel() {
+            const startHourWheel = document.getElementById('start-hour-wheel');
+            const startMinuteWheel = document.getElementById('start-minute-wheel');
+            const endHourWheel = document.getElementById('end-hour-wheel');
+            const endMinuteWheel = document.getElementById('end-minute-wheel');
+
+            if (!startHourWheel || !startMinuteWheel || !endHourWheel || !endMinuteWheel) {
+                return { startTime: '00:00', endTime: '23:59' };
+            }
+
+            // Helper to find closest item to center
+            const getClosestValue = (wheel) => {
+                const center = wheel.scrollTop + wheel.offsetHeight / 2;
+                const items = wheel.querySelectorAll('.time-wheel-item');
+                let minDist = Infinity;
+                let value = '00';
+                items.forEach(item => {
+                    const itemCenter = item.offsetTop + item.offsetHeight / 2;
+                    const dist = Math.abs(itemCenter - center);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        value = item.dataset.value;
+                    }
+                });
+                return value;
+            };
+
+            const startHour = getClosestValue(startHourWheel);
+            const startMinute = getClosestValue(startMinuteWheel);
+            const endHour = getClosestValue(endHourWheel);
+            const endMinute = getClosestValue(endMinuteWheel);
+
+            return {
+                startTime: `${startHour}:${startMinute}`,
+                endTime: `${endHour}:${endMinute}`
+            };
+        }
+
+        // Close time wheel picker
+        function closeTimeWheelPicker() {
+            const modal = document.getElementById('time-wheel-picker-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Confirm time selection
+        function confirmTimeSelection() {
+            const times = getSelectedTimesFromWheel();
+            selectedStartTime = times.startTime;
+            selectedEndTime = times.endTime;
+
+            const startDisplay = document.getElementById('start-time-display');
+            const endDisplay = document.getElementById('end-time-display');
+            if (startDisplay) startDisplay.textContent = times.startTime;
+            if (endDisplay) endDisplay.textContent = times.endTime;
+
+            closeTimeWheelPicker();
+        }
+
+        // ========== Path View Map Functions ==========
+
+        let pathMap = null;
+        let pathMarkers = [];
+        let pathPolyline = null;
+        let currentFocusedIndex = null;
+        let pendingFocusIndex = null; // Store pending focus request from history list
+        let cameFromHistory = false; // Track if we navigated from history-point screen
+        let userLocationMarker = null; // Store user's location marker
+        let userLocation = null; // Store user's location coordinates
+
+        // Initialize path view map
+        function initPathViewMap(initialFocusIndex = null) {
+            const mapElement = document.getElementById('demo-path-map');
+            if (!mapElement) return;
+
+            // Clean up existing map
+            if (pathMap) {
+                pathMap.remove();
+                pathMap = null;
+            }
+
+            // Get trajectory data (for demo, always show all points)
+            const tagId = window.currentTag?.id || 1;
+            const trajectoryPoints = mockTrajectoryData[tagId] || [];
+
+            if (trajectoryPoints.length === 0) {
+                showInteractiveToast('No trajectory data available', 'error');
+                setTimeout(() => {
+                    goBack('path-datepicker');
+                }, 1500);
+                return;
+            }
+
+            // Store points globally for tooltip navigation
+            window.currentTrajectoryPoints = trajectoryPoints;
+
+            // Initialize map centered on focus point or last point
+            // Check for pending focus request first
+            let focusIndex = initialFocusIndex;
+            if (focusIndex === null && pendingFocusIndex !== null) {
+                focusIndex = pendingFocusIndex;
+                pendingFocusIndex = null; // Clear pending request
+            }
+            if (focusIndex === null) {
+                focusIndex = trajectoryPoints.length - 1; // Default to last point
+            }
+            const centerPoint = trajectoryPoints[focusIndex];
+            pathMap = L.map('demo-path-map', {
+                center: [centerPoint.lat, centerPoint.lng],
+                zoom: 14,
+                zoomControl: false,
+                attributionControl: false
+            });
+
+            // Add AMap tiles
+            L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}', {
+                subdomains: ['1', '2', '3', '4'],
+                attribution: '&copy; 高德地图',
+                maxZoom: 19
+            }).addTo(pathMap);
+
+            // Render trajectory
+            renderTrajectoryLine(trajectoryPoints);
+            createKeyPointMarkers(trajectoryPoints);
+
+            // Add user location marker (mock location visible on screen)
+            createUserLocationMarker(trajectoryPoints);
+
+            // Focus on specified point after a short delay
+            setTimeout(() => {
+                focusOnPoint(focusIndex, trajectoryPoints);
+            }, 500);
+        }
+
+        // Create user location marker
+        function createUserLocationMarker(trajectoryPoints) {
+            if (!pathMap || trajectoryPoints.length === 0) return;
+
+            // Remove existing marker
+            if (userLocationMarker && pathMap) {
+                pathMap.removeLayer(userLocationMarker);
+            }
+
+            // Set user location near the middle point of trajectory (for demo visibility)
+            const midIndex = Math.floor(trajectoryPoints.length / 2);
+            const midPoint = trajectoryPoints[midIndex];
+
+            // Offset slightly from trajectory point to ensure visibility
+            userLocation = {
+                lat: midPoint.lat + 0.002,  // Offset ~200m north
+                lng: midPoint.lng - 0.002   // Offset ~200m west
+            };
+
+            // Create custom marker for user location
+            const userIcon = L.divIcon({
+                className: 'user-location-marker',
+                html: `
+                    <div style="position: relative; width: 40px; height: 40px;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; background: #3A8BFF; border: 3px solid #FFFFFF; border-radius: 50%; box-shadow: 0 0 0 4px rgba(58, 139, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.3);"></div>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: rgba(58, 139, 255, 0.2); border-radius: 50%; animation: pulse-ring 2s infinite;"></div>
+                    </div>
+                `,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+
+            userLocationMarker = L.marker([userLocation.lat, userLocation.lng], {
+                icon: userIcon,
+                zIndexOffset: 1000  // Keep above trajectory markers
+            }).addTo(pathMap);
+        }
+
+        // Render trajectory line
+        function renderTrajectoryLine(points) {
+            if (pathPolyline && pathMap) {
+                pathMap.removeLayer(pathPolyline);
+            }
+
+            if (!pathMap || points.length === 0) return;
+
+            const latLngs = points.map(p => [p.lat, p.lng]);
+
+            pathPolyline = L.polyline(latLngs, {
+                color: '#3A8BFF',
+                weight: 3,
+                opacity: 0.7,
+                smoothFactor: 1
+            }).addTo(pathMap);
+
+            // Fit bounds to show entire path
+            if (points.length > 1) {
+                pathMap.fitBounds(pathPolyline.getBounds(), { padding: [50, 50] });
+            }
+        }
+
+        // Create key point markers
+        function createKeyPointMarkers(points) {
+            // Clear existing markers
+            pathMarkers.forEach(m => {
+                if (pathMap) pathMap.removeLayer(m);
+            });
+            pathMarkers = [];
+
+            if (!pathMap) return;
+
+            points.forEach((point, index) => {
+                const label = getPointLabel(index, points.length);
+                const isStart = index === 0;
+                const isEnd = index === points.length - 1;
+
+                let markerColor = '#3A8BFF'; // Middle points
+                if (isStart) markerColor = '#22C55E'; // Green for start
+                if (isEnd) markerColor = '#EC6C70'; // Red for end
+
+                const markerIcon = L.divIcon({
+                    className: 'trajectory-marker',
+                    html: `
+                        <div class="trajectory-marker-inner" data-index="${index}" style="
+                            width: 24px;
+                            height: 24px;
+                            background: ${markerColor};
+                            border: 2px solid #FFFFFF;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: #FFFFFF;
+                            font-weight: 700;
+                            font-size: 11px;
+                            cursor: pointer;
+                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+                            transition: transform 0.2s ease;
+                        ">
+                            ${label}
+                        </div>
+                    `,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+
+                const marker = L.marker([point.lat, point.lng], {
+                    icon: markerIcon
+                }).addTo(pathMap);
+
+                pathMarkers.push(marker);
+            });
+
+            // Add click listeners to markers after DOM render
+            setTimeout(() => {
+                document.querySelectorAll('.trajectory-marker-inner').forEach(markerEl => {
+                    markerEl.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.index);
+                        focusOnPoint(index, points);
+                    });
+                });
+            }, 100);
+        }
+
+        // Focus on a specific point and show tooltip
+        function focusOnPoint(index, points) {
+            if (index < 0 || index >= points.length) return;
+
+            currentFocusedIndex = index;
+            const point = points[index];
+
+            // Center map on point
+            if (pathMap) {
+                pathMap.setView([point.lat, point.lng], 16, { animate: true });
+            }
+
+            // Update tooltip content
+            const label = getPointLabel(index, points.length);
+            const seqEl = document.getElementById('tooltip-sequence');
+            // Use sequential numbers with "No." prefix (1, 2, 3, ... N)
+            if (seqEl) {
+                seqEl.textContent = 'No.' + (index + 1);
+            }
+
+            const timeEl = document.getElementById('tooltip-timestamp');
+            if (timeEl) timeEl.textContent = point.timestamp;
+
+            // Calculate duration to next point
+            const durationEl = document.getElementById('tooltip-duration');
+            if (durationEl) {
+                if (index < points.length - 1) {
+                    const duration = calculateDuration(point.timestamp, points[index + 1].timestamp);
+                    durationEl.textContent = duration;
+                } else {
+                    durationEl.textContent = 'Final point';
+                }
+            }
+
+            const addressEl = document.getElementById('tooltip-address');
+            if (addressEl) addressEl.textContent = point.address;
+
+            // Update prev/next button states
+            const prevBtn = document.getElementById('tooltip-prev');
+            const nextBtn = document.getElementById('tooltip-next');
+
+            if (prevBtn) {
+                if (index === 0) {
+                    prevBtn.style.opacity = '0.3';
+                    prevBtn.style.pointerEvents = 'none';
+                } else {
+                    prevBtn.style.opacity = '1';
+                    prevBtn.style.pointerEvents = 'auto';
+                }
+            }
+
+            if (nextBtn) {
+                if (index === points.length - 1) {
+                    nextBtn.style.opacity = '0.3';
+                    nextBtn.style.pointerEvents = 'none';
+                } else {
+                    nextBtn.style.opacity = '1';
+                    nextBtn.style.pointerEvents = 'auto';
+                }
+            }
+
+            // Show tooltip
+            showPointTooltip();
+
+            // Highlight focused marker
+            document.querySelectorAll('.trajectory-marker-inner').forEach(m => {
+                if (parseInt(m.dataset.index) === index) {
+                    m.style.transform = 'scale(1.3)';
+                    m.style.zIndex = '1000';
+                } else {
+                    m.style.transform = 'scale(1)';
+                    m.style.zIndex = 'auto';
+                }
+            });
+        }
+
+        // Show point tooltip
+        function showPointTooltip() {
+            const tooltip = document.getElementById('point-tooltip');
+            if (tooltip) {
+                tooltip.style.display = 'block';
+            }
+        }
+
+        // Navigate to previous/next point
+        function navigatePoints(direction) {
+            const points = window.currentTrajectoryPoints;
+            if (!points || currentFocusedIndex === null) return;
+
+            const newIndex = currentFocusedIndex + direction;
+            if (newIndex >= 0 && newIndex < points.length) {
+                focusOnPoint(newIndex, points);
+            }
+        }
+
+        // ========== History Point List Function ==========
+
+        // Render history points list
+        function renderHistoryPointsList() {
+            const listContainer = document.getElementById('history-point-list');
+            if (!listContainer) return;
+
+            const tagId = window.currentTag?.id || 1;
+            // Use all mock data for demo (consistent with path-view)
+            const points = mockTrajectoryData[tagId] || [];
+
+            // Store points globally
+            window.currentTrajectoryPoints = points;
+
+            // Update count
+            const countEl = document.getElementById('history-point-count');
+            if (countEl) countEl.textContent = `${points.length} locations found`;
+
+            if (points.length === 0) {
+                listContainer.innerHTML = '<div style="text-align: center; color: #8B94A4; padding: 20px;">No points available</div>';
+                return;
+            }
+
+            // Render cards
+            const html = points.map((point, index) => {
+                const label = getPointLabel(index, points.length);
+                const isStart = index === 0;
+                const isEnd = index === points.length - 1;
+
+                let labelColor = '#3A8BFF';
+                if (isStart) labelColor = '#22C55E';
+                if (isEnd) labelColor = '#EC6C70';
+
+                const duration = index < points.length - 1
+                    ? calculateDuration(point.timestamp, points[index + 1].timestamp)
+                    : 'Final point';
+
+                return `
+                    <div class="history-point-card" data-index="${index}" style="
+                        background: rgba(26, 31, 43, 0.6);
+                        backdrop-filter: blur(10px);
+                        border: 1px solid rgba(58, 139, 255, 0.15);
+                        border-radius: 16px;
+                        padding: 16px;
+                        margin-bottom: 12px;
+                        transition: all 0.3s ease;
+                    ">
+                        <!-- First row: sequence + timestamp + chevron -->
+                        <div class="history-card-first-row" style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px; cursor: pointer;">
+                            <div style="
+                                width: 32px;
+                                height: 32px;
+                                background: ${labelColor};
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                color: #FFFFFF;
+                                font-weight: 700;
+                                font-size: 13px;
+                                flex-shrink: 0;
+                            ">
+                                ${label}
+                            </div>
+                            <div style="flex: 1; color: #FFFFFF; font-weight: 600; font-size: 14px;">
+                                ${point.timestamp}
+                            </div>
+                            <i data-lucide="chevron-right" style="color: #3A8BFF; flex-shrink: 0;"></i>
+                        </div>
+                        <!-- Second row: duration + address (full width) - Click to copy -->
+                        <div>
+                            <div class="text-body history-copy-duration" data-copy-text="${duration}" style="font-size: 12px; margin-bottom: 4px; cursor: pointer; transition: color 0.2s ease;">
+                                Duration: ${duration}
+                            </div>
+                            <div class="text-body history-copy-address" data-copy-text="${point.address}" style="font-size: 12px; line-height: 1.4; word-break: break-word; cursor: pointer; transition: color 0.2s ease;">
+                                ${point.address}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            listContainer.innerHTML = html;
+
+            // Re-init lucide icons
+            lucide.createIcons();
+
+            // Attach click listeners
+            // Attach click listeners to first row only
+            document.querySelectorAll('.history-card-first-row').forEach(firstRow => {
+                firstRow.addEventListener('click', function() {
+                    const card = this.closest('.history-point-card');
+                    const index = parseInt(card.dataset.index);
+                    // Store pending focus index and set flag that we came from history
+                    pendingFocusIndex = index;
+                    cameFromHistory = true;
+                    showInteractiveScreen('path-view', false);
+                });
+            });
+
+            // Attach hover effect to card
+            document.querySelectorAll('.history-point-card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.borderColor = 'rgba(58, 139, 255, 0.5)';
+                    this.style.transform = 'translateX(4px)';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.borderColor = 'rgba(58, 139, 255, 0.15)';
+                    this.style.transform = 'translateX(0)';
+                });
+            });
+
+            // Attach copy listeners to duration and address
+            document.querySelectorAll('.history-copy-duration').forEach(el => {
+                el.addEventListener('click', async function(e) {
+                    e.stopPropagation(); // Prevent card navigation
+                    const text = this.dataset.copyText;
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        showInteractiveToast('⏱️ Duration copied');
+                        // Visual feedback
+                        const originalColor = this.style.color;
+                        this.style.color = '#3A8BFF';
+                        setTimeout(() => {
+                            this.style.color = originalColor;
+                        }, 200);
+                    } catch (e) {
+                        showInteractiveToast('Failed to copy', 'error');
+                    }
+                });
+                // Hover effect
+                el.addEventListener('mouseenter', function() {
+                    this.style.color = '#3A8BFF';
+                });
+                el.addEventListener('mouseleave', function() {
+                    this.style.color = '';
+                });
+            });
+
+            document.querySelectorAll('.history-copy-address').forEach(el => {
+                el.addEventListener('click', async function(e) {
+                    e.stopPropagation(); // Prevent card navigation
+                    const text = this.dataset.copyText;
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        showInteractiveToast('📍 Address copied');
+                        // Visual feedback
+                        const originalColor = this.style.color;
+                        this.style.color = '#3A8BFF';
+                        setTimeout(() => {
+                            this.style.color = originalColor;
+                        }, 200);
+                    } catch (e) {
+                        showInteractiveToast('Failed to copy', 'error');
+                    }
+                });
+                // Hover effect
+                el.addEventListener('mouseenter', function() {
+                    this.style.color = '#3A8BFF';
+                });
+                el.addEventListener('mouseleave', function() {
+                    this.style.color = '';
+                });
             });
         }
 

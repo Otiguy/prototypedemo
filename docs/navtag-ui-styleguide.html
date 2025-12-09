@@ -143,7 +143,7 @@
           </div>
           <div class="glass-card" style="padding:12px;">
             <div class="text-body" style="color:#8B94A4; margin-bottom:8px; font-size:11px;">Active (移动端按压)</div>
-            <button class="btn-primary" style="transform: translateY(0); font-size:14px; padding:12px;">Primary</button>
+            <button class="btn-primary" style="transform: translateY(0) scale(0.98); background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); box-shadow: 0 0 15px rgba(58,139,255,0.5), 0 4px 8px rgba(0,0,0,0.4); opacity: 0.95; font-size:14px; padding:12px;">Primary</button>
           </div>
         </div>
       </div>
@@ -162,7 +162,7 @@
           </div>
           <div class="glass-card" style="padding:12px;">
             <div class="text-body" style="color:#8B94A4; margin-bottom:8px; font-size:11px;">Active (移动端按压)</div>
-            <button class="btn-secondary" style="transform: scale(0.98); background: rgba(58, 139, 255, 0.15); font-size:14px; padding:12px;">Secondary</button>
+            <button class="btn-secondary" style="transform: scale(0.96); background: rgba(58, 139, 255, 0.18); border-color: rgba(58, 139, 255, 0.7); font-size:14px; padding:12px;">Secondary</button>
           </div>
         </div>
       </div>
@@ -196,10 +196,11 @@
       <div class="text-body" style="margin-top: 12px; padding: 12px; background: rgba(58,139,255,0.1); border: 1px solid rgba(58,139,255,0.3); border-radius: 12px; font-size: 12px; line-height: 1.6;">
         <strong style="color:#3A8BFF;">📱 移动端交互要点:</strong><br>
         • 移动端无 hover 状态，<strong>:active 是唯一的按压反馈</strong><br>
-        • btn-primary: translateY(0) - 从 hover 的上浮状态回到原位<br>
-        • btn-secondary: scale(0.98) - 按压缩小效果<br>
-        • icon-btn: scale(0.95) - 更明显的缩小效果<br>
-        • 所有按钮都有 transition: all 0.3s ease 保证动效流畅
+        • btn-primary: scale(0.98) + 渐变变深 + 阴影减弱 + 透明度0.95 - 最强视觉反馈<br>
+        • btn-secondary: scale(0.96) + 背景加深(0.18) + 边框加深(0.7) - 中等反馈<br>
+        • icon-btn: scale(0.95) + 背景蓝色(0.25) - 轻量反馈<br>
+        • 所有按钮都有 transition: all 0.3s ease 保证动效流畅<br>
+        • 按重要性分级：主按钮 > 次按钮 > 图标按钮
       </div>
     </div>
 
