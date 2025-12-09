@@ -114,7 +114,7 @@
             // Start with splash screen
             setTimeout(() => {
                 showInteractiveScreen('login');
-            }, 2000);
+            }, 1000);
 
             showInteractiveScreen('splash');
         }
@@ -369,7 +369,7 @@
                                         <i data-lucide="tag"></i>
                                     </div>
                                     <div style="flex: 1;">
-                                        <div style="color: #FFFFFF; font-weight: 600;">ATag-8F42</div>
+                                        <div style="color: #FFFFFF; font-weight: 600;">ATag-8F42AD245611</div>
                                     </div>
                                 </div>
 
@@ -378,7 +378,7 @@
                                         <i data-lucide="tag"></i>
                                     </div>
                                     <div style="flex: 1;">
-                                        <div style="color: #FFFFFF; font-weight: 600;">ATag-3A91</div>
+                                        <div style="color: #FFFFFF; font-weight: 600;">ATag-3A91AD245612</div>
                                     </div>
                                 </div>
 
@@ -387,7 +387,7 @@
                                         <i data-lucide="tag"></i>
                                     </div>
                                     <div style="flex: 1;">
-                                        <div style="color: #FFFFFF; font-weight: 600;">ATag-D7C2</div>
+                                        <div style="color: #FFFFFF; font-weight: 600;">ATag-D7C2AD245613</div>
                                     </div>
                                 </div>
                             </div>
@@ -507,7 +507,15 @@
                                             <div style="display: flex; align-items: center; gap: 12px; position: relative;">
                                                 <div style="font-size: 28px;">${tag.icon}</div>
                                                 <div style="flex: 1;">
-                                                    <div style="color: #FFFFFF; font-weight: 600; margin-bottom: 4px;">${tag.name}</div>
+                                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                                        <div style="color: #FFFFFF; font-weight: 600;">${tag.name}</div>
+                                                        <span class="battery-badge ${tag.battery <= 30 ? 'low' : tag.battery <= 60 ? 'medium' : ''}" data-battery="${tag.battery}">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="battery-icon">
+                                                                <path d="M 25 14 L 25 10"></path>
+                                                                <rect x="0" y="6" width="22" height="12" rx="2"></rect>
+                                                            </svg>
+                                                        </span>
+                                                    </div>
                                                     <div class="text-body" style="font-size: 12px;">${tag.address}</div>
                                                     <div class="text-body" style="font-size: 11px; margin-top: 2px;">Updated ${tag.lastUpdate}</div>
                                                 </div>
