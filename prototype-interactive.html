@@ -1210,7 +1210,7 @@
 
                         <!-- Time Wheel Picker Modal -->
                         <div id="time-wheel-picker-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); z-index: 9999; align-items: flex-end; justify-content: center;">
-                            <div style="width: 100%; background: rgba(26, 31, 43, 0.98); backdrop-filter: blur(20px); border-radius: 28px 28px 0 0; padding: 20px; box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);">
+                            <div class="drawer" style="width: 100%; background: rgba(26, 31, 43, 0.98); backdrop-filter: blur(20px); border-radius: 28px 28px 0 0; padding: 20px; box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);">
                                 <!-- Header -->
                                 <div style="display: flex; align-items: center; margin-bottom: 20px;">
                                     <button class="btn-secondary" id="time-picker-close" style="padding: 6px 12px; font-size: 13px; width: 70px;">
@@ -3661,6 +3661,11 @@
             if (startDisplay) startDisplay.textContent = times.startTime;
             if (endDisplay) endDisplay.textContent = times.endTime;
 
+            // 清除所有快捷按钮的选中状态
+            document.querySelectorAll('.quick-select-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
             closeTimeWheelPicker();
         }
 
@@ -3815,7 +3820,7 @@
                 const isStart = index === 0;
                 const isEnd = index === points.length - 1;
 
-                let markerColor = '#3A8BFF'; // Middle points
+                let markerColor = '#8B5CF6'; // Middle points
                 if (isStart) markerColor = '#22C55E'; // Green for start
                 if (isEnd) markerColor = '#EC6C70'; // Red for end
 
@@ -3823,8 +3828,8 @@
                     className: 'trajectory-marker',
                     html: `
                         <div class="trajectory-marker-inner" data-index="${index}" style="
-                            width: 24px;
-                            height: 24px;
+                            width: 22px;
+                            height: 22px;
                             background: ${markerColor};
                             border: 2px solid #FFFFFF;
                             border-radius: 50%;
