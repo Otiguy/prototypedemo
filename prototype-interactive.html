@@ -53,7 +53,7 @@
                 id: 1,
                 name: 'My Keys',
                 icon: '🔑',
-                address: '深圳市福田区福田街道',
+                address: 'Building 101, No. 100, Futian Street, Futian District, Shenzhen',
                 lat: 22.5480,
                 lng: 114.0579,
                 distance: 'Around You',
@@ -61,13 +61,13 @@
                 mac: '8F:42:A1:D3:7E:C9',
                 firmwareVersion: 'v0.1.0',
                 hasUpdate: true,
-                battery: 85
+                battery: 100
             },
             {
                 id: 2,
                 name: 'Backpack',
                 icon: '🎒',
-                address: '深圳市南山区南山街道',
+                address: 'Building 101, No. 100, Futian Street, Futian District, Shenzhen',
                 lat: 22.5380,
                 lng: 114.0579,
                 distance: '1.2km',
@@ -81,7 +81,7 @@
                 id: 3,
                 name: 'Car',
                 icon: '🚗',
-                address: '深圳市罗湖区罗湖街道',
+                address: 'Building 101, No. 100, Futian Street, Futian District, Shenzhen',
                 lat: 22.5431,
                 lng: 114.0479,
                 distance: '2.8km',
@@ -114,7 +114,7 @@
             // Start with splash screen
             setTimeout(() => {
                 showInteractiveScreen('login');
-            }, 3000);
+            }, 2000);
 
             showInteractiveScreen('splash');
         }
@@ -1709,9 +1709,12 @@
                                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                                                 <div style="color: #FFFFFF; font-weight: 600; font-size: 15px;">${tag.name}</div>
                                                 <!-- 电量图标紧跟在名字后面 -->
-                                                <div style="width: 32px; height: 16px; border: 2px solid ${tag.battery > 30 ? '#3A8BFF' : '#EF4444'}; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                                                    <span style="font-size: 10px; color: ${tag.battery > 30 ? '#3A8BFF' : '#EF4444'}; font-weight: 600;">${tag.battery}%</span>
-                                                </div>
+                                                <span class="battery-badge ${tag.battery <= 30 ? 'low' : tag.battery <= 60 ? 'medium' : ''}" data-battery="${tag.battery}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="battery-icon">
+                                                        <path d="M 25 14 L 25 10"></path>
+                                                        <rect x="0" y="6" width="22" height="12" rx="2"></rect>
+                                                    </svg>
+                                                </span>
                                             </div>
                                             <div style="color: #8B94A4; font-size: 12px;">${tag.isUpdated ? 'v1.1.0 (Up to date)' : tag.version + ' → v1.1.0'}</div>
                                         </div>
@@ -2103,6 +2106,9 @@
             const currentIndex = mockTags.findIndex(t => t.id === tag.id);
             const totalTags = mockTags.length;
 
+            // Determine battery badge class based on battery level
+            const batteryClass = tag.battery <= 30 ? 'low' : tag.battery <= 60 ? 'medium' : '';
+
             const content = document.getElementById('interactive-content');
             content.innerHTML = `
                 <div style="position: relative; height: 100%; overflow: hidden;">
@@ -2113,27 +2119,6 @@
                     <!-- Map focused on tag -->
                     <div class="map-container" style="height: 644px; position: relative;">
                         <div id="demo-tag-detail-map" style="width: 100%; height: 100%;"></div>
-
-                        <!-- Tag Switching Controls (Floating) -->
-                        <div style="position: absolute; bottom: 50px; left: 0; right: 0; z-index: 900; pointer-events: none;">
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; pointer-events: auto;">
-                                <!-- Previous Button -->
-                                <button class="icon-btn" id="demo-tag-prev" style="width: 44px; height: 44px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); border-radius: var(--radius-xs); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
-                                    <i data-lucide="chevron-left"></i>
-                                </button>
-
-                                <div id="tag-mac-display" class="text-body poppins" style="height: 44px; display: flex; align-items: center; padding: 0 16px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); border-radius: var(--radius-xs); border: 1px solid rgba(58, 139, 255, 0.3); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); color: var(--color-text); cursor: pointer; letter-spacing: 0.5px;">
-                                    ${tag.mac}
-                                </div>
-
-                                <!-- Next Button -->
-                                <button class="icon-btn" id="demo-tag-next" style="width: 44px; height: 44px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); border-radius: var(--radius-xs); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
-                                    <i data-lucide="chevron-right"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        
 
                         <div class="map-controls">
                             <button class="control-btn" id="demo-tag-zoom-in">
@@ -2149,31 +2134,46 @@
                     </div>
 
                     <!-- Selected Tag Info Drawer -->
-                    <div class="drawer" style="height: 200px;">
+                    <div class="drawer" style="height: auto;">
                         <div style="padding: 20px;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-                                <!-- Tag Info (Swipeable) -->
-                                <div id="tag-info-swipeable" style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; touch-action: pan-y; transition: opacity 0.3s ease;">
-                                    <div style="font-size: 28px; flex-shrink: 0;">${tag.icon}</div>
-                                    <div style="flex: 1; min-width: 0;">
-                                        <h3 class="title-secondary" style="font-size: 22px; margin-bottom: 6px;">${tag.name}</h3>
-                                        <div class="text-body" style="font-size: 13px; margin-bottom: 4px;">${tag.address}</div>
-                                        <div class="text-body" style="font-size: 12px;">Updated ${tag.lastUpdate}</div>
-                                    </div>
+                            <!-- 1. Top Control Bar: MAC Switching + Action Buttons -->
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                                <button class="icon-btn" id="demo-tag-prev" style="width: 36px; height: 36px;">
+                                    <i data-lucide="chevron-left"></i>
+                                </button>
+                                <div id="tag-mac-display" class="text-body poppins" style="height: 36px; width: 180px; display: flex; align-items: center; justify-content: center; padding: 0 16px; background: rgba(13, 17, 26, 0.95); backdrop-filter: blur(10px); border-radius: var(--radius-xs); border: 1px solid rgba(58, 139, 255, 0.3); color: var(--color-text-muted); cursor: pointer; letter-spacing: 0.5px; font-size: 13px;">
+                                    ${tag.mac}
                                 </div>
+                                <button class="icon-btn" id="demo-tag-next" style="width: 36px; height: 36px;">
+                                    <i data-lucide="chevron-right"></i>
+                                </button>
+                                <button class="icon-btn" id="demo-tag-share" style="width: 36px; height: 36px;">
+                                    <i data-lucide="share-2"></i>
+                                </button>
+                                <button class="icon-btn" id="demo-tag-detail-close" style="width: 36px; height: 36px;">
+                                    <i data-lucide="x"></i>
+                                </button>
+                            </div>
 
-                                <!-- Action Buttons (Share & Close) -->
-                                <div style="display: flex; gap: 8px; flex-shrink: 0;">
-                                    <button class="icon-btn" id="demo-tag-share">
-                                        <i data-lucide="share-2"></i>
-                                    </button>
-                                    <button class="icon-btn" id="demo-tag-detail-close">
-                                        <i data-lucide="x"></i>
-                                    </button>
+                            <!-- 2. Tag Info -->
+                            <div id="tag-info-swipeable" style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; touch-action: pan-y; transition: opacity 0.3s ease;">
+                                <div style="font-size: 28px; flex-shrink: 0;">${tag.icon}</div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <h3 class="title-secondary" style="font-size: 22px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                                        ${tag.name}
+                                        <span class="battery-badge ${batteryClass}" data-battery="${tag.battery}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="battery-icon">
+                                                <path d="M 25 14 L 25 10"></path>
+                                                <rect x="0" y="6" width="22" height="12" rx="2"></rect>
+                                            </svg>
+                                        </span>
+                                    </h3>
+                                    <div class="text-body" style="font-size: 13px; margin-bottom: 4px;">${tag.address}</div>
+                                    <div class="text-body" style="font-size: 12px;">• ${tag.lastUpdate}</div>
                                 </div>
                             </div>
 
-                            <!-- Action Buttons -->
+                            <!-- 3. Action Buttons Grid -->
                             <div style="display: flex; justify-content: space-between; gap: 8px;">
                                 <button class="tag-action-btn" id="demo-tag-nav" data-action="nav">
                                     <div class="tag-action-icon" style="background: linear-gradient(135deg, #3A8BFF 0%, #2563EB 100%);">

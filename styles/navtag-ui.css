@@ -237,7 +237,10 @@ body {
 }
 
 .btn-primary:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.98);
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  box-shadow: 0 0 15px rgba(58, 139, 255, 0.5), 0 4px 8px rgba(0, 0, 0, 0.4);
+  opacity: 0.95;
 }
 
 @keyframes breathing {
@@ -277,8 +280,9 @@ body {
 }
 
 .btn-secondary:active {
-  transform: scale(0.98);
-  background: rgba(58, 139, 255, 0.15);
+  transform: scale(0.96);
+  background: rgba(58, 139, 255, 0.18);
+  border-color: rgba(58, 139, 255, 0.7);
 }
 
 /* ========== Input Fields ========== */
@@ -774,6 +778,49 @@ body {
 .icon-btn:active {
   transform: scale(0.95);
   background: rgba(58, 139, 255, 0.25);
+}
+
+/* ========== Battery Badge ========== */
+.battery-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  color: var(--color-primary);
+  font-family: 'Poppins', sans-serif;
+}
+
+.battery-badge svg,
+.battery-badge .battery-icon {
+  width: 30px;
+  height: 24px;
+  display: block;
+}
+
+/* 电量百分比叠加在图标上 */
+.battery-badge::after {
+  content: attr(data-battery);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: inherit;
+  pointer-events: none;
+  line-height: 1;
+}
+
+/* 低电量状态 */
+.battery-badge.low {
+  color: var(--color-error);
+}
+
+/* 中等电量状态 */
+.battery-badge.medium {
+  color: var(--color-accent);
 }
 
 /* ========== Toast Notifications ========== */
