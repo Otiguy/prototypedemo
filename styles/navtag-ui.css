@@ -335,6 +335,18 @@ body {
 .tag-item-wrapper {
   position: relative;
   margin-bottom: var(--space-3);
+  background: rgba(26, 31, 43, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(58, 139, 255, 0.15);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tag-item-wrapper:hover {
+  border-color: rgba(58, 139, 255, 0.4);
+  box-shadow: 0 4px 16px rgba(58, 139, 255, 0.2);
 }
 
 .tag-item-content {
@@ -1724,4 +1736,180 @@ body {
 
 .location-item-delete:hover {
   background: rgba(239, 68, 68, 0.3);
+}
+
+/* ========== Trajectory Path Styles ========== */
+
+/* Calendar Day States */
+.calendar-day {
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.calendar-day.today {
+  border: 2px solid var(--color-primary) !important;
+  z-index: 1;
+}
+
+.calendar-day.selected {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%) !important;
+  color: var(--color-text) !important;
+  border-radius: 8px !important;
+  font-weight: 600;
+  z-index: 2;
+}
+
+/* Continuous range styling - no gaps */
+.calendar-day.range-start {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%) !important;
+  color: var(--color-text) !important;
+  border-radius: 8px 0 0 8px !important;
+  font-weight: 600;
+  z-index: 2;
+}
+
+.calendar-day.range-end {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%) !important;
+  color: var(--color-text) !important;
+  border-radius: 0 8px 8px 0 !important;
+  font-weight: 600;
+  z-index: 2;
+}
+
+.calendar-day.in-range {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%) !important;
+  color: var(--color-text) !important;
+  opacity: 0.5;
+  border-radius: 0 !important;
+}
+
+.calendar-day:not(.disabled):hover {
+  background: rgba(58, 139, 255, 0.2);
+  z-index: 3;
+}
+
+.calendar-day.disabled {
+  opacity: 0.3;
+  cursor: not-allowed !important;
+}
+
+/* Time Picker Trigger Hover */
+.time-picker-trigger:hover {
+  background: rgba(58, 139, 255, 0.2);
+  border-color: rgba(58, 139, 255, 0.5);
+}
+
+/* Time Wheel Styles */
+.time-wheel {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.time-wheel::-webkit-scrollbar {
+  display: none;
+}
+
+.time-wheel-item {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8B94A4;
+  font-size: 18px;
+  scroll-snap-align: center;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.time-wheel-item.selected {
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 20px;
+}
+
+/* Quick Select Buttons */
+.quick-select-btn {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.quick-select-btn.active {
+  border-color: var(--color-primary);
+  background: rgba(58, 139, 255, 0.2);
+}
+
+/* Tag-style buttons */
+.tag-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #8B94A4;
+  background: rgba(26, 31, 43, 0.6);
+  border: 1px solid rgba(58, 139, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tag-btn.selected {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%);
+  color: #FFFFFF;
+  border-color: var(--color-primary);
+}
+
+.tag-btn:hover:not(.selected):not(.disabled) {
+  background: rgba(58, 139, 255, 0.1);
+  color: #FFFFFF;
+  border-color: var(--color-primary);
+}
+
+.tag-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quick-select-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Trajectory Markers */
+.trajectory-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.trajectory-marker-inner {
+  transition: transform 0.2s ease;
+}
+
+.trajectory-marker-inner:hover {
+  transform: scale(1.2) !important;
+}
+
+/* History Point Cards */
+.history-point-card {
+  transition: all 0.3s ease;
+}
+
+.history-point-card:hover {
+  border-color: rgba(58, 139, 255, 0.5) !important;
+  box-shadow: 0 4px 16px rgba(58, 139, 255, 0.3);
+}
+
+/* User Location Marker */
+.user-location-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
 }
