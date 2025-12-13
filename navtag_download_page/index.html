@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NavTag</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; background: #0f172a; color: #e5e7eb; }
+    .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .card { width: 100%; max-width: 360px; padding: 32px 24px; text-align: center; }
+    .logo { width: 160px; height: 160px; border-radius: 40px; margin: 0 auto 20px; object-fit: cover; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); display: block; }
+    .title { font-size: 24px; font-weight: 700; margin: 0 0 8px; color: #f8fafc; letter-spacing: -0.025em; text-align: center; }
+    .desc { font-size: 14px; color: #94a3b8; margin: 0 0 32px; line-height: 1.5; font-weight: 500; text-align: center; }
+    .actions { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%; margin: 0 auto; }
+    .btn { display: flex; align-items: center; justify-content: center; width: 160px; height: 47.41px; padding: 0; border-radius: 8px; background: linear-gradient(113deg, #3A8BFF 25%, #2563EB 75%); box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.4), 0px 0px 20px 0px rgba(58, 139, 255, 0.4); color: #fff; font-weight: 600; font-size: 14px; text-decoration: none; box-sizing: border-box; transition: transform 0.2s; border: none; cursor: pointer; white-space: nowrap; }
+    .btn-badge { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; padding: 0; background: none; border: none; text-decoration: none; box-sizing: border-box; transition: transform 0.2s; cursor: pointer; }
+    .btn-badge img { width: 160px; height: auto; display: block; }
+    .btn:active { transform: scale(0.98); }
+    /* .btn.alt { background: #334155; color: #f1f5f9; } */
+    .tip { margin-top: 24px; font-size: 13px; color: #64748b; line-height: 1.5; padding: 0 12px; text-align: center; }
+  </style>
+  <meta name="referrer" content="no-referrer">
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <img src="./resource/logo.png" alt="NavTag Logo" class="logo">
+      <h1 class="title">NavTag</h1>
+      <p class="desc" id="desc"></p>
+      <div id="actions" class="actions" style="display:none"></div>
+      <p id="tip" class="tip" style="display:none"></p>
+    </div>
+  </div>
+  <script>
+    // Logo加载失败处理
+    document.addEventListener('DOMContentLoaded', function() {
+      const logo = document.querySelector('.logo')
+      if (logo) {
+        logo.addEventListener('error', function() {
+          this.style.display = 'none'
+        })
+      }
+    })
+
+    const i18n = {
+      'zh-CN': {
+        tagline: '不止于寻找，更揭示旅程。',
+        downloadApk: '直接下载 APK',
+        tipWechat: '当前为微信内置浏览器，请点击右上角在系统浏览器打开或复制当前链接使用。',
+        tipInApp: '当前为内置浏览器，可能无法直接跳转，请在系统浏览器打开或复制当前链接使用。',
+        copyLink: '复制当前链接',
+        altAppStore: '前往 App Store 下载',
+        altGooglePlay: '前往 Google Play 下载'
+      },
+      'zh-TW': {
+        tagline: '不止於尋找，更揭示旅程。',
+        downloadApk: '直接下載 APK',
+        tipWechat: '當前為微信內置瀏覽器，請點擊右上角在系統瀏覽器打開或複製當前鏈接使用。',
+        tipInApp: '當前為內置瀏覽器，可能無法直接跳轉，請在系統瀏覽器打開或複製當前鏈接使用。',
+        copyLink: '複製當前鏈接',
+        altAppStore: '前往 App Store 下載',
+        altGooglePlay: '前往 Google Play 下載'
+      },
+      'en': {
+        tagline: 'More than finding, unveil the journey.',
+        downloadApk: 'Download APK',
+        tipWechat: 'Currently in WeChat browser. Please open in system browser using the menu or copy the current link.',
+        tipInApp: 'Currently in in-app browser. May not redirect properly. Please open in system browser or copy the current link.',
+        copyLink: 'Copy Link',
+        altAppStore: 'Download on the App Store',
+        altGooglePlay: 'Get it on Google Play'
+      },
+      'fr': {
+        tagline: 'Plus que trouver, dévoiler le voyage.',
+        downloadApk: 'Télécharger APK',
+        tipWechat: 'Actuellement dans le navigateur WeChat. Veuillez ouvrir dans le navigateur système via le menu ou copier le lien actuel.',
+        tipInApp: 'Actuellement dans le navigateur intégré. Peut ne pas rediriger correctement. Veuillez ouvrir dans le navigateur système ou copier le lien actuel.',
+        copyLink: 'Copier le lien',
+        altAppStore: 'Télécharger dans l\'App Store',
+        altGooglePlay: 'Disponible sur Google Play'
+      },
+      'de': {
+        tagline: 'Mehr als Finden, die Reise enthüllen.',
+        downloadApk: 'APK herunterladen',
+        tipWechat: 'Derzeit im WeChat-Browser. Bitte öffnen Sie im Systembrowser über das Menü oder kopieren Sie den aktuellen Link.',
+        tipInApp: 'Derzeit im In-App-Browser. Möglicherweise keine korrekte Weiterleitung. Bitte öffnen Sie im Systembrowser oder kopieren Sie den aktuellen Link.',
+        copyLink: 'Link kopieren',
+        altAppStore: 'Laden im App Store',
+        altGooglePlay: 'Jetzt bei Google Play'
+      },
+      'es': {
+        tagline: 'Más que encontrar, descubre el viaje.',
+        downloadApk: 'Descargar APK',
+        tipWechat: 'Actualmente en el navegador WeChat. Por favor, abra en el navegador del sistema usando el menú o copie el enlace actual.',
+        tipInApp: 'Actualmente en navegador integrado. Puede que no redirija correctamente. Por favor, abra en el navegador del sistema o copie el enlace actual.',
+        copyLink: 'Copiar enlace',
+        altAppStore: 'Descargar en App Store',
+        altGooglePlay: 'Disponible en Google Play'
+      },
+      'it': {
+        tagline: 'Più che trovare, svela il viaggio.',
+        downloadApk: 'Scarica APK',
+        tipWechat: 'Attualmente nel browser WeChat. Si prega di aprire nel browser di sistema utilizzando il menu o copiare il link corrente.',
+        tipInApp: 'Attualmente nel browser integrato. Potrebbe non reindirizzare correttamente. Si prega di aprire nel browser di sistema o copiare il link corrente.',
+        copyLink: 'Copia link',
+        altAppStore: 'Scarica su App Store',
+        altGooglePlay: 'Disponibile su Google Play'
+      },
+      'nl': {
+        tagline: 'Meer dan vinden, onthul de reis.',
+        downloadApk: 'Download APK',
+        tipWechat: 'Momenteel in WeChat-browser. Open in systeembrowser via het menu of kopieer de huidige link.',
+        tipInApp: 'Momenteel in in-app browser. Mogelijk geen correcte doorverwijzing. Open in systeembrowser of kopieer de huidige link.',
+        copyLink: 'Link kopiëren',
+        altAppStore: 'Download in de App Store',
+        altGooglePlay: 'Downloaden bij Google Play'
+      },
+      'pt': {
+        tagline: 'Mais do que encontrar, revelar a jornada.',
+        downloadApk: 'Baixar APK',
+        tipWechat: 'Atualmente no navegador WeChat. Por favor, abra no navegador do sistema usando o menu ou copie o link atual.',
+        tipInApp: 'Atualmente no navegador integrado. Pode não redirecionar corretamente. Por favor, abra no navegador do sistema ou copie o link atual.',
+        copyLink: 'Copiar link',
+        altAppStore: 'Baixar na App Store',
+        altGooglePlay: 'Disponível no Google Play'
+      },
+      'ru': {
+        tagline: 'Больше, чем поиск, раскройте путешествие.',
+        downloadApk: 'Скачать APK',
+        tipWechat: 'В настоящее время в браузере WeChat. Пожалуйста, откройте в системном браузере через меню или скопируйте текущую ссылку.',
+        tipInApp: 'В настоящее время во встроенном браузере. Может не перенаправить правильно. Пожалуйста, откройте в системном браузере или скопируйте текущую ссылку.',
+        copyLink: 'Копировать ссылку',
+        altAppStore: 'Загрузить в App Store',
+        altGooglePlay: 'Доступно в Google Play'
+      },
+      'ja': {
+        tagline: '見つけるだけでなく、旅を明らかにする。',
+        downloadApk: 'APKをダウンロード',
+        tipWechat: '現在WeChatブラウザです。メニューからシステムブラウザで開くか、現在のリンクをコピーしてください。',
+        tipInApp: '現在アプリ内ブラウザです。正しくリダイレクトされない場合があります。システムブラウザで開くか、現在のリンクをコピーしてください。',
+        copyLink: 'リンクをコピー',
+        altAppStore: 'App Storeでダウンロード',
+        altGooglePlay: 'Google Playで手に入れよう'
+      },
+      'ko': {
+        tagline: '찾는 것 이상, 여정을 밝히다.',
+        downloadApk: 'APK 다운로드',
+        tipWechat: '현재 WeChat 브라우저입니다. 메뉴를 사용하여 시스템 브라우저에서 열거나 현재 링크를 복사하십시오.',
+        tipInApp: '현재 인앱 브라우저입니다. 올바르게 리디렉션되지 않을 수 있습니다. 시스템 브라우저에서 열거나 현재 링크를 복사하십시오.',
+        copyLink: '링크 복사',
+        altAppStore: 'App Store에서 다운로드',
+        altGooglePlay: 'Google Play에서 받기'
+      }
+    }
+    function detectLanguage() {
+      const browserLang = navigator.language || navigator.userLanguage || 'en'
+      const langCode = browserLang.toLowerCase()
+      if (i18n[browserLang]) return browserLang
+      const primaryLang = langCode.split('-')[0]
+      if (langCode.includes('zh')) {
+        return langCode.includes('tw') || langCode.includes('hk') || langCode.includes('mo') ? 'zh-TW' : 'zh-CN'
+      }
+      const mapping = { en: 'en', fr: 'fr', de: 'de', es: 'es', it: 'it', nl: 'nl', pt: 'pt', ru: 'ru', ja: 'ja', ko: 'ko' }
+      return mapping[primaryLang] || 'en'
+    }
+    const lang = detectLanguage()
+    const t = i18n[lang] || i18n['en']
+    document.getElementById('desc').textContent = t.tagline
+
+    // URL安全验证函数
+    function isValidURL(url, allowedDomains) {
+      if (!url || typeof url !== 'string') return false
+
+      try {
+        const parsed = new URL(url)
+
+        // 只允许安全协议
+        const safeProtocols = ['https:', 'http:', 'intent:', 'market:']
+        if (!safeProtocols.includes(parsed.protocol)) {
+          console.warn('[Security] Blocked unsafe protocol:', parsed.protocol, 'in URL:', url)
+          return false
+        }
+
+        // 对于http/https,验证域名白名单
+        if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+          const isAllowed = allowedDomains.some(domain =>
+            parsed.hostname === domain || parsed.hostname.endsWith('.' + domain)
+          )
+          if (!isAllowed) {
+            console.warn('[Security] Blocked untrusted domain:', parsed.hostname)
+            return false
+          }
+        }
+
+        return true
+      } catch (e) {
+        console.error('[Security] Invalid URL format:', e.message)
+        return false
+      }
+    }
+
+    // 受信任域名白名单
+    const ALLOWED_DOMAINS = [
+      'apps.apple.com',
+      'play.google.com',
+      'pgyerapp.tracup.com',
+      'tracup.com'
+    ]
+
+    // URL模板常量
+    const URL_TEMPLATES = {
+      APP_STORE: 'https://apps.apple.com/app/',
+      PLAY_STORE_WEB: 'https://play.google.com/store/apps/details?id=',
+      PLAY_INTENT_PREFIX: 'intent://details?id=',
+      PLAY_INTENT_SUFFIX: '#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url='
+    }
+
+    fetch('app-config.json')
+      .then(function (r) {
+        if (!r.ok) {
+          throw new Error('Failed to load config: ' + r.status + ' ' + r.statusText)
+        }
+        return r.json()
+      })
+      .then(function (cfg) {
+      const iosId = String(cfg.ios_id || '').trim()
+      const pkg = String(cfg.pkg || '').trim()
+      const apk = String(cfg.apk || '').trim()
+      const ua = navigator.userAgent
+      const isIOS = /iPhone|iPad|iPod/i.test(ua) || (/(Macintosh|Mac OS X)/i.test(ua) && navigator.maxTouchPoints > 0)
+      const isAndroid = /Android/i.test(ua)
+      const isInApp = /(MicroMessenger|MQQBrowser|QQ|Weibo|AlipayClient|AliApp|DingTalk|FBAN|FBAV|Instagram|Line|XHS|Feishu|Lark|wxwork|WeCom|Douyin|Aweme|Kuaishou|Kwai)/i.test(ua)
+      const isWeChat = /MicroMessenger/i.test(ua)
+      const isChrome = /Chrome\/\d+/.test(ua) && !/Edg\/|OPR\//.test(ua)
+      const isCNVendor = /(HuaweiBrowser|HUAWEI|HMSCore|HMOS|HarmonyOS|EMUI|Mi\s?Browser|MiuiBrowser|MIUI|XiaoMi|Redmi|POCO|VivoBrowser|FuntouchOS|OriginOS|OPPO|OppoBrowser|ColorOS|Realme|OnePlus|H2OS|MeizuBrowser|Flyme|MEIZU|ZTE|Nubia|Lenovo|ZUK|Coolpad|Hisense|360Browser|QHBrowser|BaiduBrowser|SogouMobileBrowser|Sogou|LBBROWSER|Liebao|XBrowser|UCBrowser|Quark|HONOR|CM\s?Browser)/i.test(ua)
+      const isMac = /(Macintosh|Mac OS X)/i.test(ua) && navigator.maxTouchPoints === 0
+      const appStore = iosId ? URL_TEMPLATES.APP_STORE + iosId : ''
+      const playStoreWeb = pkg ? URL_TEMPLATES.PLAY_STORE_WEB + pkg : ''
+      const playIntent = (pkg && apk) ? URL_TEMPLATES.PLAY_INTENT_PREFIX + pkg + URL_TEMPLATES.PLAY_INTENT_SUFFIX + encodeURIComponent(apk) + ';end' : ''
+      function showFallback() {
+        const actions = document.getElementById('actions')
+        const tip = document.getElementById('tip')
+        actions.innerHTML = ''
+        if (appStore) {
+          const a = document.createElement('a')
+          a.className = 'btn-badge'
+          const img = document.createElement('img')
+          img.src = './resource/AppStore-badge-logo.svg'
+          img.alt = t.altAppStore
+          a.appendChild(img)
+          a.href = appStore
+          actions.appendChild(a)
+        }
+        if (playStoreWeb) {
+          const a = document.createElement('a')
+          a.className = 'btn-badge'
+          const img = document.createElement('img')
+          img.src = './resource/Google Play Badge Logo.svg'
+          img.alt = t.altGooglePlay
+          a.appendChild(img)
+          a.href = playStoreWeb
+          actions.appendChild(a)
+        }
+        /* if (pkg) {
+          const a = document.createElement('a')
+          a.className = 'btn alt'
+          a.textContent = '打开 内置商店 App'
+          a.href = `market://details?id=${pkg}`
+          actions.appendChild(a)
+        } */
+        if (apk) {
+          const a = document.createElement('a')
+          a.className = 'btn'
+          a.textContent = t.downloadApk
+          a.href = apk
+          actions.appendChild(a)
+        }
+        if (isInApp) {
+          tip.style.display = 'block'
+          tip.textContent = isWeChat ? t.tipWechat : t.tipInApp
+          const copyBtn = document.createElement('button')
+          copyBtn.className = 'btn alt'
+          copyBtn.textContent = t.copyLink
+          copyBtn.onclick = function () { if (navigator.clipboard) navigator.clipboard.writeText(location.href) }
+          actions.appendChild(copyBtn)
+        }
+        actions.style.display = actions.childElementCount ? 'flex' : 'none'
+      }
+      showFallback()
+      if (isMac) {
+        return
+      }
+      if (isIOS && appStore) {
+        if (isValidURL(appStore, ALLOWED_DOMAINS)) {
+          location.replace(appStore)
+        } else {
+          console.error('[Security] iOS App Store redirect blocked')
+        }
+        return
+      }
+      if (isAndroid) {
+        if (isInApp) return
+        if (isCNVendor && apk) {
+          if (isValidURL(apk, ALLOWED_DOMAINS)) {
+            location.replace(apk)
+          } else {
+            console.error('[Security] APK download redirect blocked')
+          }
+          return
+        }
+        if (isChrome && playIntent) {
+          if (isValidURL(playIntent, ALLOWED_DOMAINS)) {
+            location.replace(playIntent)
+          } else {
+            console.error('[Security] Play Store intent blocked')
+          }
+          return
+        }
+        if (playStoreWeb) {
+          if (isValidURL(playStoreWeb, ALLOWED_DOMAINS)) {
+            location.replace(playStoreWeb)
+          } else {
+            console.error('[Security] Play Store web redirect blocked')
+          }
+          return
+        }
+      }
+    })
+    .catch(function (err) {
+      console.error('[Error] Failed to load configuration:', err.message)
+      const tip = document.getElementById('tip')
+      const actions = document.getElementById('actions')
+      if (tip) {
+        tip.style.display = 'block'
+        tip.textContent = t.tipInApp || 'Configuration loading failed, please refresh the page and try again.'
+      }
+      if (actions) {
+        actions.style.display = 'none'
+      }
+    })
+  </script>
+</body>
+</html>
