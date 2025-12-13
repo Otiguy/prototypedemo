@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>智能分发跳转</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; background: #0f172a; color: #e5e7eb; }
+    .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { width: 92%; max-width: 560px; background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+    .title { font-size: 20px; margin: 0 0 12px; }
+    .desc { font-size: 14px; color: #9ca3af; margin: 0 0 16px; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn { display: inline-block; text-decoration: none; padding: 10px 14px; border-radius: 10px; background: #2563eb; color: #fff; font-weight: 600; font-size: 14px; }
+    .btn.alt { background: #374151; color: #e5e7eb; }
+    .tip { margin-top: 14px; font-size: 13px; color: #9ca3af; }
+  </style>
+  <meta name="referrer" content="no-referrer">
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">正在为你跳转…</h1>
+      <p class="desc">若未自动跳转，请使用下方按钮。</p>
+      <div id="actions" class="actions" style="display:none"></div>
+      <p id="tip" class="tip" style="display:none"></p>
+    </div>
+  </div>
+  <script>
+    fetch('app-config.json').then(function (r) { return r.json() }).then(function (cfg) {
+      const iosId = cfg.ios_id
+      const pkg = cfg.pkg
+      const apk = cfg.apk
+      const ua = navigator.userAgent
+      const isIOS = /iPhone|iPad|iPod/i.test(ua)
+      const isAndroid = /Android/i.test(ua)
+      const isInApp = /(MicroMessenger|MQQBrowser|QQ|Weibo|AlipayClient|AliApp|DingTalk|FBAN|FBAV|Instagram|Line)/i.test(ua)
+      const isWeChat = /MicroMessenger/i.test(ua)
+      const appStore = iosId ? `https://apps.apple.com/app/${iosId}` : ''
+      const playStoreWeb = pkg ? `https://play.google.com/store/apps/details?id=${pkg}` : ''
+      const playIntent = (pkg && apk) ? `intent://details?id=${pkg}#Intent;scheme=market;S.browser_fallback_url=${encodeURIComponent(apk)};end` : ''
+      function showFallback() {
+        const actions = document.getElementById('actions')
+        const tip = document.getElementById('tip')
+        actions.innerHTML = ''
+        if (appStore) {
+          const a = document.createElement('a')
+          a.className = 'btn'
+          a.textContent = '前往 App Store'
+          a.href = appStore
+          actions.appendChild(a)
+        }
+        if (playStoreWeb) {
+          const a = document.createElement('a')
+          a.className = 'btn alt'
+          a.textContent = '前往 Google 商店'
+          a.href = playStoreWeb
+          actions.appendChild(a)
+        }
+        if (apk) {
+          const a = document.createElement('a')
+          a.className = 'btn'
+          a.textContent = '直接下载 APK'
+          a.href = apk
+          actions.appendChild(a)
+        }
+        if (isInApp) {
+          tip.style.display = 'block'
+          tip.textContent = isWeChat ? '当前为微信内置浏览器，请点击右上角在系统浏览器打开或使用下方按钮。' : '当前为内置浏览器，可能无法直接跳转，请在系统浏览器打开或使用上方按钮。'
+          const copyBtn = document.createElement('button')
+          copyBtn.className = 'btn alt'
+          copyBtn.textContent = '复制当前链接'
+          copyBtn.onclick = function () { if (navigator.clipboard) navigator.clipboard.writeText(location.href) }
+          actions.appendChild(copyBtn)
+        }
+        actions.style.display = actions.childElementCount ? 'flex' : 'none'
+      }
+      if (isIOS && appStore) {
+        location.replace(appStore)
+        return
+      }
+      if (isAndroid && playIntent) {
+        if (isInApp) {
+          showFallback()
+          return
+        }
+        location.replace(playIntent)
+        return
+      }
+      showFallback()
+    }).catch(function () {
+      document.getElementById('actions').style.display = 'none'
+    })
+  </script>
+</body>
+</html>
