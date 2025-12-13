@@ -36,6 +36,8 @@
       const isAndroid = /Android/i.test(ua)
       const isInApp = /(MicroMessenger|MQQBrowser|QQ|Weibo|AlipayClient|AliApp|DingTalk|FBAN|FBAV|Instagram|Line)/i.test(ua)
       const isWeChat = /MicroMessenger/i.test(ua)
+      const isChrome = /Chrome\/\d+/.test(ua) && !/Edg\/|OPR\//.test(ua)
+      const isCNVendor = /(HuaweiBrowser|HMSCore|HMOS|HarmonyOS|Mi\s?Browser|VivoBrowser|OPPO|OnePlus)/i.test(ua)
       const appStore = iosId ? `https://apps.apple.com/app/${iosId}` : ''
       const playStoreWeb = pkg ? `https://play.google.com/store/apps/details?id=${pkg}` : ''
       const playIntent = (pkg && apk) ? `intent://details?id=${pkg}#Intent;scheme=market;S.browser_fallback_url=${encodeURIComponent(apk)};end` : ''
@@ -75,19 +77,27 @@
         }
         actions.style.display = actions.childElementCount ? 'flex' : 'none'
       }
+      showFallback()
       if (isIOS && appStore) {
+        if (isInApp) return
         location.replace(appStore)
         return
       }
-      if (isAndroid && playIntent) {
-        if (isInApp) {
-          showFallback()
+      if (isAndroid) {
+        if (isInApp) return
+        if (isCNVendor && apk) {
+          location.replace(apk)
           return
         }
-        location.replace(playIntent)
-        return
+        if (isChrome && playIntent) {
+          location.replace(playIntent)
+          return
+        }
+        if (playStoreWeb) {
+          location.replace(playStoreWeb)
+          return
+        }
       }
-      showFallback()
     }).catch(function () {
       document.getElementById('actions').style.display = 'none'
     })
