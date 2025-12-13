@@ -28,19 +28,19 @@
   </div>
   <script>
     fetch('app-config.json').then(function (r) { return r.json() }).then(function (cfg) {
-      const iosId = cfg.ios_id
-      const pkg = cfg.pkg
-      const apk = cfg.apk
+      const iosId = String(cfg.ios_id || '').trim()
+      const pkg = String(cfg.pkg || '').trim()
+      const apk = String(cfg.apk || '').trim()
       const ua = navigator.userAgent
       const isIOS = /iPhone|iPad|iPod/i.test(ua)
       const isAndroid = /Android/i.test(ua)
       const isInApp = /(MicroMessenger|MQQBrowser|QQ|Weibo|AlipayClient|AliApp|DingTalk|FBAN|FBAV|Instagram|Line)/i.test(ua)
       const isWeChat = /MicroMessenger/i.test(ua)
       const isChrome = /Chrome\/\d+/.test(ua) && !/Edg\/|OPR\//.test(ua)
-      const isCNVendor = /(HuaweiBrowser|HMSCore|HMOS|HarmonyOS|Mi\s?Browser|VivoBrowser|OPPO|OnePlus)/i.test(ua)
+      const isCNVendor = /(HuaweiBrowser|HMSCore|HMOS|HarmonyOS|Mi\s?Browser|MiuiBrowser|VivoBrowser|OPPO|OnePlus|UCBrowser|Quark|XiaoMi|HONOR)/i.test(ua)
       const appStore = iosId ? `https://apps.apple.com/app/${iosId}` : ''
       const playStoreWeb = pkg ? `https://play.google.com/store/apps/details?id=${pkg}` : ''
-      const playIntent = (pkg && apk) ? `intent://details?id=${pkg}#Intent;scheme=market;S.browser_fallback_url=${encodeURIComponent(apk)};end` : ''
+      const playIntent = (pkg && apk) ? `intent://details?id=${pkg}#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=${encodeURIComponent(apk)};end` : ''
       function showFallback() {
         const actions = document.getElementById('actions')
         const tip = document.getElementById('tip')
@@ -57,6 +57,13 @@
           a.className = 'btn alt'
           a.textContent = '前往 Google 商店'
           a.href = playStoreWeb
+          actions.appendChild(a)
+        }
+        if (pkg) {
+          const a = document.createElement('a')
+          a.className = 'btn alt'
+          a.textContent = '打开 Google 商店 App'
+          a.href = `market://details?id=${pkg}`
           actions.appendChild(a)
         }
         if (apk) {
